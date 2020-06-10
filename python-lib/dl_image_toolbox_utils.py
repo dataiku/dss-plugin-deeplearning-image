@@ -11,6 +11,7 @@ import json
 from collections import OrderedDict
 import StringIO
 import numpy as np
+from datetime import datetime
 
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
@@ -446,6 +447,17 @@ def clean_custom_params(custom_params, params_type=""):
         value = string_to_arg(p["value"])
         cleaned_params[name] = value
     return cleaned_params
+
+def log_func(txt):
+    def inner(f):
+        def wrapper(*args, **kwargs):
+            print('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            res = f(*args, **kwargs)
+            print('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            return res
+        return wrapper
+    return inner
+
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR

@@ -21,6 +21,7 @@ class AttributeDict(dict):
 
 
 # Config
+@utils.log_func(txt='config loading')
 def load_config():
     recipe_config = get_recipe_config()
     config = AttributeDict()
@@ -67,7 +68,9 @@ def load_config():
 
 
 # Helper for predicting
-def predict(config, limit = 5, min_threshold = 0):
+
+@utils.log_func(txt='predicting')
+def predict(config, limit=5, min_threshold=0):
     batch_size = 100
     n = 0
     results = {"prediction": [], "error": []}
@@ -109,30 +112,26 @@ def predict(config, limit = 5, min_threshold = 0):
 ###################################################################################################################
 
 
-def build_output_df(config, predictions):
+def build_output_df(images_paths, predictions):
     output = pd.DataFrame()
-    output["images"] = config.images_paths
+    output["images"] = images_paths
     print("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output
 
 
+@utils.log_func(txt='output dataset writing')
+def write_output_dataset(output_dataset, output_df):
+    output_dataset.write_with_schema(pd.DataFrame(output_df))
+
+
+@utils.log_func(txt='recipe')
 def run():
     config = load_config()
-
-    # Make the predictions
-    print("------ \n Info: Start predicting \n ------")
     predictions = predict(config, config.max_nb_labels, config.min_threshold)
-    print("------ \n Info: Finished predicting \n ------")
-
-    # Prepare results
-    output_df = build_output_df(config, predictions)
-
-    # Write to output dataset
-    print("------ \n Info: Writing to output dataset \n ------")
-    config.output_dataset.write_with_schema(pd.DataFrame(output_df))
-    print("------ \n Info: END of recipe \n ------")
+    output_df = build_output_df(config.images_paths, predictions)
+    write_output_dataset(config.output_dataset, output_df)
 
 
 run()
