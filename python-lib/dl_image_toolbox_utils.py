@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
@@ -11,6 +13,7 @@ import json
 from collections import OrderedDict
 import StringIO
 import numpy as np
+from datetime import datetime
 
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
@@ -401,15 +404,66 @@ def get_cached_file_from_folder(folder, file_path) :
 ###################################################################################################################
 ## MISC.
 ###################################################################################################################
+def log_func(txt):
+    def inner(f):
+        def wrapper(*args, **kwargs):
+            print('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            res = f(*args, **kwargs)
+            print('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            return res
+        return wrapper
+    return inner
 
-def get_predictions(model, batch, limit=5, min_threshold=0, labels_df=None):
+def get_predictions(model, batch, limit=5, min_threshold=0, labels_df=None, labelize=True):
     predictions = model.predict(batch)
+    if not labelize:
+        return predictions
     def id_pred(index):
         if labels_df is not None:
             return labels_df.loc[index].className
         else:
             return str(index)
     return [get_ordered_dict({id_pred(i): float(prediction[i]) for i in prediction.argsort()[-limit:] if float(prediction[i]) >= min_threshold}) for prediction in predictions]
+
+@log_func(txt='predicting')
+def predict(config, limit=5, min_threshold=0, labelize=True):
+    batch_size = 100
+    n = 0
+    results = {"prediction": [], "error": []}
+    num_images = len(config.images_paths)
+    labels_df = config.labels_df if 'labels_df' in config else None
+    while True:
+        if (n * batch_size) >= num_images:
+            break
+
+        next_batch_list = []
+        error_indices = []
+        for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
+            img_path = config.images_paths[i]
+            try:
+                preprocessed_img = preprocess_img(
+                    img_path=config.image_folder.get_download_stream(img_path),
+                    img_shape=config.model_input_shape,
+                    preprocessing=config.preprocessing)
+                next_batch_list.append(preprocessed_img)
+            except IOError as e:
+                print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                error_indices.append(index_in_batch)
+        next_batch = np.array(next_batch_list)
+
+        prediction_batch = get_predictions(config.model, next_batch, limit, min_threshold, labels_df,
+                                           labelize=labelize)
+        error_batch = [0] * len(prediction_batch)
+
+        for err_index in error_indices:
+            prediction_batch.insert(err_index, None)
+            error_batch.insert(err_index, 1)
+
+        results["prediction"].extend(prediction_batch)
+        results["error"].extend(error_batch)
+        n += 1
+        print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+    return results
 
 def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
@@ -447,6 +501,7 @@ def clean_custom_params(custom_params, params_type=""):
         cleaned_params[name] = value
     return cleaned_params
 
+
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR
 ## Inspired by :
@@ -475,4 +530,53 @@ def threadsafe_generator(f):
     def g(*a, **kw):
         return ThreadsafeIterator(f(*a, **kw))
     return g
+
+###############################################################
+## Dictionary as class
+###############################################################
+
+class AttributeDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__
+
+###############################################################
+## MODEL CHECKPOINT FOR MULTI GPU
+## When using multiple GPUs, we need to save the base model,
+## not the one defined by multi_gpu_model
+## see example: https://keras.io/utils/#multi_gpu_model
+## Therefore, to save the model after each epoch by leveraging
+## ModelCheckpoint callback, we need to adapt it to save the
+## base model. To do so, we pass the base model to the callback.
+## Inspired by:
+##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
+###############################################################
+
+class MultiGPUModelCheckpoint(ModelCheckpoint):
+
+    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
+                 save_best_only=False, save_weights_only=False,
+                 mode='auto', period=1):
+        super(MultiGPUModelCheckpoint, self).__init__(filepath,
+                                                      monitor=monitor,
+                                                      verbose=verbose,
+                                                      save_best_only=save_best_only,
+                                                      save_weights_only=save_weights_only,
+                                                      mode=mode,
+                                                      period=period)
+        self.base_model = base_model
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
+
+        # First retrieve model
+        model = self.model
+
+        # Then switching model to base model
+        self.model = self.base_model
+
+        # Calling super on_epoch_end
+        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
+
+        # Resetting model afterwards
+        self.model = model
 
