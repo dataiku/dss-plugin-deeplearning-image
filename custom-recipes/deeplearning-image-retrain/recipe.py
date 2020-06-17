@@ -106,7 +106,7 @@ def load_model_config(model_folder):
 ###################################################################################################################
 ## BUILD TRAIN/TEST SETS
 ###################################################################################################################
-def build_train_test_set(label_df, train_ratio, random_seed):
+def build_train_test_sets(label_df, train_ratio, random_seed):
     train_df, test_df = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio,
                                          random_state=random_seed)
     return train_df, test_df
@@ -161,8 +161,8 @@ def load_model_without_gpu(config):
     config.model_and_pp = get_model_and_pp(config)
 
 
-def load_model(config):
-    load_model_with_gpu(config) if config.should_use_gpu and config.n_gpu > 1 else load_model_without_gpu(config)
+def load_model(use_gpu, config):
+    load_model_with_gpu(config) if use_gpu else load_model_without_gpu(config)
     set_trainable_layers(config.model_and_pp['model'], config.layer_to_retrain, config.layer_to_retrain_n)
     config.model_and_pp['model'].summary()
 
@@ -310,8 +310,8 @@ def get_tensorboard(output_model_folder):
 ## TRAIN MODEL
 ###################################################################################################################
 
-def train_model(model, train_generator, test_generator, config, callback_list):
-    model.fit_generator(
+def train_model(config, train_generator, test_generator, callback_list):
+    config.model_and_pp['model'].fit_generator(
         train_generator,
         steps_per_epoch=config.nb_steps_per_epoch,
         epochs=config.nb_epochs,
@@ -325,7 +325,8 @@ def train_model(model, train_generator, test_generator, config, callback_list):
 ## SAVING NEW CONFIG AND LABELS
 ###################################################################################################################
 
-def save_config_and_labels(model_weights_path, model_config, config):
+
+def save_config_and_labels(model_weights_path, config, model_config):
     model_config[constants.RETRAINED] = True
     model_config[constants.TOP_PARAMS] = config.model_and_pp['model_params']
     utils.write_config(config.output_model_folder, model_config)
@@ -339,3 +340,31 @@ def save_config_and_labels(model_weights_path, model_config, config):
         config.output_model_folder.upload_stream(model_weights_path, f)
     # Computing model info
     utils.save_model_info(config.output_model_folder)
+
+
+def run():
+    config = load_config()
+    use_gpu = config.should_use_gpu and config.n_gpu > 1
+
+    model_config = load_model_config(config.model_folder)
+    load_model(use_gpu, config)
+
+    compile_model(config.model_and_pp['model'], config.optimizer, config.custom_params_opti, config.learning_rate)
+
+    model_weights_path = utils.get_weights_path(
+        config.output_model_folder,
+        model_config,
+        suffix=constants.RETRAINED_SUFFIX,
+        should_exist=False
+    )
+    callback_list = []
+    callback_list.append(get_model_checkpoint(model_weights_path, model_config, config.model_and_pp, use_gpu))
+    if config.use_tensorboard:
+        callback_list.append(get_tensorboard(config.output_model_folder))
+    df_train, df_test = build_train_test_sets(config.label_df, config.train_ratio, config.random_seed)
+    train_gen, test_gen = load_train_test_generator(df_train, df_test, config)
+    train_model(config, train_gen, test_gen, callback_list)
+    save_config_and_labels(model_weights_path, config, model_config)
+
+
+run()
