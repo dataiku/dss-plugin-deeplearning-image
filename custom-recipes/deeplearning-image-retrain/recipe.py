@@ -341,6 +341,14 @@ def save_config_and_labels(model_weights_path, config, model_config):
     # Computing model info
     utils.save_model_info(config.output_model_folder)
 
+def get_model_weight_path(config, model_config):
+    return utils.get_weights_path(
+        config.output_model_folder,
+        model_config,
+        suffix=constants.RETRAINED_SUFFIX,
+        should_exist=False
+    )
+
 
 def run():
     config = load_config()
@@ -351,18 +359,16 @@ def run():
 
     compile_model(config.model_and_pp['model'], config.optimizer, config.custom_params_opti, config.learning_rate)
 
-    model_weights_path = utils.get_weights_path(
-        config.output_model_folder,
-        model_config,
-        suffix=constants.RETRAINED_SUFFIX,
-        should_exist=False
-    )
+    model_weights_path = get_model_weight_path(config, model_config)
+
+    df_train, df_test = build_train_test_sets(config.label_df, config.train_ratio, config.random_seed)
+    train_gen, test_gen = load_train_test_generator(df_train, df_test, config)
+
     callback_list = []
     callback_list.append(get_model_checkpoint(model_weights_path, model_config, config.model_and_pp, use_gpu))
     if config.use_tensorboard:
         callback_list.append(get_tensorboard(config.output_model_folder))
-    df_train, df_test = build_train_test_sets(config.label_df, config.train_ratio, config.random_seed)
-    train_gen, test_gen = load_train_test_generator(df_train, df_test, config)
+
     train_model(config, train_gen, test_gen, callback_list)
     save_config_and_labels(model_weights_path, config, model_config)
 
