@@ -230,8 +230,8 @@ def load_train_test_generator(train_df, test_df, config):
         )
         extra_images_gen = ImageDataGenerator(**params_data_augment)
     get_images_gen = lambda images_df: images_generator(
-        images_df=images_df,
-        images_folder=config.image_folder,
+        image_df=images_df,
+        image_folder=config.image_folder,
         batch_size=config.batch_size,
         input_shape=config.input_shape,
         labels=config.labels,
