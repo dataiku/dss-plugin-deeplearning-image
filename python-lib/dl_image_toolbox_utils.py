@@ -537,3 +537,44 @@ class AttributeDict(dict):
     __getattr__ = dict.__getitem__
     __setattr__ = dict.__setitem__
 
+###############################################################
+## MODEL CHECKPOINT FOR MULTI GPU
+## When using multiple GPUs, we need to save the base model,
+## not the one defined by multi_gpu_model
+## see example: https://keras.io/utils/#multi_gpu_model
+## Therefore, to save the model after each epoch by leveraging
+## ModelCheckpoint callback, we need to adapt it to save the
+## base model. To do so, we pass the base model to the callback.
+## Inspired by:
+##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
+###############################################################
+
+class MultiGPUModelCheckpoint(ModelCheckpoint):
+
+    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
+                 save_best_only=False, save_weights_only=False,
+                 mode='auto', period=1):
+        super(MultiGPUModelCheckpoint, self).__init__(filepath,
+                                                      monitor=monitor,
+                                                      verbose=verbose,
+                                                      save_best_only=save_best_only,
+                                                      save_weights_only=save_weights_only,
+                                                      mode=mode,
+                                                      period=period)
+        self.base_model = base_model
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
+
+        # First retrieve model
+        model = self.model
+
+        # Then switching model to base model
+        self.model = self.base_model
+
+        # Calling super on_epoch_end
+        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
+
+        # Resetting model afterwards
+        self.model = model
+

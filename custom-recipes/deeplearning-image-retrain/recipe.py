@@ -1,17 +1,17 @@
-from dataiku.customrecipe import *
+from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
 import dl_image_toolbox_utils as utils
 import config_utils as config_utils
 from sklearn.model_selection import train_test_split
 from keras import optimizers, initializers, metrics, regularizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
-from keras.layers import Dropout, Dense
-from keras.models import Model
 from keras.utils.training_utils import multi_gpu_model
 from keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
+from tensorflow.python.client import device_lib
 import pandas as pd
 import constants
 import math
+import os
 import shutil
 import numpy as np
 import dataiku
@@ -44,7 +44,7 @@ def load_recipe_config(config):
     config.data_augmentation = recipe_config["data_augmentation"]
     config.n_augmentation = int(recipe_config["n_augmentation"])
     config.custom_params_data_augment = recipe_config.get("model_custom_params_data_augmentation", [])
-    config.tensorboard = recipe_config["tensorboard"]
+    config.use_tensorboard = recipe_config["tensorboard"]
     config.random_seed = int(recipe_config["random_seed"])
     config.gpu_options = utils.load_gpu_options(config.should_use_gpu, config.list_gpu, config.gpu_allocation)
     config.n_gpu = config.gpu_options.get("n_gpu", 0)
@@ -76,7 +76,6 @@ def load_label_df(config):
 
 
 def display_gpu_device():
-    from tensorflow.python.client import device_lib
     print(device_lib.list_local_devices())
 
     if tf.test.gpu_device_name():
@@ -154,7 +153,8 @@ def set_trainable_layers(model, layer_to_retrain, layer_to_retrain_n=None):
 def load_model_with_gpu(config):
     with tf.device('/cpu:0'):
         config.model_and_pp = get_model_and_pp(config)
-    config.model_and_pp['model'] = multi_gpu_model(config.model_and_pp['model'], config.n_gpu)
+    config.model_and_pp['base_model'] = config.model_and_pp['model']
+    config.model_and_pp['model'] = multi_gpu_model(config.model_and_pp['base_model'], config.n_gpu)
 
 
 def load_model_without_gpu(config):
@@ -250,127 +250,92 @@ def load_train_test_generator(train_df, test_df, config):
 ## COMPILE MODEL
 ###################################################################################################################
 
+def compile_model(model, optimizer, custom_params_opti, learning_rate):
+    if optimizer == "adam":
+        model_opti_class = optimizers.Adam
+    elif optimizer == "adagrad":
+        model_opti_class = optimizers.Adagrad
+    elif optimizer == "sgd":
+        model_opti_class = optimizers.SGD
+    else:
+        print("Optimizer not supporter: {}. Applying adam.".format(optimizer))
+        model_opti_class = optimizers.Adam
 
-if optimizer == "adam":
-    model_opti_class = optimizers.Adam
-elif optimizer == "adagrad":
-    model_opti_class = optimizers.Adagrad
-elif optimizer == "sgd":
-    model_opti_class = optimizers.SGD
+    # Cleaning custom parameters
+    params_opti = utils.clean_custom_params(custom_params_opti)
+    params_opti["lr"] = learning_rate
 
-# Cleaning custom parameters
-params_opti = utils.clean_custom_params(custom_params_opti)
-params_opti["lr"] = learning_rate
-
-model_opti = model_opti_class(**params_opti)
-model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
-
-callback_list = []
+    model_opti = model_opti_class(**params_opti)
+    model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
 
 ###################################################################################################################
 ## BUILD MODEL CHECKPOINT
 ###################################################################################################################
 
-model_weights_path = utils.get_weights_path(output_model_folder, model_config, suffix=constants.RETRAINED_SUFFIX,
-                                            should_exist=False)
-should_save_weights_only = utils.should_save_weights_only(model_config)
+def get_model_checkpoint(model_weights_path, model_config, model_and_pp, use_gpu):
+    should_save_weights_only = utils.should_save_weights_only(model_config)
 
-if should_use_gpu and n_gpu > 1:
-    mcheck = MultiGPUModelCheckpoint(model_weights_path, base_model, monitor="val_loss", save_best_only=True,
-                                     save_weights_only=should_save_weights_only)
-else:
-    mcheck = ModelCheckpoint(model_weights_path, monitor="val_loss", save_best_only=True,
-                             save_weights_only=should_save_weights_only)
-
-callback_list.append(mcheck)
+    if use_gpu:
+        mcheck = utils.MultiGPUModelCheckpoint(
+            filepath=model_weights_path,
+            base_model=model_and_pp['base_model'],
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=should_save_weights_only
+        )
+    else:
+        mcheck = ModelCheckpoint(
+            filepath=model_weights_path,
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=should_save_weights_only
+        )
+    return mcheck
 
 ###################################################################################################################
 ## TENSORBOARD
 ###################################################################################################################
 
-if tensorboard:
-    log_path = utils.get_file_path(config.output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
+def get_tensorboard(output_model_folder):
+    log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
 
     # If already folder at loger_path, delete it
     if os.path.isdir(log_path):
         shutil.rmtree(log_path)
 
-    tsboard = TensorBoard(log_dir=log_path, write_graph=True)
-    callback_list.append(tsboard)
+    return TensorBoard(log_dir=log_path, write_graph=True)
+
 
 ###################################################################################################################
 ## TRAIN MODEL
 ###################################################################################################################
 
-
-model.fit_generator(
-    train_generator,
-    steps_per_epoch=nb_steps_per_epoch,
-    epochs=nb_epochs,
-    validation_data=test_generator,
-    validation_steps=nb_validation_steps,
-    callbacks=callback_list,
-    shuffle=False,
-    verbose=2)
+def train_model(model, train_generator, test_generator, config, callback_list):
+    model.fit_generator(
+        train_generator,
+        steps_per_epoch=config.nb_steps_per_epoch,
+        epochs=config.nb_epochs,
+        validation_data=test_generator,
+        validation_steps=config.nb_validation_steps,
+        callbacks=callback_list,
+        shuffle=False,
+        verbose=2)
 
 ###################################################################################################################
 ## SAVING NEW CONFIG AND LABELS
 ###################################################################################################################
 
-model_config[constants.RETRAINED] = True
-model_config[constants.TOP_PARAMS] = model_params
-utils.write_config(output_model_folder, model_config)
+def save_config_and_labels(model_weights_path, model_config, config):
+    model_config[constants.RETRAINED] = True
+    model_config[constants.TOP_PARAMS] = config.model_and_pp['model_params']
+    utils.write_config(config.output_model_folder, model_config)
 
-df_labels = pd.DataFrame({"id": range(n_classes), "className": labels})
-with output_model_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-    w.write((df_labels.to_csv(index=False)))
-# df_labels.to_csv(utils.get_file_path(output_model_folder_path, constants.MODEL_LABELS_FILE), index=False)
+    df_labels = pd.DataFrame({"id": range(config.n_classes), "className": config.labels})
+    with config.output_model_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+        w.write((df_labels.to_csv(index=False)))
 
-
-# This copies a local file to the managed folder
-with open(model_weights_path) as f:
-    output_model_folder.upload_stream(model_weights_path, f)
-# Computing model info
-utils.save_model_info(output_model_folder)
-
-
-###############################################################
-## MODEL CHECKPOINT FOR MULTI GPU
-## When using multiple GPUs, we need to save the base model,
-## not the one defined by multi_gpu_model
-## see example: https://keras.io/utils/#multi_gpu_model
-## Therefore, to save the model after each epoch by leveraging 
-## ModelCheckpoint callback, we need to adapt it to save the 
-## base model. To do so, we pass the base model to the callback.
-## Inspired by: 
-##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
-###############################################################
-
-class MultiGPUModelCheckpoint(ModelCheckpoint):
-
-    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
-        super(MultiGPUModelCheckpoint, self).__init__(filepath,
-                                                      monitor=monitor,
-                                                      verbose=verbose,
-                                                      save_best_only=save_best_only,
-                                                      save_weights_only=save_weights_only,
-                                                      mode=mode,
-                                                      period=period)
-        self.base_model = base_model
-
-    def on_epoch_end(self, epoch, logs=None):
-        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
-
-        # First retrieve model
-        model = self.model
-
-        # Then switching model to base model
-        self.model = self.base_model
-
-        # Calling super on_epoch_end
-        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
-
-        # Resetting model afterwards
-        self.model = model
+    # This copies a local file to the managed folder
+    with open(model_weights_path) as f:
+        config.output_model_folder.upload_stream(model_weights_path, f)
+    # Computing model info
+    utils.save_model_info(config.output_model_folder)
