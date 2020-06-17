@@ -108,9 +108,10 @@ def load_model_config(model_folder):
 ## BUILD TRAIN/TEST SETS
 ###################################################################################################################
 def build_train_test_set(label_df, train_ratio, random_seed):
-    df_train, df_test = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio,
+    train_df, test_df = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio,
                                          random_state=random_seed)
-    return df_train, df_test
+    return train_df, test_df
+
 
 ###################################################################################################################
 ## LOAD MODEL
@@ -127,6 +128,7 @@ def get_model_and_pp(config):
         dropout=config.model_dropout,
         n_classes=config.n_classes)
     return model_and_pp
+
 
 def set_trainable_layers(model, layer_to_retrain, layer_to_retrain_n=None):
     # CHOOSING LAYER TO RETRAIN
@@ -154,13 +156,16 @@ def load_model_with_gpu(config):
         config.model_and_pp = get_model_and_pp(config)
     config.model_and_pp['model'] = multi_gpu_model(config.model_and_pp['model'], config.n_gpu)
 
+
 def load_model_without_gpu(config):
     config.model_and_pp = get_model_and_pp(config)
+
 
 def load_model(config):
     load_model_with_gpu(config) if config.should_use_gpu and config.n_gpu > 1 else load_model_without_gpu(config)
     set_trainable_layers(config.model_and_pp['model'], config.layer_to_retrain, config.layer_to_retrain_n)
     config.model_and_pp['model'].summary()
+
 
 ###################################################################################################################
 ## BUILD GENERATORS
@@ -170,79 +175,39 @@ def load_model(config):
 
 
 @utils.threadsafe_generator
-def augmentation_generator(df_imgs, image_folder, batch_size, n_augmentation, input_shape, labels, preprocessing,
-                           TrainImageGen):
-    nb_imgs = df_imgs.shape[0]
-    batch_size_adapted = int(batch_size / n_augmentation)
-    nb_batch = int(math.ceil(nb_imgs * 1.0 / batch_size_adapted))
+def images_generator(image_df, image_folder, batch_size, input_shape, labels, preprocessing, n_classes,
+                     use_augmentation=False, extra_images_gen=None, n_augmentation=None):
+    n_images = image_df.shape[0]
+    batch_size_adapted = int(batch_size / n_augmentation) if use_augmentation else batch_size
+    n_batch = int(math.ceil(n_images * 1.0 / batch_size_adapted))
 
     while True:
 
-        for num_batch in range(nb_batch):
+        for num_batch in range(n_batch):
 
-            df_imgs_batch = df_imgs.iloc[num_batch * batch_size_adapted: (num_batch + 1) * batch_size_adapted, :]
-            nb_imgs_batch = df_imgs_batch.shape[0]
+            images_df_batch = image_df.iloc[num_batch * batch_size_adapted: (num_batch + 1) * batch_size_adapted, :]
+            n_images_batch = images_df_batch.shape[0]
 
             X_batch_list = []
             y_batch_list = []
 
-            for num_img in range(nb_imgs_batch):
-
-                row = df_imgs_batch.iloc[num_img, :]
+            for num_img in range(n_images_batch):
+                row = images_df_batch.iloc[num_img, :]
                 img_filename = row[constants.FILENAME]
-                # img_path = utils.get_file_path(image_folder_path, img_filename)
-                label = row[constants.LABEL]
-                label_index = labels.index(label)
-
-                try:
-                    x = utils.preprocess_img(utils.get_cached_file_from_folder(image_folder, img_filename), input_shape,
-                                             preprocessing)
-                    x = np.tile(x, (n_augmentation, 1, 1, 1))
-
-                    # TrainImageGen returns infinite loop, each of which yields batch data
-                    for batch in TrainImageGen.flow(x, batch_size=n_augmentation):
-                        X_batch_list.append(batch)
-                        y_batch_list.extend([label_index] * n_augmentation)
-                        break
-                except IOError as e:
-                    print("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
-
-            X_batch = np.concatenate(X_batch_list)
-
-            actual_batch_size = X_batch.shape[0]
-            y_batch = np.zeros((actual_batch_size, n_classes))
-            y_batch[range(actual_batch_size), y_batch_list] = 1
-
-            yield (X_batch, y_batch)
-
-
-@utils.threadsafe_generator
-def no_augmentation_generator(df_imgs, image_folder, batch_size, input_shape, labels, preprocessing):
-    nb_imgs = df_imgs.shape[0]
-    nb_batch = int(math.ceil(nb_imgs * 1.0 / batch_size))
-
-    while True:
-
-        for num_batch in range(nb_batch):
-
-            df_imgs_batch = df_imgs.iloc[num_batch * batch_size: (num_batch + 1) * batch_size, :]
-            nb_imgs_batch = df_imgs_batch.shape[0]
-            X_batch_list = []
-            y_batch_list = []
-
-            for num_img in range(nb_imgs_batch):
-
-                row = df_imgs_batch.iloc[num_img, :]
-                img_filename = row[constants.FILENAME]
-
-                # img_path = utils.get_file_path(image_folder_path, img_filename)
                 label = row[constants.LABEL]
                 label_index = labels.index(label)
                 try:
-                    x = utils.preprocess_img(utils.get_cached_file_from_folder(image_folder, img_filename), input_shape,
-                                             preprocessing)
-                    X_batch_list.append(x)
-                    y_batch_list.append(label_index)
+                    x = utils.preprocess_img(
+                        utils.get_cached_file_from_folder(image_folder, img_filename), input_shape, preprocessing)
+                    if use_augmentation:
+                        x = np.tile(x, (n_augmentation, 1, 1, 1))
+                        X_batch = next(extra_images_gen.flow(x, batch_size=n_augmentation))
+                        y_batch = [label_index] * n_augmentation
+                    else:
+                        X_batch = [x]
+                        y_batch = [label_index]
+                    X_batch_list.extend(X_batch)
+                    y_batch_list.extend(y_batch)
                 except IOError as e:
                     print("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
 
@@ -252,19 +217,34 @@ def no_augmentation_generator(df_imgs, image_folder, batch_size, input_shape, la
             y_batch = np.zeros((actual_batch_size, n_classes))
             y_batch[range(actual_batch_size), y_batch_list] = 1
 
-            yield (X_batch, y_batch)
+            yield X_batch, y_batch
 
 
-if data_augmentation:
-    print("Using data augmentation with {} images generated per training image\n".format(n_augmentation))
-    params_data_augment = utils.clean_custom_params(custom_params_data_augment, params_type="Data Augmentation")
-    TrainImageGen = ImageDataGenerator(**params_data_augment)
-    train_generator = augmentation_generator(df_train, image_folder, batch_size, n_augmentation, input_shape, labels,
-                                             preprocessing, TrainImageGen)
-else:
-    train_generator = no_augmentation_generator(df_train, image_folder, batch_size, input_shape, labels, preprocessing)
+def load_train_test_generator(train_df, test_df, config):
+    extra_images_gen = None
+    if config.data_augmentation:
+        print("Using data augmentation with {} images generated per training image\n".format(config.n_augmentation))
+        params_data_augment = utils.clean_custom_params(
+            custom_params=config.custom_params_data_augment,
+            params_type="Data Augmentation"
+        )
+        extra_images_gen = ImageDataGenerator(**params_data_augment)
+    get_images_gen = lambda images_df: images_generator(
+        images_df=images_df,
+        images_folder=config.image_folder,
+        batch_size=config.batch_size,
+        input_shape=config.input_shape,
+        labels=config.labels,
+        preprocessing=config.model_and_pp['preprocessing'],
+        n_classes=config.n_classes,
+        use_augmentation=config.data_augmentation,
+        extra_images_gen=extra_images_gen,
+        n_augmentation=config.n_augmentation
+    )
+    train_gen = get_images_gen(train_df)
+    test_gen = get_images_gen(test_df)
+    return train_gen, test_gen
 
-test_generator = no_augmentation_generator(df_test, image_folder, batch_size, input_shape, labels, preprocessing)
 
 ###################################################################################################################
 ## COMPILE MODEL
