@@ -476,3 +476,10 @@ def threadsafe_generator(f):
         return ThreadsafeIterator(f(*a, **kw))
     return g
 
+###############################################################
+## Dictionary as class
+###############################################################
+
+class AttributeDict(dict):
+    __getattr__ = dict.__getitem__
+    __setattr__ = dict.__setitem__

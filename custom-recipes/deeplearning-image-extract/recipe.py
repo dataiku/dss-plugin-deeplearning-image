@@ -5,44 +5,47 @@ from keras.models import Model
 import dl_image_toolbox_utils as utils
 import constants
 
-###################################################################################################################
-## LOADING ALL REQUIRED INFO AND 
-##      SETTING VARIABLES
-###################################################################################################################
+def load_input_output(config):
+    image_folder_input_name = get_input_names_for_role('image_folder')[0]
+    config.image_folder = dataiku.Folder(image_folder_input_name)
 
-recipe_config = get_recipe_config()
-extract_layer_index = int(recipe_config["extract_layer_index"])
-should_use_gpu = recipe_config.get('should_use_gpu', False)
+    model_folder_input_name = get_input_names_for_role('model_folder')[0]
+    config.model_folder = dataiku.Folder(model_folder_input_name)
 
-# gpu
-utils.load_gpu_options(should_use_gpu, recipe_config['list_gpu'], recipe_config['gpu_allocation'])
-
-# Plugin parameters
-image_folder_input_name = get_input_names_for_role('image_folder')[0]
-image_folder = dataiku.Folder(image_folder_input_name)
-
-#image_folder_path = image_folder.get_path()
-
-model_folder_input_name = get_input_names_for_role('model_folder')[0]
-model_folder = dataiku.Folder(model_folder_input_name)
-
-#model_folder_path = model_folder.get_path()
-
-output_name = get_output_names_for_role('feature_dataset')[0]
-output_dataset =  dataiku.Dataset(output_name)
+    output_name = get_output_names_for_role('feature_dataset')[0]
+    config.output_dataset = dataiku.Dataset(output_name)
 
 
+def load_model(config):
+    model_and_pp = utils.load_instantiate_keras_model_preprocessing(config.model_folder, goal=constants.SCORING)
+    model = model_and_pp["model"]
+    config.model = Model(inputs=model.input, outputs=model.layers[config.extract_layer_index].output)
+    config.preprocessing = model_and_pp["preprocessing"]
+    config.model_input_shape = utils.get_model_input_shape(config.model, config.model_folder)
 
-# Model
-model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.SCORING)
-model = model_and_pp["model"]
-preprocessing = model_and_pp["preprocessing"]
 
-model = Model(inputs=model.input, outputs=model.layers[extract_layer_index].output)
-model_input_shape = utils.get_model_input_shape(model, model_folder)
+def load_recipe_params(config):
+    recipe_config = get_recipe_config()
+    config.extract_layer_index = int(recipe_config['extract_layer_index'])
+    config.should_use_gpu = recipe_config.get('should_use_gpu', False)
 
-# Image paths
-images_paths = image_folder.list_paths_in_partition()
+    # gpu
+    config.gpu_options = utils.load_gpu_options(
+        config.should_use_gpu, recipe_config['list_gpu'], recipe_config['gpu_allocation'])
+
+
+def load_images_path(config):
+    config.images_paths = config.image_folder.list_paths_in_partition()
+
+def load_config():
+    config = utils.AttributeDict()
+
+    load_recipe_params(config)
+    load_input_output(config)
+    load_model(config)
+    load_images_path(config)
+
+    return config
 
 ###################################################################################################################
 ## EXTRACTING FEATURES
