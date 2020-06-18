@@ -106,9 +106,10 @@ def load_model_config(model_folder):
 ## BUILD TRAIN/TEST SETS
 ###################################################################################################################
 
-df_train, df_test = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio, random_state=random_seed)
-labels = list(np.unique(label_df[constants.LABEL]))
-n_classes = len(labels)
+def build_train_test_sets(label_df, train_ratio, random_seed):
+    train_df, test_df = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio,
+                                         random_state=random_seed)
+    return train_df, test_df
 
 
 ###################################################################################################################
