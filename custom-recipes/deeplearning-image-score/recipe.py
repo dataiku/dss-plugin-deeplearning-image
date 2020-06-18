@@ -4,6 +4,7 @@ from dataiku.customrecipe import get_recipe_config, get_input_names_for_role, ge
 import constants
 import dl_image_toolbox_utils as utils
 
+
 def load_input_output(config):
     image_folder_input_name = get_input_names_for_role('image_folder')[0]
     config.image_folder = dataiku.Folder(image_folder_input_name)
@@ -58,6 +59,7 @@ def load_config():
     load_images_path(config)
 
     return config
+
 
 def build_output_df(images_paths, predictions):
     output = pd.DataFrame()
