@@ -308,33 +308,66 @@ def get_tensorboard(output_model_folder):
 ###################################################################################################################
 
 
-model.fit_generator(
-    train_generator,
-    steps_per_epoch=nb_steps_per_epoch,
-    epochs=nb_epochs,
-    validation_data=test_generator,
-    validation_steps=nb_validation_steps,
-    callbacks=callback_list,
-    shuffle=False,
-    verbose=2)
+def train_model(config, train_generator, test_generator, callback_list):
+    config.model_and_pp['model'].fit_generator(
+        train_generator,
+        steps_per_epoch=config.nb_steps_per_epoch,
+        epochs=config.nb_epochs,
+        validation_data=test_generator,
+        validation_steps=config.nb_validation_steps,
+        callbacks=callback_list,
+        shuffle=False,
+        verbose=2)
 
 ###################################################################################################################
 ## SAVING NEW CONFIG AND LABELS
 ###################################################################################################################
 
-model_config[constants.RETRAINED] = True
-model_config[constants.TOP_PARAMS] = model_params
-utils.write_config(output_model_folder, model_config)
+def save_config_and_labels(model_weights_path, config, model_config):
+    model_config[constants.RETRAINED] = True
+    model_config[constants.TOP_PARAMS] = config.model_and_pp['model_params']
+    utils.write_config(config.output_model_folder, model_config)
 
-df_labels = pd.DataFrame({"id": range(n_classes), "className": labels})
-with output_model_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+    df_labels = pd.DataFrame({"id": range(config.n_classes), "className": config.labels})
+    with config.output_model_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
         w.write((df_labels.to_csv(index=False)))
-#df_labels.to_csv(utils.get_file_path(output_model_folder_path, constants.MODEL_LABELS_FILE), index=False)
+
+    # This copies a local file to the managed folder
+    with open(model_weights_path) as f:
+        config.output_model_folder.upload_stream(model_weights_path, f)
+    # Computing model info
+    utils.save_model_info(config.output_model_folder)
+
+def get_model_weight_path(config, model_config):
+    return utils.get_weights_path(
+        config.output_model_folder,
+        model_config,
+        suffix=constants.RETRAINED_SUFFIX,
+        should_exist=False
+    )
 
 
-# This copies a local file to the managed folder
-with open(model_weights_path) as f:
-    output_model_folder.upload_stream(model_weights_path, f)
-# Computing model info
-utils.save_model_info(output_model_folder)
+def run():
+    config = load_config()
+    use_gpu = config.should_use_gpu and config.n_gpu > 1
 
+    model_config = load_model_config(config.model_folder)
+    load_model(use_gpu, config)
+
+    compile_model(config.model_and_pp['model'], config.optimizer, config.custom_params_opti, config.learning_rate)
+
+    model_weights_path = get_model_weight_path(config, model_config)
+
+    df_train, df_test = build_train_test_sets(config.label_df, config.train_ratio, config.random_seed)
+    train_gen, test_gen = load_train_test_generator(df_train, df_test, config)
+
+    callback_list = []
+    callback_list.append(get_model_checkpoint(model_weights_path, model_config, config.model_and_pp, use_gpu))
+    if config.use_tensorboard:
+        callback_list.append(get_tensorboard(config.output_model_folder))
+
+    train_model(config, train_gen, test_gen, callback_list)
+    save_config_and_labels(model_weights_path, config, model_config)
+
+
+run()
