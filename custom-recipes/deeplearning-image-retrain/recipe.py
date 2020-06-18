@@ -117,53 +117,54 @@ def build_train_test_sets(label_df, train_ratio, random_seed):
 ###################################################################################################################
 
 # Loading pre-trained model
-def load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config):
+def get_model_and_pp(config):
+    model_and_pp = utils.load_instantiate_keras_model_preprocessing(
+        config.model_folder,
+        goal=constants.RETRAINING,
+        input_shape=config.input_shape,
+        pooling=config.model_pooling,
+        reg=config.model_reg,
+        dropout=config.model_dropout,
+        n_classes=config.n_classes)
+    return model_and_pp
 
-    pooling = recipe_config["model_pooling"]
-    reg = recipe_config["model_reg"]
-    dropout = float(recipe_config["model_dropout"])
 
-    model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.RETRAINING, 
-                                                                    input_shape=input_shape,
-                                                                    pooling=pooling,
-                                                                    reg=reg,
-                                                                    dropout=dropout,
-                                                                    n_classes=n_classes)
-
-    model = model_and_pp["model"]
-    preprocessing = model_and_pp["preprocessing"]
-    model_params = model_and_pp["model_params"]
-
+def set_trainable_layers(model, layer_to_retrain, layer_to_retrain_n=None):
     # CHOOSING LAYER TO RETRAIN
-    layer_to_retrain = recipe_config["layer_to_retrain"]
     print("Will Retrain layer(s) with mode: {}".format(layer_to_retrain))
-    if layer_to_retrain == "all" :
-        for lay in model.layers :
+    if layer_to_retrain == "all":
+        for lay in model.layers:
             lay.trainable = True
-            
-    elif layer_to_retrain == "last" :
-        for lay in model.layers[:-1] :
+
+    elif layer_to_retrain == "last":
+        for lay in model.layers[:-1]:
             lay.trainable = False
         lay = model.layers[-1]
         lay.trainable = True
-        
-    elif layer_to_retrain == "n_last" :
-        n_last = int(recipe_config["layer_to_retrain_n"])
-        for lay in model.layers[:-n_last] :
+
+    elif layer_to_retrain == "n_last":
+        n_last = layer_to_retrain_n
+        for lay in model.layers[:-n_last]:
             lay.trainable = False
-        for lay in model.layers[-n_last:] :
+        for lay in model.layers[-n_last:]:
             lay.trainable = True
 
-    model.summary()
 
-    return model, preprocessing, model_params
-
-if should_use_gpu and n_gpu > 1:
+def load_model_with_gpu(config):
     with tf.device('/cpu:0'):
-        base_model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config)
-    model = multi_gpu_model(base_model, n_gpu)
-else:
-    model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config)
+        config.model_and_pp = get_model_and_pp(config)
+    config.model_and_pp['base_model'] = config.model_and_pp['model']
+    config.model_and_pp['model'] = multi_gpu_model(config.model_and_pp['base_model'], config.n_gpu)
+
+
+def load_model_without_gpu(config):
+    config.model_and_pp = get_model_and_pp(config)
+
+
+def load_model(use_gpu, config):
+    load_model_with_gpu(config) if use_gpu else load_model_without_gpu(config)
+    set_trainable_layers(config.model_and_pp['model'], config.layer_to_retrain, config.layer_to_retrain_n)
+    config.model_and_pp['model'].summary()
 
 ###################################################################################################################
 ## BUILD GENERATORS
