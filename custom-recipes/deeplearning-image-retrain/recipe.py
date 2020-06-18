@@ -16,11 +16,11 @@ import shutil
 import numpy as np
 import dataiku
 
+
 ###################################################################################################################
-## LOADING ALL REQUIRED INFO AND 
+## LOADING ALL REQUIRED INFO AND
 ##      SETTING VARIABLES
 ###################################################################################################################
-
 def load_recipe_config(config):
     recipe_config = get_recipe_config()
 
@@ -102,10 +102,10 @@ def load_model_config(model_folder):
     model_config = config_utils.get_config(model_folder)
     return model_config
 
+
 ###################################################################################################################
 ## BUILD TRAIN/TEST SETS
 ###################################################################################################################
-
 def build_train_test_sets(label_df, train_ratio, random_seed):
     train_df, test_df = train_test_split(label_df, stratify=label_df[constants.LABEL], train_size=train_ratio,
                                          random_state=random_seed)
@@ -115,8 +115,6 @@ def build_train_test_sets(label_df, train_ratio, random_seed):
 ###################################################################################################################
 ## LOAD MODEL
 ###################################################################################################################
-
-# Loading pre-trained model
 def get_model_and_pp(config):
     model_and_pp = utils.load_instantiate_keras_model_preprocessing(
         config.model_folder,
@@ -166,13 +164,12 @@ def load_model(use_gpu, config):
     set_trainable_layers(config.model_and_pp['model'], config.layer_to_retrain, config.layer_to_retrain_n)
     config.model_and_pp['model'].summary()
 
+
 ###################################################################################################################
 ## BUILD GENERATORS
 ## Info: Generators must loop infinitely, each loop yielding the batches of preprocessed data.
 ##       It will be used at each epoch, hence the infinite loop.
 ###################################################################################################################
-
-
 @utils.threadsafe_generator
 def images_generator(image_df, image_folder, batch_size, input_shape, labels, preprocessing, n_classes,
                      use_augmentation=False, extra_images_gen=None, n_augmentation=None):
@@ -244,10 +241,10 @@ def load_train_test_generator(train_df, test_df, config):
     test_gen = get_images_gen(test_df)
     return train_gen, test_gen
 
+
 ###################################################################################################################
 ## COMPILE MODEL
 ###################################################################################################################
-
 def compile_model(model, optimizer, custom_params_opti, learning_rate):
     if optimizer == "adam":
         model_opti_class = optimizers.Adam
@@ -266,10 +263,10 @@ def compile_model(model, optimizer, custom_params_opti, learning_rate):
     model_opti = model_opti_class(**params_opti)
     model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
 
+
 ###################################################################################################################
 ## BUILD MODEL CHECKPOINT
 ###################################################################################################################
-
 def get_model_checkpoint(model_weights_path, model_config, model_and_pp, use_gpu):
     should_save_weights_only = utils.should_save_weights_only(model_config)
 
@@ -290,10 +287,10 @@ def get_model_checkpoint(model_weights_path, model_config, model_and_pp, use_gpu
         )
     return mcheck
 
+
 ###################################################################################################################
 ## TENSORBOARD
 ###################################################################################################################
-
 def get_tensorboard(output_model_folder):
     log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
 
@@ -303,11 +300,10 @@ def get_tensorboard(output_model_folder):
 
     return TensorBoard(log_dir=log_path, write_graph=True)
 
+
 ###################################################################################################################
 ## TRAIN MODEL
 ###################################################################################################################
-
-
 def train_model(config, train_generator, test_generator, callback_list):
     config.model_and_pp['model'].fit_generator(
         train_generator,
@@ -319,10 +315,10 @@ def train_model(config, train_generator, test_generator, callback_list):
         shuffle=False,
         verbose=2)
 
+
 ###################################################################################################################
 ## SAVING NEW CONFIG AND LABELS
 ###################################################################################################################
-
 def save_config_and_labels(model_weights_path, config, model_config):
     model_config[constants.RETRAINED] = True
     model_config[constants.TOP_PARAMS] = config.model_and_pp['model_params']
@@ -337,6 +333,7 @@ def save_config_and_labels(model_weights_path, config, model_config):
         config.output_model_folder.upload_stream(model_weights_path, f)
     # Computing model info
     utils.save_model_info(config.output_model_folder)
+
 
 def get_model_weight_path(config, model_config):
     return utils.get_weights_path(
