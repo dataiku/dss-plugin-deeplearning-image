@@ -21,73 +21,86 @@ import dataiku
 ##      SETTING VARIABLES
 ###################################################################################################################
 
-# Recipe config
-recipe_config = get_recipe_config()
-should_use_gpu = recipe_config.get('should_use_gpu', False)
-list_gpu = recipe_config["list_gpu"]
-gpu_allocation = recipe_config["gpu_allocation"]
-train_ratio = float(recipe_config["train_ratio"])
-input_shape = (int(recipe_config["image_width"]),int(recipe_config["image_height"]),3)
-batch_size = int(recipe_config["batch_size"])
-optimizer = recipe_config["model_optimizer"]
-learning_rate = recipe_config["model_learning_rate"]
-custom_params_opti = recipe_config.get("model_custom_params_opti", [])
-nb_epochs = int(recipe_config["nb_epochs"])
-nb_steps_per_epoch = int(recipe_config["nb_steps_per_epoch"])
-nb_validation_steps = int(recipe_config["nb_validation_steps"])
-data_augmentation = recipe_config["data_augmentation"]
-n_augmentation = int(recipe_config["n_augmentation"])
-custom_params_data_augment = recipe_config.get("model_custom_params_data_augmentation", [])
-tensorboard = recipe_config["tensorboard"]
-random_seed = int(recipe_config["random_seed"])
+def load_recipe_config(config):
+    recipe_config = get_recipe_config()
 
-# gpu
-gpu_options = utils.load_gpu_options(should_use_gpu, list_gpu, gpu_allocation)
-n_gpu = gpu_options.get("n_gpu", 0)
-
-print "GPU OUTPUT "
-print should_use_gpu
-print n_gpu
-print gpu_options
-
-from tensorflow.python.client import device_lib
-print(device_lib.list_local_devices())
-
-if tf.test.gpu_device_name():
-    print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
-else:
-    print("Please install GPU version of TF")
-
-# Folders
-image_folder_input_name = get_input_names_for_role('image_folder')[0]
-image_folder = dataiku.Folder(image_folder_input_name)
+    config.should_use_gpu = recipe_config.get('should_use_gpu', False)
+    config.list_gpu = recipe_config["list_gpu"]
+    config.gpu_allocation = recipe_config["gpu_allocation"]
+    config.train_ratio = float(recipe_config["train_ratio"])
+    config.input_shape = (int(recipe_config["image_width"]), int(recipe_config["image_height"]), 3)
+    config.batch_size = int(recipe_config["batch_size"])
+    config.model_pooling = recipe_config["model_pooling"]
+    config.model_reg = recipe_config["model_reg"]
+    config.model_dropout = float(recipe_config["model_dropout"])
+    config.layer_to_retrain = recipe_config["layer_to_retrain"]
+    config.layer_to_retrain_n = int(recipe_config.get('layer_to_retrain_n', 0))
+    config.optimizer = recipe_config["model_optimizer"]
+    config.learning_rate = recipe_config["model_learning_rate"]
+    config.custom_params_opti = recipe_config.get("model_custom_params_opti", [])
+    config.nb_epochs = int(recipe_config["nb_epochs"])
+    config.nb_steps_per_epoch = int(recipe_config["nb_steps_per_epoch"])
+    config.nb_validation_steps = int(recipe_config["nb_validation_steps"])
+    config.data_augmentation = recipe_config["data_augmentation"]
+    config.n_augmentation = int(recipe_config["n_augmentation"])
+    config.custom_params_data_augment = recipe_config.get("model_custom_params_data_augmentation", [])
+    config.use_tensorboard = recipe_config["tensorboard"]
+    config.random_seed = int(recipe_config["random_seed"])
+    config.gpu_options = utils.load_gpu_options(config.should_use_gpu, config.list_gpu, config.gpu_allocation)
+    config.n_gpu = config.gpu_options.get("n_gpu", 0)
 
 
+def load_input_output(config):
+    image_folder_input_name = get_input_names_for_role('image_folder')[0]
+    config.image_folder = dataiku.Folder(image_folder_input_name)
 
-model_folder_input_name = get_input_names_for_role('model_folder')[0]
-model_folder = dataiku.Folder(model_folder_input_name)
+    model_folder_input_name = get_input_names_for_role('model_folder')[0]
+    config.model_folder = dataiku.Folder(model_folder_input_name)
+
+    output_model_folder_name = get_output_names_for_role('model_output')[0]
+    config.output_model_folder = dataiku.Folder(output_model_folder_name)
 
 
+def load_label_df(config):
+    recipe_config = get_recipe_config()
 
-output_model_folder_name = get_output_names_for_role('model_output')[0]
-output_model_folder = dataiku.Folder(output_model_folder_name)
-output_model_folder_path = output_model_folder.get_path()
-
-
-
-# Label Dataset : Keeping only the two relevant columns
-label_dataset_input_name = get_input_names_for_role('label_dataset')[0]
-label_dataset = dataiku.Dataset(label_dataset_input_name)
-renaming_mapping = {
+    label_dataset_input_name = get_input_names_for_role('label_dataset')[0]
+    config.label_dataset = dataiku.Dataset(label_dataset_input_name)
+    renaming_mapping = {
         recipe_config["col_filename"]: constants.FILENAME,
         recipe_config["col_label"]: constants.LABEL
-}
-label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
+    }
+    config.label_df = config.label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
+    config.labels = list(np.unique(config.label_df[constants.LABEL]))
+    config.n_classes = len(config.labels)
 
 
-# Model config
-utils.save_model_info(model_folder)
-model_config = config_utils.get_config(model_folder)
+def display_gpu_device():
+    print(device_lib.list_local_devices())
+
+    if tf.test.gpu_device_name():
+        print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+    else:
+        print("Please install GPU version of TF")
+
+
+def load_config():
+    config = utils.AttributeDict()
+
+    load_recipe_config(config)
+    load_input_output(config)
+    load_label_df(config)
+
+    display_gpu_device()
+
+    return config
+
+
+def load_model_config(model_folder):
+    # Model config
+    utils.save_model_info(model_folder)
+    model_config = config_utils.get_config(model_folder)
+    return model_config
 
 ###################################################################################################################
 ## BUILD TRAIN/TEST SETS
