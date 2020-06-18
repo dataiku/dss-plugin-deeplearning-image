@@ -5,6 +5,7 @@ from keras.models import Model
 import dl_image_toolbox_utils as utils
 import constants
 
+
 def load_input_output(config):
     image_folder_input_name = get_input_names_for_role('image_folder')[0]
     config.image_folder = dataiku.Folder(image_folder_input_name)
@@ -37,6 +38,7 @@ def load_recipe_params(config):
 def load_images_path(config):
     config.images_paths = config.image_folder.list_paths_in_partition()
 
+
 @utils.log_func(txt='config loading')
 def load_config():
     config = utils.AttributeDict()
@@ -57,9 +59,11 @@ def build_output_df(images_paths, predictions):
     output["error"] = predictions["error"]
     return output
 
+
 @utils.log_func(txt='output dataset writing')
 def write_output_dataset(output_dataset, output_df):
     output_dataset.write_with_schema(pd.DataFrame(output_df))
+
 
 @utils.log_func(txt='recipe')
 def run():
