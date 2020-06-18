@@ -46,6 +46,18 @@
             "mandatory" : true
         },
         
+           {
+            "name": "connectionFolder",
+            "label" : "Connection folder",
+            "type": "STRING",
+            "description":"File with a valid connection",
+            "mandatory" : true,
+            "defaultValue" : "s3-instance-bucket"
+               
+        },
+        
+        
+        
         /* A "SELECT" parameter is a multi-choice selector. Choices are specified using the selectChoice field*/
         {
             "name": "model",

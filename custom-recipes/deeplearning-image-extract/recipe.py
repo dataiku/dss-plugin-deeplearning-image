@@ -8,7 +8,7 @@ import os
 import glob
 import dl_image_toolbox_utils as utils
 import constants
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
+#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 ###################################################################################################################
 ## LOADING ALL REQUIRED INFO AND 
@@ -25,13 +25,13 @@ utils.load_gpu_options(should_use_gpu, recipe_config['list_gpu'], recipe_config[
 # Plugin parameters
 image_folder_input_name = get_input_names_for_role('image_folder')[0]
 image_folder = dataiku.Folder(image_folder_input_name)
-utils.check_managed_folder_filesystem(image_folder)
-image_folder_path = image_folder.get_path()
+
+#image_folder_path = image_folder.get_path()
 
 model_folder_input_name = get_input_names_for_role('model_folder')[0]
 model_folder = dataiku.Folder(model_folder_input_name)
-utils.check_managed_folder_filesystem(model_folder)
-model_folder_path = model_folder.get_path()
+
+#model_folder_path = model_folder.get_path()
 
 output_name = get_output_names_for_role('feature_dataset')[0]
 output_dataset =  dataiku.Dataset(output_name)
@@ -39,15 +39,15 @@ output_dataset =  dataiku.Dataset(output_name)
 
 
 # Model
-model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder_path, goal=constants.SCORING)
+model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.SCORING)
 model = model_and_pp["model"]
 preprocessing = model_and_pp["preprocessing"]
 
 model = Model(inputs=model.input, outputs=model.layers[extract_layer_index].output)
-model_input_shape = utils.get_model_input_shape(model, model_folder_path)
+model_input_shape = utils.get_model_input_shape(model, model_folder)
 
 # Image paths
-images_paths = os.listdir(image_folder_path)
+images_paths = image_folder.list_paths_in_partition()
 
 ###################################################################################################################
 ## EXTRACTING FEATURES
@@ -68,8 +68,8 @@ def get_predictions():
         for index_in_batch, i in enumerate(range(n*batch_size, min((n + 1)*batch_size, num_images))):
             img_path = images_paths[i]
             try:
-                preprocssed_img = utils.preprocess_img(utils.get_file_path(image_folder_path, img_path), model_input_shape, preprocessing)
-                next_batch_list.append(preprocssed_img)
+                preprocessed_img = utils.preprocess_img(image_folder.get_download_stream(img_path), model_input_shape, preprocessing)
+                next_batch_list.append(preprocessed_img)
             except IOError as e:
                 print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
                 error_indices.append(index_in_batch)

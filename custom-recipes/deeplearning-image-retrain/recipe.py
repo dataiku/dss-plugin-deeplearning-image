@@ -1,5 +1,6 @@
 from dataiku.customrecipe import *
 import dl_image_toolbox_utils as utils
+import config_utils as config_utils
 from sklearn.model_selection import train_test_split
 from keras import optimizers, initializers, metrics, regularizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
@@ -44,21 +45,35 @@ random_seed = int(recipe_config["random_seed"])
 gpu_options = utils.load_gpu_options(should_use_gpu, list_gpu, gpu_allocation)
 n_gpu = gpu_options.get("n_gpu", 0)
 
+print "GPU OUTPUT "
+print should_use_gpu
+print n_gpu
+print gpu_options
+
+from tensorflow.python.client import device_lib
+print(device_lib.list_local_devices())
+
+if tf.test.gpu_device_name():
+    print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+else:
+    print("Please install GPU version of TF")
+
 # Folders
 image_folder_input_name = get_input_names_for_role('image_folder')[0]
 image_folder = dataiku.Folder(image_folder_input_name)
-utils.check_managed_folder_filesystem(image_folder)
-image_folder_path = image_folder.get_path()
+
+
 
 model_folder_input_name = get_input_names_for_role('model_folder')[0]
 model_folder = dataiku.Folder(model_folder_input_name)
-utils.check_managed_folder_filesystem(model_folder)
-model_folder_path = model_folder.get_path()
+
+
 
 output_model_folder_name = get_output_names_for_role('model_output')[0]
 output_model_folder = dataiku.Folder(output_model_folder_name)
-utils.check_managed_folder_filesystem(output_model_folder)
 output_model_folder_path = output_model_folder.get_path()
+
+
 
 # Label Dataset : Keeping only the two relevant columns
 label_dataset_input_name = get_input_names_for_role('label_dataset')[0]
@@ -69,8 +84,10 @@ renaming_mapping = {
 }
 label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
 
+
 # Model config
-model_config = utils.get_config(model_folder_path)
+utils.save_model_info(model_folder)
+model_config = config_utils.get_config(model_folder)
 
 ###################################################################################################################
 ## BUILD TRAIN/TEST SETS
@@ -86,13 +103,13 @@ n_classes = len(labels)
 ###################################################################################################################
 
 # Loading pre-trained model
-def load_model_and_apply_recipe_params(model_folder_path, input_shape, n_classes, recipe_config):
+def load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config):
 
     pooling = recipe_config["model_pooling"]
     reg = recipe_config["model_reg"]
     dropout = float(recipe_config["model_dropout"])
 
-    model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder_path, goal=constants.RETRAINING, 
+    model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.RETRAINING, 
                                                                     input_shape=input_shape,
                                                                     pooling=pooling,
                                                                     reg=reg,
@@ -129,10 +146,10 @@ def load_model_and_apply_recipe_params(model_folder_path, input_shape, n_classes
 
 if should_use_gpu and n_gpu > 1:
     with tf.device('/cpu:0'):
-        base_model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder_path, input_shape, n_classes, recipe_config)
+        base_model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config)
     model = multi_gpu_model(base_model, n_gpu)
 else:
-    model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder_path, input_shape, n_classes, recipe_config)
+    model, preprocessing, model_params = load_model_and_apply_recipe_params(model_folder, input_shape, n_classes, recipe_config)
 
 ###################################################################################################################
 ## BUILD GENERATORS
@@ -142,7 +159,7 @@ else:
 
 
 @utils.threadsafe_generator
-def augmentation_generator(df_imgs, image_folder_path, batch_size, n_augmentation, input_shape, labels, preprocessing, TrainImageGen):
+def augmentation_generator(df_imgs, image_folder, batch_size, n_augmentation, input_shape, labels, preprocessing, TrainImageGen):
 
     nb_imgs = df_imgs.shape[0]
     batch_size_adapted = int( batch_size / n_augmentation )
@@ -162,12 +179,12 @@ def augmentation_generator(df_imgs, image_folder_path, batch_size, n_augmentatio
 
                 row = df_imgs_batch.iloc[num_img, :]
                 img_filename = row[constants.FILENAME]
-                img_path = utils.get_file_path(image_folder_path, img_filename)
+                #img_path = utils.get_file_path(image_folder_path, img_filename)
                 label = row[constants.LABEL]
                 label_index = labels.index(label)
                 
                 try: 
-                    x = utils.preprocess_img(img_path, input_shape, preprocessing)
+                    x = utils.preprocess_img(utils.get_cached_file_from_folder(image_folder,img_filename), input_shape, preprocessing)
                     x = np.tile(x, (n_augmentation, 1, 1, 1))
 
                     # TrainImageGen returns infinite loop, each of which yields batch data
@@ -188,7 +205,7 @@ def augmentation_generator(df_imgs, image_folder_path, batch_size, n_augmentatio
 
 
 @utils.threadsafe_generator
-def no_augmentation_generator(df_imgs, image_folder_path, batch_size, input_shape, labels, preprocessing):
+def no_augmentation_generator(df_imgs, image_folder, batch_size, input_shape, labels, preprocessing):
 
     nb_imgs = df_imgs.shape[0]
     nb_batch = int(math.ceil( nb_imgs * 1.0 / batch_size))
@@ -207,11 +224,11 @@ def no_augmentation_generator(df_imgs, image_folder_path, batch_size, input_shap
                 row = df_imgs_batch.iloc[num_img, :]
                 img_filename = row[constants.FILENAME]
 
-                img_path = utils.get_file_path(image_folder_path, img_filename)
+               # img_path = utils.get_file_path(image_folder_path, img_filename)
                 label = row[constants.LABEL]
                 label_index = labels.index(label)
                 try :
-                    x = utils.preprocess_img(img_path, input_shape, preprocessing)
+                    x = utils.preprocess_img(utils.get_cached_file_from_folder(image_folder,img_filename), input_shape, preprocessing)
                     X_batch_list.append(x)
                     y_batch_list.append(label_index)
                 except IOError as e:
@@ -230,11 +247,11 @@ if data_augmentation:
     print("Using data augmentation with {} images generated per training image\n".format(n_augmentation))
     params_data_augment = utils.clean_custom_params(custom_params_data_augment, params_type="Data Augmentation")
     TrainImageGen = ImageDataGenerator(**params_data_augment)
-    train_generator = augmentation_generator(df_train, image_folder_path, batch_size, n_augmentation, input_shape, labels, preprocessing, TrainImageGen)
+    train_generator = augmentation_generator(df_train, image_folder, batch_size, n_augmentation, input_shape, labels, preprocessing, TrainImageGen)
 else:
-    train_generator = no_augmentation_generator(df_train, image_folder_path, batch_size, input_shape, labels, preprocessing)
+    train_generator = no_augmentation_generator(df_train, image_folder, batch_size, input_shape, labels, preprocessing)
 
-test_generator = no_augmentation_generator(df_test, image_folder_path, batch_size, input_shape, labels, preprocessing)
+test_generator = no_augmentation_generator(df_test, image_folder, batch_size, input_shape, labels, preprocessing)
 
 ###################################################################################################################
 ## COMPILE MODEL
@@ -261,11 +278,11 @@ callback_list = []
 ## BUILD MODEL CHECKPOINT
 ###################################################################################################################
 
-model_weights_path = utils.get_weights_path(output_model_folder_path, model_config, suffix=constants.RETRAINED_SUFFIX, should_exist=False)
+model_weights_path = utils.get_weights_path(output_model_folder, model_config, suffix=constants.RETRAINED_SUFFIX, should_exist=False)
 should_save_weights_only = utils.should_save_weights_only(model_config)
 
 if should_use_gpu and n_gpu > 1:
-    mcheck = utils.MultiGPUModelCheckpoint(model_weights_path, base_model, monitor="val_loss", save_best_only=True, save_weights_only=should_save_weights_only)
+    mcheck = MultiGPUModelCheckpoint(model_weights_path, base_model, monitor="val_loss", save_best_only=True, save_weights_only=should_save_weights_only)
 else:
     mcheck = ModelCheckpoint(model_weights_path, monitor="val_loss", save_best_only=True, save_weights_only=should_save_weights_only)
 
@@ -306,10 +323,59 @@ model.fit_generator(
 
 model_config[constants.RETRAINED] = True
 model_config[constants.TOP_PARAMS] = model_params
-utils.write_config(output_model_folder_path, model_config)
+utils.write_config(output_model_folder, model_config)
 
 df_labels = pd.DataFrame({"id": range(n_classes), "className": labels})
-df_labels.to_csv(utils.get_file_path(output_model_folder_path, constants.MODEL_LABELS_FILE), index=False)
+with output_model_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+        w.write((df_labels.to_csv(index=False)))
+#df_labels.to_csv(utils.get_file_path(output_model_folder_path, constants.MODEL_LABELS_FILE), index=False)
 
+
+# This copies a local file to the managed folder
+with open(model_weights_path) as f:
+    output_model_folder.upload_stream(model_weights_path, f)
 # Computing model info
-utils.save_model_info(output_model_folder_path)
+utils.save_model_info(output_model_folder)
+
+
+###############################################################
+## MODEL CHECKPOINT FOR MULTI GPU
+## When using multiple GPUs, we need to save the base model,
+## not the one defined by multi_gpu_model
+## see example: https://keras.io/utils/#multi_gpu_model
+## Therefore, to save the model after each epoch by leveraging 
+## ModelCheckpoint callback, we need to adapt it to save the 
+## base model. To do so, we pass the base model to the callback.
+## Inspired by: 
+##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
+###############################################################
+
+class MultiGPUModelCheckpoint(ModelCheckpoint):
+
+    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
+                 save_best_only=False, save_weights_only=False,
+                 mode='auto', period=1):
+        super(MultiGPUModelCheckpoint, self).__init__(filepath, 
+                                                      monitor=monitor,
+                                                      verbose=verbose,
+                                                      save_best_only=save_best_only,
+                                                      save_weights_only=save_weights_only,
+                                                      mode=mode,
+                                                      period=period)
+        self.base_model = base_model
+
+    def on_epoch_end(self, epoch, logs=None):
+        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
+
+        # First retrieve model
+        model = self.model
+
+        # Then switching model to base model
+        self.model = self.base_model
+
+        # Calling super on_epoch_end
+        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
+
+        # Resetting model afterwards
+        self.model = model
+

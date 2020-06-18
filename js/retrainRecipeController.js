@@ -78,7 +78,7 @@ app.controller('retrainRecipeController', function($scope) {
     var initVariables = function() {
         initVariable("random_seed", 1337);
         initVariable("train_ratio", 0.8);
-        initVariable("gpu_allocation", 0.5);
+        initVariable("gpu_allocation",1.0);
         initVariable("list_gpu", "0");
         initVariable('layer_to_retrain', 'last');
         initVariable('layer_to_retrain_n', 2);
@@ -88,8 +88,8 @@ app.controller('retrainRecipeController', function($scope) {
         initVariable('model_learning_rate', 0.001);
         initVariable('batch_size', 32);
         initVariable('nb_epochs', 10);
-        initVariable('nb_steps_per_epoch', 100);
-        initVariable('nb_validation_steps', 50);
+            initVariable('nb_steps_per_epoch', 50);
+        initVariable('nb_validation_steps', 25);
         initVariable('model_custom_params_opti', []);
         initVariable('n_augmentation', 2);
         initVariable('model_custom_params_data_augmentation', []);

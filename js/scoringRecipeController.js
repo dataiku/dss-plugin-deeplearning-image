@@ -23,7 +23,7 @@ app.controller('scoringRecipeController', function($scope) {
     var initVariables = function() {
         initVariable("max_nb_labels", 5);
         initVariable("min_threshold", 0);
-        initVariable("gpu_allocation", 0.5);
+        initVariable("gpu_allocation",1);
         initVariable("list_gpu", "0");
     };
 
@@ -31,6 +31,7 @@ app.controller('scoringRecipeController', function($scope) {
         $scope.finishedLoading = false;
         initVariables();
         retrieveCanUseGPU();
+        initVariable("should_use_gpu", $scope.canUseGPU);
     };
 
     init();

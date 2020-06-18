@@ -4,14 +4,13 @@ import urllib2, sys
 import requests
 import json
 import os
-import dl_image_toolbox_utils as utils
+import dl_weights_toolbox as utils
 import pandas as pd
 import constants
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
 # fetch information about model and do not make computation
-utils.deactivate_gpu()
 
 class MyRunnable(Runnable):
     """The base interface for a Python runnable"""
@@ -40,6 +39,7 @@ class MyRunnable(Runnable):
 
         # Retrieving parameters
         output_folder_name = self.config.get('outputName', '')
+        connection_folder = self.config.get('connectionFolder', '')
         model = self.config.get('model', '')
         architecture, trained_on = model.split('_')
         
@@ -49,15 +49,15 @@ class MyRunnable(Runnable):
         
         for folder in project.list_managed_folders():
             if output_folder_name == folder['name']:
-                output_folder = project.get_managed_folder(folder['id'])
+                output_folder_dss = project.get_managed_folder(folder['id'])
                 output_folder_found = True
                 break
         
         if not output_folder_found:
-            output_folder = project.create_managed_folder(output_folder_name)
+            output_folder_dss = project.create_managed_folder(output_folder_name,connection_name = connection_folder)
 
-        output_folder_path = dataiku.Folder(output_folder.get_definition()["id"], project_key=self.project_key).get_path()
-        
+      
+        output_folder = dataiku.Folder(output_folder_name,project_key=self.project_key)
         # Building config file
         config = {
             "architecture": architecture,
@@ -76,7 +76,7 @@ class MyRunnable(Runnable):
             else:
                 return last_update_time
 
-        def download_files_to_managed_folder(folder_path, files_info, chunk_size=8192):
+        def download_files_to_managed_folder(output_folder, files_info, chunk_size=8192):
             total_size = 0
             bytes_so_far = 0
             for file_info in files_info:
@@ -85,7 +85,7 @@ class MyRunnable(Runnable):
                 file_info["response"] = response
             update_time = time.time()
             for file_info in files_info:
-                with open(utils.get_file_path(folder_path, file_info["filename"]), "wb") as f:
+                with output_folder.get_writer(file_info["filename"]) as f:
                     for content in file_info["response"].iter_content(chunk_size=chunk_size):
                         bytes_so_far += len(content)
                         # Only scale to 80% because needs to compute model summary after download
@@ -93,9 +93,13 @@ class MyRunnable(Runnable):
                         update_time = update_percent(percent, update_time)
                         f.write(content)
 
+                        
+
+  
+    
         files_to_dl = [
-            {"url": url_to_weights["top"], "filename": utils.get_weights_filename(output_folder_path, config)},
-            {"url": url_to_weights["no_top"], "filename": utils.get_weights_filename(output_folder_path, config, "_notop")}
+            {"url": url_to_weights["top"], "filename": utils.get_weights_filename("", config)},
+            {"url": url_to_weights["no_top"], "filename": utils.get_weights_filename("", config, "_notop")}
         ]
 
         if trained_on == constants.IMAGENET:
@@ -106,19 +110,27 @@ class MyRunnable(Runnable):
             imagenet_class_mapping_temp_file = "imagenet_classes_mapping.json"
             files_to_dl.append({"url": imagenet_id_class_mapping_url, "filename": imagenet_class_mapping_temp_file})
 
-        output_folder.put_file(constants.CONFIG_FILE, json.dumps(config))
-        download_files_to_managed_folder(output_folder_path, files_to_dl)
+        output_folder_dss.put_file(constants.CONFIG_FILE, json.dumps(config))
+        download_files_to_managed_folder(output_folder, files_to_dl)
 
         if trained_on == constants.IMAGENET:
             # Convert class mapping from json to csv
-            mapping_df = pd.read_json(utils.get_file_path(output_folder_path, imagenet_class_mapping_temp_file), orient="index")
+           
+            mapping_df = pd.read_json(output_folder.get_download_stream (imagenet_class_mapping_temp_file), orient="index")
             mapping_df = mapping_df.reset_index()
-            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
-            mapping_df.to_csv(utils.get_file_path(output_folder_path, constants.MODEL_LABELS_FILE), index=False, sep=",")
-            os.remove(utils.get_file_path(output_folder_path, imagenet_class_mapping_temp_file))
+            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]         
+            with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+                w.write((mapping_df.to_csv(index=False,sep=",")))
+            output_folder_dss.delete_file(imagenet_class_mapping_temp_file)
+            
 
+    
+       
+
+
+            
         # Computing model info
-        utils.save_model_info(output_folder_path)
+        #utils.save_model_info(output_folder_path)
         
         return "<span>DONE</span>"
 

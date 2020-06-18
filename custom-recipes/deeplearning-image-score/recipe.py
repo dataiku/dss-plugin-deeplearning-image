@@ -7,6 +7,7 @@ import os
 import glob
 import constants
 import dl_image_toolbox_utils as utils
+import config_utils as config_utils
 
 
 ###################################################################################################################
@@ -26,34 +27,39 @@ utils.load_gpu_options(should_use_gpu, recipe_config['list_gpu'], recipe_config[
 # Plugin parameters
 image_folder_input_name = get_input_names_for_role('image_folder')[0]
 image_folder = dataiku.Folder(image_folder_input_name)
-utils.check_managed_folder_filesystem(image_folder)
-image_folder_path = image_folder.get_path()
+
 
 model_folder_input_name = get_input_names_for_role('model_folder')[0]
 model_folder = dataiku.Folder(model_folder_input_name)
-utils.check_managed_folder_filesystem(model_folder)
-model_folder_path = model_folder.get_path()
+
 
 output_name = get_output_names_for_role('scored_dataset')[0]
 output_dataset =  dataiku.Dataset(output_name)
 
 # Model
-model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder_path, goal=constants.SCORING)
+model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.SCORING)
 model = model_and_pp["model"]
 preprocessing = model_and_pp["preprocessing"]
-model_input_shape = utils.get_model_input_shape(model, model_folder_path)
+model_input_shape = utils.get_model_input_shape(model, model_folder)
 
 # (classId -> Name) mapping
 labels_df = None
-labels_path = utils.get_file_path(model_folder_path, constants.MODEL_LABELS_FILE)
-if os.path.isfile(labels_path):
+
+details_model_label = model_folder.get_path_details(constants.MODEL_LABELS_FILE)
+#if os.path.isfile(labels_path):
+if details_model_label['exists'] and not(details_model_label["directory"]) : 
+    labels_path = model_folder.get_download_stream (constants.MODEL_LABELS_FILE)
+
+
     labels_df = pd.read_csv(labels_path, sep=",")
+    #print labels_df
     labels_df = labels_df.set_index('id')
 else:
     print("------ \n Info: No csv file in the model folder, will not use class names. \n ------")
 
 # Image paths
-images_paths = os.listdir(image_folder_path)
+
+images_paths = image_folder.list_paths_in_partition()
 
 ###################################################################################################################
 ## COMPUTING SCORE
@@ -74,7 +80,7 @@ def predict(limit = 5, min_threshold = 0):
         for index_in_batch, i in enumerate(range(n*batch_size, min((n+1)*batch_size, num_images))):
             img_path = images_paths[i]
             try:
-                preprocessed_img = utils.preprocess_img(utils.get_file_path(image_folder_path, img_path), model_input_shape, preprocessing)
+                preprocessed_img = utils.preprocess_img(image_folder.get_download_stream(img_path), model_input_shape, preprocessing)
                 next_batch_list.append(preprocessed_img)
             except IOError as e:
                 print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))

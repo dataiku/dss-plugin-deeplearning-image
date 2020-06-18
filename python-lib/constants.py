@@ -20,3 +20,5 @@ FILENAME = "__dku__image_filename"
 MODEL_LABELS_FILE = "model_labels.csv"
 PLUGIN_NAME = "dl-image-toolbox"
 TENSORFLOW_VERSION_FOR_TENSORBOARD="tensorflow==1.4.0"
+ENV_NAME_GPU = 'plugin_dl-image-gpu-api_node'
+ENV_NAME_CPU = 'plugin_dl-image-cpu-api_node'
