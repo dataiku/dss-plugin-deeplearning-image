@@ -411,6 +411,45 @@ def get_predictions(model, batch, limit=5, min_threshold=0, labels_df=None):
             return str(index)
     return [get_ordered_dict({id_pred(i): float(prediction[i]) for i in prediction.argsort()[-limit:] if float(prediction[i]) >= min_threshold}) for prediction in predictions]
 
+def predict(config, limit=5, min_threshold=0, labelize=True):
+    batch_size = 100
+    n = 0
+    results = {"prediction": [], "error": []}
+    num_images = len(config.images_paths)
+    labels_df = config.labels_df if 'labels_df' in config else None
+    while True:
+        if (n * batch_size) >= num_images:
+            break
+
+        next_batch_list = []
+        error_indices = []
+        for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
+            img_path = config.images_paths[i]
+            try:
+                preprocessed_img = preprocess_img(
+                    img_path=config.image_folder.get_download_stream(img_path),
+                    img_shape=config.model_input_shape,
+                    preprocessing=config.preprocessing)
+                next_batch_list.append(preprocessed_img)
+            except IOError as e:
+                print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                error_indices.append(index_in_batch)
+        next_batch = np.array(next_batch_list)
+
+        prediction_batch = get_predictions(config.model, next_batch, limit, min_threshold, labels_df,
+                                           labelize=labelize)
+        error_batch = [0] * len(prediction_batch)
+
+        for err_index in error_indices:
+            prediction_batch.insert(err_index, None)
+            error_batch.insert(err_index, 1)
+
+        results["prediction"].extend(prediction_batch)
+        results["error"].extend(error_batch)
+        n += 1
+        print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+    return results
+
 def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 

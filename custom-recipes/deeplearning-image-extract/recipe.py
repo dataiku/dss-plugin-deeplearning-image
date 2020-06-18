@@ -47,62 +47,25 @@ def load_config():
 
     return config
 
-###################################################################################################################
-## EXTRACTING FEATURES
-###################################################################################################################
 
-# Helper for predicting
-def get_predictions():
-    batch_size = 100
-    n = 0
-    results = {"prediction": [], "error": []}
-    num_images = len(images_paths)
-    while True:
-        if (n * batch_size) >= num_images:
-            break
+def build_output_df(images_paths, predictions):
+    output = pd.DataFrame()
+    output["images"] = images_paths
+    print("------->" + str(output))
+    output["prediction"] = predictions["prediction"]
+    output["error"] = predictions["error"]
+    return output
 
-        next_batch_list = []
-        error_indices = []
-        for index_in_batch, i in enumerate(range(n*batch_size, min((n + 1)*batch_size, num_images))):
-            img_path = images_paths[i]
-            try:
-                preprocessed_img = utils.preprocess_img(image_folder.get_download_stream(img_path), model_input_shape, preprocessing)
-                next_batch_list.append(preprocessed_img)
-            except IOError as e:
-                print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
-                error_indices.append(index_in_batch)
-        next_batch = np.array(next_batch_list)
 
-        prediction_batch = model.predict(next_batch).tolist()
-        error_batch = [0] * len(prediction_batch)
+def write_output_dataset(output_dataset, output_df):
+    output_dataset.write_with_schema(pd.DataFrame(output_df))
 
-        for err_index in error_indices:
-            prediction_batch.insert(err_index, None)
-            error_batch.insert(err_index, 1)
 
-        results["prediction"].extend(prediction_batch)
-        results["error"].extend(error_batch)
-        n+=1
-        print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
-    return results
+def run():
+    config = load_config()
+    predictions = utils.predict(config, labelize=False)
+    output_df = build_output_df(config.images_paths, predictions)
+    write_output_dataset(config.output_dataset, output_df)
 
-# Make the predictions
-print("------ \n Info: Start predicting \n ------")
-predictions = get_predictions()
-print("------ \n Info: Finished predicting \n ------")
 
-###################################################################################################################
-## SAVING RESULTS
-###################################################################################################################
- 
-# Prepare results
-output = pd.DataFrame()
-output["images"] = images_paths
-print("------->" + str(output))
-output["prediction"] = predictions["prediction"]
-output["error"] = predictions["error"]
-
-# Write to output dataset    
-print("------ \n Info: Writing to output dataset \n ------")
-output_dataset.write_with_schema(pd.DataFrame(output))
-print("------ \n Info: END of recipe \n ------")
+run()
