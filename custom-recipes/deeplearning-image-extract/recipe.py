@@ -1,14 +1,9 @@
 import dataiku
 import pandas as pd
-from dataiku.customrecipe import *
-from keras.models import load_model, Model
-import numpy as np
-import json
-import os
-import glob
+from dataiku.customrecipe import get_recipe_config, get_input_names_for_role, get_output_names_for_role
+from keras.models import Model
 import dl_image_toolbox_utils as utils
 import constants
-#os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
 ###################################################################################################################
 ## LOADING ALL REQUIRED INFO AND 
