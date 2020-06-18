@@ -401,6 +401,15 @@ def get_cached_file_from_folder(folder, file_path) :
 ###################################################################################################################
 ## MISC.
 ###################################################################################################################
+def log_func(txt):
+    def inner(f):
+        def wrapper(*args, **kwargs):
+            print('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            res = f(*args, **kwargs)
+            print('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            return res
+        return wrapper
+    return inner
 
 def get_predictions(model, batch, limit=5, min_threshold=0, labels_df=None):
     predictions = model.predict(batch)

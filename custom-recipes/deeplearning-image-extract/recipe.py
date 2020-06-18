@@ -37,6 +37,7 @@ def load_recipe_params(config):
 def load_images_path(config):
     config.images_paths = config.image_folder.list_paths_in_partition()
 
+@utils.log_func(txt='config loading')
 def load_config():
     config = utils.AttributeDict()
 
@@ -56,11 +57,11 @@ def build_output_df(images_paths, predictions):
     output["error"] = predictions["error"]
     return output
 
-
+@utils.log_func(txt='output dataset writing')
 def write_output_dataset(output_dataset, output_df):
     output_dataset.write_with_schema(pd.DataFrame(output_df))
 
-
+@utils.log_func(txt='recipe')
 def run():
     config = load_config()
     predictions = utils.predict(config, labelize=False)
