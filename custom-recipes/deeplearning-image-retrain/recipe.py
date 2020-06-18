@@ -248,22 +248,23 @@ def load_train_test_generator(train_df, test_df, config):
 ## COMPILE MODEL
 ###################################################################################################################
 
+def compile_model(model, optimizer, custom_params_opti, learning_rate):
+    if optimizer == "adam":
+        model_opti_class = optimizers.Adam
+    elif optimizer == "adagrad":
+        model_opti_class = optimizers.Adagrad
+    elif optimizer == "sgd":
+        model_opti_class = optimizers.SGD
+    else:
+        print("Optimizer not supporter: {}. Applying adam.".format(optimizer))
+        model_opti_class = optimizers.Adam
 
-if optimizer == "adam":
-    model_opti_class = optimizers.Adam
-elif optimizer == "adagrad":
-    model_opti_class = optimizers.Adagrad
-elif optimizer == "sgd":
-    model_opti_class = optimizers.SGD
+    # Cleaning custom parameters
+    params_opti = utils.clean_custom_params(custom_params_opti)
+    params_opti["lr"] = learning_rate
 
-# Cleaning custom parameters
-params_opti = utils.clean_custom_params(custom_params_opti)
-params_opti["lr"] = learning_rate
-
-model_opti = model_opti_class(**params_opti)
-model.compile(optimizer=model_opti, loss='categorical_crossentropy',metrics=['accuracy'])
-
-callback_list = []
+    model_opti = model_opti_class(**params_opti)
+    model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
 
 ###################################################################################################################
 ## BUILD MODEL CHECKPOINT
