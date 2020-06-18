@@ -4,57 +4,60 @@ from dataiku.customrecipe import get_recipe_config, get_input_names_for_role, ge
 import constants
 import dl_image_toolbox_utils as utils
 
+def load_input_output(config):
+    image_folder_input_name = get_input_names_for_role('image_folder')[0]
+    config.image_folder = dataiku.Folder(image_folder_input_name)
 
-###################################################################################################################
-## LOADING ALL REQUIRED INFO AND 
-##      SETTING VARIABLES
-###################################################################################################################
+    model_folder_input_name = get_input_names_for_role('model_folder')[0]
+    config.model_folder = dataiku.Folder(model_folder_input_name)
 
-# Config
-recipe_config = get_recipe_config()
-max_nb_labels = int(recipe_config['max_nb_labels'])
-min_threshold = float(recipe_config['min_threshold'])
-should_use_gpu = recipe_config.get('should_use_gpu', False)
-
-# gpu
-utils.load_gpu_options(should_use_gpu, recipe_config['list_gpu'], recipe_config['gpu_allocation'])
-
-# Plugin parameters
-image_folder_input_name = get_input_names_for_role('image_folder')[0]
-image_folder = dataiku.Folder(image_folder_input_name)
+    output_name = get_output_names_for_role('scored_dataset')[0]
+    config.output_dataset = dataiku.Dataset(output_name)
 
 
-model_folder_input_name = get_input_names_for_role('model_folder')[0]
-model_folder = dataiku.Folder(model_folder_input_name)
+def load_model(config):
+    model_and_pp = utils.load_instantiate_keras_model_preprocessing(config.model_folder, goal=constants.SCORING)
+    config.model = model_and_pp["model"]
+    config.preprocessing = model_and_pp["preprocessing"]
+    config.model_input_shape = utils.get_model_input_shape(config.model, config.model_folder)
 
 
-output_name = get_output_names_for_role('scored_dataset')[0]
-output_dataset =  dataiku.Dataset(output_name)
+def load_recipe_params(config):
+    recipe_config = get_recipe_config()
+    config.max_nb_labels = int(recipe_config['max_nb_labels'])
+    config.min_threshold = float(recipe_config['min_threshold'])
+    config.should_use_gpu = recipe_config.get('should_use_gpu', False)
 
-# Model
-model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder, goal=constants.SCORING)
-model = model_and_pp["model"]
-preprocessing = model_and_pp["preprocessing"]
-model_input_shape = utils.get_model_input_shape(model, model_folder)
-
-# (classId -> Name) mapping
-labels_df = None
-
-details_model_label = model_folder.get_path_details(constants.MODEL_LABELS_FILE)
-#if os.path.isfile(labels_path):
-if details_model_label['exists'] and not(details_model_label["directory"]) : 
-    labels_path = model_folder.get_download_stream (constants.MODEL_LABELS_FILE)
+    # gpu
+    config.gpu_options = utils.load_gpu_options(
+        config.should_use_gpu, recipe_config['list_gpu'], recipe_config['gpu_allocation'])
 
 
-    labels_df = pd.read_csv(labels_path, sep=",")
-    #print labels_df
-    labels_df = labels_df.set_index('id')
-else:
-    print("------ \n Info: No csv file in the model folder, will not use class names. \n ------")
+def load_labels_df(config):
+    details_model_label = config.model_folder.get_path_details(constants.MODEL_LABELS_FILE)
+    if details_model_label['exists'] and not details_model_label["directory"]:
+        labels_path = config.model_folder.get_download_stream(constants.MODEL_LABELS_FILE)
+        config.labels_df = pd.read_csv(labels_path, sep=",").set_index('id')
+    else:
+        print("------ \n Info: No csv file in the model folder, will not use class names. \n ------")
+        config.labels_df = None
 
-# Image paths
 
-images_paths = image_folder.list_paths_in_partition()
+def load_images_path(config):
+    config.images_paths = config.image_folder.list_paths_in_partition()
+
+
+@utils.log_func(txt='config loading')
+def load_config():
+    config = utils.AttributeDict()
+
+    load_recipe_params(config)
+    load_input_output(config)
+    load_model(config)
+    load_labels_df(config)
+    load_images_path(config)
+
+    return config
 
 ###################################################################################################################
 ## COMPUTING SCORE
