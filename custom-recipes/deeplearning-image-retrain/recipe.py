@@ -270,29 +270,38 @@ def compile_model(model, optimizer, custom_params_opti, learning_rate):
 ## BUILD MODEL CHECKPOINT
 ###################################################################################################################
 
-model_weights_path = utils.get_weights_path(output_model_folder, model_config, suffix=constants.RETRAINED_SUFFIX, should_exist=False)
-should_save_weights_only = utils.should_save_weights_only(model_config)
+def get_model_checkpoint(model_weights_path, model_config, model_and_pp, use_gpu):
+    should_save_weights_only = utils.should_save_weights_only(model_config)
 
-if should_use_gpu and n_gpu > 1:
-    mcheck = MultiGPUModelCheckpoint(model_weights_path, base_model, monitor="val_loss", save_best_only=True, save_weights_only=should_save_weights_only)
-else:
-    mcheck = ModelCheckpoint(model_weights_path, monitor="val_loss", save_best_only=True, save_weights_only=should_save_weights_only)
-
-callback_list.append(mcheck)
+    if use_gpu:
+        mcheck = utils.MultiGPUModelCheckpoint(
+            filepath=model_weights_path,
+            base_model=model_and_pp['base_model'],
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=should_save_weights_only
+        )
+    else:
+        mcheck = ModelCheckpoint(
+            filepath=model_weights_path,
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=should_save_weights_only
+        )
+    return mcheck
 
 ###################################################################################################################
 ## TENSORBOARD
 ###################################################################################################################
 
-if tensorboard:
-    log_path = utils.get_file_path(output_model_folder_path, constants.TENSORBOARD_LOGS)
+def get_tensorboard(output_model_folder):
+    log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
 
     # If already folder at loger_path, delete it
     if os.path.isdir(log_path):
         shutil.rmtree(log_path)
 
-    tsboard = TensorBoard(log_dir=log_path, write_graph=True)
-    callback_list.append(tsboard)
+    return TensorBoard(log_dir=log_path, write_graph=True)
 
 ###################################################################################################################
 ## TRAIN MODEL
