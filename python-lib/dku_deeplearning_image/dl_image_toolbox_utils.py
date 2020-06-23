@@ -11,6 +11,7 @@ import json
 from collections import OrderedDict
 import StringIO
 import numpy as np
+from tensorflow.python.client import device_lib
 
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
@@ -387,6 +388,7 @@ def safe_str(val):
             return val.encode("utf-8")
         else:
             return str(val)
+
 def get_cached_file_from_folder(folder, file_path) :
     
     filename = file_path.replace('/','_')
@@ -494,6 +496,13 @@ def clean_custom_params(custom_params, params_type=""):
         value = string_to_arg(p["value"])
         cleaned_params[name] = value
     return cleaned_params
+
+def display_gpu_device():
+    print(device_lib.list_local_devices())
+    if tf.test.gpu_device_name():
+        print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+    else:
+        print("Please install GPU version of TF")
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR

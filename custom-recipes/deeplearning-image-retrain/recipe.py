@@ -50,17 +50,6 @@ def load_recipe_config(config):
     config.n_gpu = config.gpu_options.get("n_gpu", 0)
 
 
-def load_input_output(config):
-    image_folder_input_name = get_input_names_for_role('image_folder')[0]
-    config.image_folder = dataiku.Folder(image_folder_input_name)
-
-    model_folder_input_name = get_input_names_for_role('model_folder')[0]
-    config.model_folder = dataiku.Folder(model_folder_input_name)
-
-    output_model_folder_name = get_output_names_for_role('model_output')[0]
-    config.output_model_folder = dataiku.Folder(output_model_folder_name)
-
-
 def load_label_df(config):
     recipe_config = get_recipe_config()
 
@@ -75,9 +64,21 @@ def load_label_df(config):
     config.n_classes = len(config.labels)
 
 
+def load_input_output(config):
+    image_folder_input_name = get_input_names_for_role('image_folder')[0]
+    config.image_folder = dataiku.Folder(image_folder_input_name)
+
+    model_folder_input_name = get_input_names_for_role('model_folder')[0]
+    config.model_folder = dataiku.Folder(model_folder_input_name)
+
+    load_label_df(config)
+
+    output_model_folder_name = get_output_names_for_role('model_output')[0]
+    config.output_model_folder = dataiku.Folder(output_model_folder_name)
+
+
 def display_gpu_device():
     print(device_lib.list_local_devices())
-
     if tf.test.gpu_device_name():
         print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
     else:
@@ -89,7 +90,6 @@ def load_config():
 
     load_recipe_config(config)
     load_input_output(config)
-    load_label_df(config)
 
     display_gpu_device()
 
