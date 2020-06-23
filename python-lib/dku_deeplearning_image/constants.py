@@ -1,5 +1,3 @@
-from enum import Enum, auto
-
 RESNET = "resnet"
 XCEPTION = "xception"
 INCEPTIONV3 = "inceptionv3"
@@ -24,18 +22,5 @@ PLUGIN_NAME = "dl-image-toolbox"
 TENSORFLOW_VERSION_FOR_TENSORBOARD="tensorflow==1.4.0"
 ENV_NAME_GPU = 'plugin_dl-image-gpu-api_node'
 ENV_NAME_CPU = 'plugin_dl-image-cpu-api_node'
-
-
-class Recipe(Enum):
-    EXTRACT = {
-        'name': 'extract',
-        'output_role': 'feature_dataset'
-    }
-    RETRAIN = {
-        'name': 'retrain',
-        'output_role': 'model_output'
-    }
-    SCORE = {
-        'name': 'score',
-        'output_role': 'scored_dataset'
-    }
+PREDICTION_BATCH_SIZE = 100
+DEFAULT_PRED_LIMIT = 5

@@ -187,8 +187,7 @@ def images_generator(image_df, image_folder, batch_size, input_shape, labels, pr
             X_batch_list = []
             y_batch_list = []
 
-            for num_img in range(n_images_batch):
-                row = images_df_batch.iloc[num_img, :]
+            for index, row in images_df_batch.iterrows():
                 img_filename = row[constants.FILENAME]
                 label = row[constants.LABEL]
                 label_index = labels.index(label)

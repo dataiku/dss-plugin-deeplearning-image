@@ -2,6 +2,8 @@ import dl_image_toolbox_utils as utils
 from keras.models import Model
 import tensorflow as tf
 import constants
+from sklearn.model_selection import train_test_split
+from keras.utils.training_utils import multi_gpu_model
 
 
 class DkuModel:
@@ -9,7 +11,8 @@ class DkuModel:
         self.config = config
 
     def load(self, **kwargs):
-        model_and_pp = utils.load_instantiate_keras_model_preprocessing(**kwargs)
+        with tf.device('/cpu:0'):
+            model_and_pp = utils.load_instantiate_keras_model_preprocessing(**kwargs)
         self.base_model = model_and_pp["model"]
         self.preprocessing = model_and_pp["preprocessing"]
         self.model_params = model_and_pp["model_params"]
@@ -18,9 +21,15 @@ class DkuModel:
             mf_path=self.config.model_folder
         )
 
+    def get_name(self):
+        return self.config.name
+
+
 class ExtractModel(DkuModel):
     def __init__(self, config):
         super().__init__(config)
+        self.features = None
+        self.model = None
 
     def load(self):
         super().load(
@@ -32,68 +41,83 @@ class ExtractModel(DkuModel):
             outputs=self.base_model.layers[self.config.extract_layer_index].output
         )
 
+    def extract_features(self, images_folder):
+        images_paths = images_folder.list_paths_in_partition()
+        self.features = utils.score(
+            dku_model=self,
+            images_folder=images_folder,
+            images_paths=images_paths
+        )
+
+
 class ScoreModel(DkuModel):
     def __init__(self, config):
         super().__init__(config)
+        self.predictions = None
+        self.model = None
 
     def load(self):
         super().load(
             mf_path=self.config.model_folder,
             goal=constants.SCORING
+        )
+        self.model = self.base_model
+
+    def classify(self, images_folder):
+        images_paths = images_folder.list_paths_in_partition()
+        self.predictions = utils.score(
+            dku_model=self,
+            images_folder=images_folder,
+            images_paths=images_paths,
+            limit=self.config.limit,
+            min_threshold=self.config.min_threshold,
+            labels_df=self.config.labels_df
         )
 
 
 class RetrainModel(DkuModel):
     def __init__(self, config):
         super().__init__(config)
+        self.model = None
 
-    def load(self):
+    def _load_model_and_pp(self):
         super().load(
             mf_path=self.config.model_folder,
-            goal=constants.SCORING
-        )
-
-    def get_model_and_pp(self):
-        model_and_pp = utils.load_instantiate_keras_model_preprocessing(
-            config.model_folder,
             goal=constants.RETRAINING,
-            input_shape=config.input_shape,
-            pooling=config.model_pooling,
-            reg=config.model_reg,
-            dropout=config.model_dropout,
-            n_classes=config.n_classes)
-        return model_and_pp
+            input_shape=self.config.input_shape,
+            pooling=self.config.model_pooling,
+            reg=self.config.model_reg,
+            dropout=self.config.model_dropout,
+            n_classes=self.config.n_classes)
 
-    def set_trainable_layers(self, layer_to_retrain, layer_to_retrain_n=None):
-        # CHOOSING LAYER TO RETRAIN
-        print("Will Retrain layer(s) with mode: {}".format(layer_to_retrain))
-        if layer_to_retrain == "all":
-            for lay in model.layers:
-                lay.trainable = True
+    def _set_trainable_layers(self):
+        print("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
+        layers = self.model.layers
+        if self.config.layer_to_retrain == "all":
+            n_last = len(layers)
+        elif self.config.layer_to_retrain == "last":
+            n_last = 1
+        elif self.config.layer_to_retrain == "n_last":
+            n_last = self.config.layer_to_retrain_n
+        else:
+            n_last = 0
 
-        elif layer_to_retrain == "last":
-            for lay in model.layers[:-1]:
-                lay.trainable = False
-            lay = model.layers[-1]
-            lay.trainable = True
+        for i, lay in enumerate(layers):
+            lay.trainable = i >= (len(layers) - n_last)
 
-        elif layer_to_retrain == "n_last":
-            n_last = layer_to_retrain_n
-            for lay in model.layers[:-n_last]:
-                lay.trainable = False
-            for lay in model.layers[-n_last:]:
-                lay.trainable = True
+    def _build_train_test_sets(self):
+        train_df, test_df = train_test_split(
+            self.config.label_df,
+            stratify=self.config.label_df[constants.LABEL],
+            train_size=self.config.train_ratio,
+            random_state=self.config.random_seed)
+        return train_df, test_df
 
-    def _load_model_with_gpu(self):
-        with tf.device('/cpu:0'):
-            config.model_and_pp = get_model_and_pp(config)
-        config.model_and_pp['base_model'] = config.model_and_pp['model']
-        config.model_and_pp['model'] = multi_gpu_model(config.model_and_pp['base_model'], config.n_gpu)
+    def load(self):
+        self._load_model_and_pp()
+        self.model = multi_gpu_model(self.base_model, self.config.n_gpu) if self.config.use_gpu else self.base_model
+        self._set_trainable_layers()
+        self.model.summary()
 
-    def load_model_without_gpu(self):
-        config.model_and_pp = get_model_and_pp(config)
-
-    def load_model(self):
-        load_model_with_gpu(config) if use_gpu else load_model_without_gpu(config)
-        set_trainable_layers(config.model_and_pp['model'], config.layer_to_retrain, config.layer_to_retrain_n)
-        config.model_and_pp['model'].summary()
+    def retrain(self, images_folder):
+        pass

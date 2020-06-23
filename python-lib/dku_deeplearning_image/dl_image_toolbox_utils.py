@@ -315,6 +315,7 @@ def enrich_model(base_model, pooling, dropout, reg, n_classes, params, verbose):
 ## GPU
 ###################################################################################################################
 
+# TODO: Rename this function as it has a lot of border effects
 def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
     gpu_options = {}
     print "load_gpu_options"
@@ -413,42 +414,51 @@ def log_func(txt):
         return wrapper
     return inner
 
-def get_predictions(model, batch, limit=5, min_threshold=0, labels_df=None):
-    predictions = model.predict(batch)
-    def id_pred(index):
-        if labels_df is not None:
-            return labels_df.loc[index].className
-        else:
-            return str(index)
-    return [get_ordered_dict({id_pred(i): float(prediction[i]) for i in prediction.argsort()[-limit:] if float(prediction[i]) >= min_threshold}) for prediction in predictions]
+def format_predictions_output(predictions, classify=False, labels_df=None, limit=None, min_threshold=None):
+    if not classify:
+        return predictions.tolist()
+    formatted_predictions = []
+    id_pred = lambda index: labels_df.loc[index].className if labels_df else str(index)
+    for pred in predictions:
+        formatted_pred = get_ordered_dict(
+            {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
+        formatted_predictions.append(formatted_pred)
+    return formatted_predictions
 
-def predict(config, limit=5, min_threshold=0, labelize=True):
-    batch_size = 100
+def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, labels_df=None):
+    predictions = model.predict(batch)
+    return format_predictions_output(predictions, labels_df, limit, min_threshold)
+
+def score(dku_model, images_folder, images_paths, limit, min_threshold, labels_df=None):
+    batch_size = constants.PREDICTION_BATCH_SIZE
     n = 0
     results = {"prediction": [], "error": []}
-    num_images = len(config.images_paths)
-    labels_df = config.labels_df if 'labels_df' in config else None
+    num_images = len(images_paths)
     while True:
-        if (n * batch_size) >= num_images:
-            break
-
-        next_batch_list = []
-        error_indices = []
+        if (n * batch_size) >= num_images: break
+        next_batch_list, error_indices = [], []
         for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
-            img_path = config.images_paths[i]
+            img_path = images_paths[i]
             try:
                 preprocessed_img = preprocess_img(
-                    img_path=config.image_folder.get_download_stream(img_path),
-                    img_shape=config.model_input_shape,
-                    preprocessing=config.preprocessing)
+                    img_path=images_folder.get_download_stream(img_path),
+                    img_shape=dku_model.model_input_shape,
+                    preprocessing=dku_model.preprocessing
+                )
                 next_batch_list.append(preprocessed_img)
             except IOError as e:
                 print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
                 error_indices.append(index_in_batch)
         next_batch = np.array(next_batch_list)
 
-        prediction_batch = get_predictions(config.model, next_batch, limit, min_threshold, labels_df,
-                                           labelize=labelize)
+        prediction_batch = get_predictions(
+            model=dku_model.model,
+            batch=next_batch,
+            classify=dku_model.get_name() == 'score',
+            limit=limit,
+            min_threshold=min_threshold,
+            labels_df=labels_df
+        )
         error_batch = [0] * len(prediction_batch)
 
         for err_index in error_indices:
