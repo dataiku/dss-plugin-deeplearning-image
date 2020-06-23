@@ -97,10 +97,8 @@ def load_config():
 
 
 def load_model_config(model_folder):
-    # Model config
     utils.save_model_info(model_folder)
-    model_config = config_utils.get_config(model_folder)
-    return model_config
+    return config_utils.get_config(model_folder)
 
 
 ###################################################################################################################

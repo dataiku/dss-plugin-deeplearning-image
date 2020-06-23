@@ -101,9 +101,7 @@ def get_weights_urls(architecture, trained_on):
         return {}
 
 def should_save_weights_only(config):
-    if config["architecture"] in build_keras_application().keys():
-        return True
-    return False
+    return config["architecture"] in build_keras_application().keys()
 
 ###############################################################
 ## EXTRACT INFO FROM MODEL (SUMMARY AND LAYERS)
@@ -148,10 +146,6 @@ def save_model_info(mf_path):
     
     with mf_path.get_writer(constants.MODEL_INFO_FILE) as w:
         w.write(json.dumps(model_info))
-
-    #with open(get_file_path(mf_path, constants.MODEL_INFO_FILE), 'w') as f:
-     #   json.dump(model_info, f)
-
 
 
 def compute_model_info(mf_path, goal):

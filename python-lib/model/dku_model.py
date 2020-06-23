@@ -4,6 +4,7 @@ import tensorflow as tf
 import constants
 from sklearn.model_selection import train_test_split
 from keras.utils.training_utils import multi_gpu_model
+from keras import optimizers
 
 
 class DkuModel:
@@ -113,11 +114,53 @@ class RetrainModel(DkuModel):
             random_state=self.config.random_seed)
         return train_df, test_df
 
+    def _get_optimizer_class(self, optimizer):
+        if optimizer == "adam":
+            model_opti_class = optimizers.Adam
+        elif optimizer == "adagrad":
+            model_opti_class = optimizers.Adagrad
+        elif optimizer == "sgd":
+            model_opti_class = optimizers.SGD
+        else:
+            print("Optimizer not supporter: {}. Applying adam.".format(optimizer))
+            model_opti_class = optimizers.Adam
+        return model_opti_class
+
+    def _get_model_checkpoint(self, model_weights_path, model_config, model_and_pp, use_gpu):
+        should_save_weights_only = utils.should_save_weights_only(model_config)
+
+        if use_gpu:
+            mcheck = utils.MultiGPUModelCheckpoint(
+                filepath=model_weights_path,
+                base_model=model_and_pp['base_model'],
+                monitor="val_loss",
+                save_best_only=True,
+                save_weights_only=should_save_weights_only
+            )
+        else:
+            mcheck = ModelCheckpoint(
+                filepath=model_weights_path,
+                monitor="val_loss",
+                save_best_only=True,
+                save_weights_only=should_save_weights_only
+            )
+        return mcheck
+
     def load(self):
         self._load_model_and_pp()
         self.model = multi_gpu_model(self.base_model, self.config.n_gpu) if self.config.use_gpu else self.base_model
         self._set_trainable_layers()
         self.model.summary()
+
+    def compile(self, optimizer, custom_params_opti, learning_rate):
+        model_opti_class = self._get_optimizer_class(optimizer)
+
+        # Cleaning custom parameters
+        params_opti = utils.clean_custom_params(custom_params_opti)
+        params_opti["lr"] = learning_rate
+
+        model_opti = model_opti_class(**params_opti)
+        self.model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
 
     def retrain(self, images_folder):
         pass
