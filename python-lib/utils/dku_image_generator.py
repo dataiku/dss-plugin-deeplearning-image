@@ -3,7 +3,8 @@ import numpy as np
 import constants
 import math
 
-class DkuImageGenrator:
+
+class DkuImageGenerator:
     def __init__(self, images_folder, labels, input_shape, batch_size, preprocessing,
                  use_augmentation, extra_images_gen=None, n_augm=None):
         self.images_folder = images_folder

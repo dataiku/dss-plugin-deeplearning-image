@@ -16,7 +16,6 @@ def can_use_gpu():
 
     dists = [d.project_name for d in pkg_resources.working_set]
     return True
-   #return "tensorflow-gpu" in dists
     
 def get_model_info(model_folder, goal):
     
@@ -24,10 +23,6 @@ def get_model_info(model_folder, goal):
     if '/'+constants.MODEL_INFO_FILE  in model_folder.list_paths_in_partition() : 
         model_info = json.loads(model_folder.get_download_stream( constants.MODEL_INFO_FILE).read())
         return model_info[goal]
-   # if os.path.isfile(get_file_path(mf_path, constants.MODEL_INFO_FILE)):
-    #    model_info = json.loads(open(get_file_path(mf_path, constants.MODEL_INFO_FILE)).read())
-     #   return model_info[goal]
     else:
-        #needs Keras and so GPU for the GPU version. GPU might not be available on DSS side 
+        #needs Keras and so GPU for the GPU version. GPU might not be available on DSS side
         return { "summary" : "Not Available before 1st run", "layers" : "Not Available before 1st run" }
-        #return compute_model_info(model_folder, goal)

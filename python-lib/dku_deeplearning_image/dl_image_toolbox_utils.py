@@ -16,6 +16,8 @@ from tensorflow.python.client import device_lib
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
 import config_utils as config_utils
+import pandas as pd
+
 # Support Truncated Images with PIL
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -395,6 +397,17 @@ def get_cached_file_from_folder(folder, file_path) :
     else :
         print "read from cache %s" %file_path
     return filename
+
+def get_model_config_from_file(model_folder):
+    return json.loads(model_folder.get_download_stream( constants.CONFIG_FILE).read())
+
+def build_prediction_output_df(images_paths, predictions):
+    output = pd.DataFrame()
+    output["images"] = images_paths
+    print("------->" + str(output))
+    output["prediction"] = predictions["prediction"]
+    output["error"] = predictions["error"]
+    return output
 ###################################################################################################################
 ## MISC.
 ###################################################################################################################

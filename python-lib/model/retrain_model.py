@@ -1,7 +1,6 @@
+from .dku_model import DkuModel
 import dl_image_toolbox_utils as utils
 from .dku_image_generator import DkuImageGenerator
-from keras.models import Model
-import tensorflow as tf
 import constants
 from sklearn.model_selection import train_test_split
 from keras.utils.training_utils import multi_gpu_model
@@ -11,24 +10,6 @@ from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
 import numpy as np
-
-class DkuModel:
-    def __init__(self, config):
-        self.config = config
-
-    def load(self, **kwargs):
-        with tf.device('/cpu:0'):
-            model_and_pp = utils.load_instantiate_keras_model_preprocessing(**kwargs)
-        self.base_model = model_and_pp["model"]
-        self.preprocessing = model_and_pp["preprocessing"]
-        self.model_params = model_and_pp["model_params"]
-        self.model_input_shape = utils.get_model_input_shape(
-            model=self.model_tf,
-            mf_path=self.config.model_folder
-        )
-
-    def get_name(self):
-        return self.config.name
 
 
 class RetrainModel(DkuModel):

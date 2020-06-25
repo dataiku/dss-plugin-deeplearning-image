@@ -50,3 +50,4 @@ class RetrainConfig(DkuConfig):
     def _load_input(self):
         super()._load_input()
         self._load_label_df()
+        utils.save_model_info(self.model_folder)
