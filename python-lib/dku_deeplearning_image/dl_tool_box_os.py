@@ -1,4 +1,4 @@
-#This package is mostly a duplicate of dl_image_toolbox_utils.py but using os command with the folder to work on the api node. NEED REFACTOR
+#This package is mostly a duplicate of utils.py but using os command with the folder to work on the api node. NEED REFACTOR
 
 import os
 #from keras.preprocessing.image import img_to_array, load_img

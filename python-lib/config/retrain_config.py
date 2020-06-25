@@ -3,7 +3,7 @@ from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_
 import dataiku
 import dku_deeplearning_image.constants as constants
 import numpy as np
-import dku_deeplearning_image.dl_image_toolbox_utils as utils
+import dku_deeplearning_image.utils as utils
 
 
 class RetrainConfig(DkuConfig):

@@ -1,7 +1,7 @@
 from .dku_model import DkuModel
-import dl_image_toolbox_utils as utils
+import dku_deeplearning_image.utils as utils
 from keras.models import Model
-import constants
+import dku_deeplearning_image.constants as constants
 
 class ExtractModel(DkuModel):
     def __init__(self, input_model_folder, config):

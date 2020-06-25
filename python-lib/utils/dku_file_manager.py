@@ -1,4 +1,4 @@
-from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
+from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
 import dataiku
 
 class DkuFileManager:

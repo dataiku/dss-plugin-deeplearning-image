@@ -1,7 +1,7 @@
 from .dku_model import DkuModel
-import dl_image_toolbox_utils as utils
-from .dku_image_generator import DkuImageGenerator
-import constants
+import dku_deeplearning_image.utils as utils
+from utils.dku_image_generator import DkuImageGenerator
+import dku_deeplearning_image.constants as constants
 from sklearn.model_selection import train_test_split
 from keras.utils.training_utils import multi_gpu_model
 from keras.preprocessing.image import ImageDataGenerator

@@ -1,7 +1,5 @@
 from .dku_config import DkuConfig
-from dataiku.customrecipe import get_recipe_config
 import dku_deeplearning_image.constants as constants
-import dku_deeplearning_image.dl_image_toolbox_utils as utils
 import pandas as pd
 
 

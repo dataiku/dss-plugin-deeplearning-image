@@ -1,6 +1,6 @@
 from .dku_model import DkuModel
-import dl_image_toolbox_utils as utils
-import constants
+import dku_deeplearning_image.utils as utils
+import dku_deeplearning_image.constants as constants
 
 class ScoreModel(DkuModel):
     def __init__(self, config):

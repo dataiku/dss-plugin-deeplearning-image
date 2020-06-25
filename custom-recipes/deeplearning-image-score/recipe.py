@@ -1,8 +1,8 @@
 import pandas as pd
 import dl_image_toolbox_utils as utils
 
-from model.extract_model import ScoreModel
-from config.extract_config import ScoreConfig
+from model.score_model import ScoreModel
+from config.score_config import ScoreConfig
 from utils.dku_file_manager import DkuFileManager
 
 

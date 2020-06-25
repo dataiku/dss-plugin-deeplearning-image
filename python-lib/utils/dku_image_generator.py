@@ -1,6 +1,6 @@
-import dl_image_toolbox_utils as utils
 import numpy as np
-import constants
+import dku_deeplearning_image.utils as utils
+import dku_deeplearning_image.constants as constants
 import math
 
 

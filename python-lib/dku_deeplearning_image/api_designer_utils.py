@@ -9,7 +9,7 @@ import sys
 import shutil
 import logging
 import inspect
-import dl_tool_box_os  #This package is mostly a duplicate of dl_image_toolbox_utils.py but using os command with the folder to work on the api node. NEED REFACTOR
+import dl_tool_box_os  #This package is mostly a duplicate of utils.py but using os command with the folder to work on the api node. NEED REFACTOR
 import constants
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
