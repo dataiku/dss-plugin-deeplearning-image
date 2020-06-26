@@ -13,7 +13,7 @@ class DkuModel(object):
         self.preprocessing = model_and_pp["preprocessing"]
         self.model_params = model_and_pp["model_params"]
         self.model_input_shape = utils.get_model_input_shape(
-            model=self.model_tf,
+            model=self.base_model,
             mf_path=self.config.model_folder
         )
 

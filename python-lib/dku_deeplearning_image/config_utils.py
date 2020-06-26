@@ -4,7 +4,7 @@ import os
 import constants
 
 def get_config(model_folder):
-    return json.loads(model_folder.get_download_stream( constants.CONFIG_FILE).read())
+    return json.loads(model_folder.get_download_stream(constants.CONFIG_FILE).read())
 
 
 def deactivate_gpu():

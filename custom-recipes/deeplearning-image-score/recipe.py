@@ -39,7 +39,7 @@ def run():
     images_paths = image_folder.list_paths_in_partition()
 
     config = ScoreConfig()
-    model = ScoreModel(config, model_folder)
+    model = ScoreModel(model_folder, config)
     classification = model.classify(image_folder, label_df)
 
     write_output_dataset(output_dataset, images_paths, classification)

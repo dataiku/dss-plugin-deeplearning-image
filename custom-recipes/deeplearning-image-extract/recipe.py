@@ -26,7 +26,7 @@ def run():
     images_paths = image_folder.list_paths_in_partition()
 
     config = ExtractConfig()
-    model = ExtractModel(config, model_folder)
+    model = ExtractModel(model_folder, config)
     features = model.extract_features(image_folder)
 
     write_output_dataset(output_dataset, images_paths, features)

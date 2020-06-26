@@ -402,7 +402,7 @@ def get_cached_file_from_folder(folder, file_path) :
     return filename
 
 def get_model_config_from_file(model_folder):
-    return json.loads(model_folder.get_download_stream( constants.CONFIG_FILE).read())
+    return json.loads(model_folder.get_download_stream(constants.CONFIG_FILE).read())
 
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
