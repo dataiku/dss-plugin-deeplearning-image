@@ -7,7 +7,7 @@ from utils.dku_file_manager import DkuFileManager
 import dku_deeplearning_image.constants as constants
 
 
-def get_load_label_df(model_folder):
+def get_label_df(model_folder):
     details_model_label = model_folder.get_path_details(constants.MODEL_LABELS_FILE)
     if details_model_label['exists'] and not details_model_label["directory"]:
         labels_path = model_folder.get_download_stream(constants.MODEL_LABELS_FILE)
@@ -22,7 +22,7 @@ def get_input_output():
     file_manager = DkuFileManager()
     image_folder = file_manager.get_input_folder('image_folder')
     model_folder = file_manager.get_input_folder('model_folder')
-    label_df = get_load_label_df(model_folder)
+    label_df = get_label_df(model_folder)
     output_dataset = file_manager.get_output_dataset('scored_dataset')
     return image_folder, label_df, model_folder, output_dataset
 

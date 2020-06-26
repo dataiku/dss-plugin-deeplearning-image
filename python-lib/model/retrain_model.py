@@ -13,8 +13,8 @@ import numpy as np
 
 
 class RetrainModel(DkuModel):
-    def __init__(self, config):
-        super(RetrainModel, self).__init__(config)
+    def __init__(self, input_model_folder, config):
+        super(RetrainModel, self).__init__(input_model_folder, config)
         self.model = None
 
     def _load_model_and_pp(self):
@@ -134,7 +134,7 @@ class RetrainModel(DkuModel):
             verbose=2
         )
 
-    def retrain(self, images_folder, label_df, model_folder, output_model_folder):
+    def retrain(self, images_folder, label_df, output_model_folder):
         self.compile()
         train_df, test_df = self._build_train_test_sets(label_df)
         extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
@@ -151,7 +151,7 @@ class RetrainModel(DkuModel):
         )
         train_gen, test_gen = dku_generator.load(train_df), dku_generator.load(test_df)
 
-        model_config = utils.get_model_config_from_file(model_folder)
+        model_config = utils.get_model_config_from_file(self.input_model_folder)
         model_weights_path = utils.get_weights_path(
             output_model_folder,
             model_config,

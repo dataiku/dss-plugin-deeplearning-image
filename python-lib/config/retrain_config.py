@@ -15,6 +15,8 @@ class RetrainConfig(DkuConfig):
     def _load_recipe_param(self):
         super(RetrainConfig, self)._load_recipe_param()
 
+        self.col_filename = self.recipe_config["col_filename"]
+        self.col_label = self.recipe_config["col_label"]
         self.list_gpu = self.recipe_config["list_gpu"]
         self.gpu_allocation = self.recipe_config["gpu_allocation"]
         self.train_ratio = float(self.recipe_config["train_ratio"])
@@ -36,19 +38,3 @@ class RetrainConfig(DkuConfig):
         self.custom_params_data_augment = self.recipe_config.get("model_custom_params_data_augmentation", [])
         self.use_tensorboard = self.recipe_config["tensorboard"]
         self.random_seed = int(self.recipe_config["random_seed"])
-
-    def _load_label_df(self):
-        label_dataset_input_name = get_input_names_for_role('label_dataset')[0]
-        self.label_dataset = dataiku.Dataset(label_dataset_input_name)
-        renaming_mapping = {
-            self.recipe_config["col_filename"]: constants.FILENAME,
-            self.recipe_config["col_label"]: constants.LABEL
-        }
-        self.label_df = self.label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
-        self.labels = list(np.unique(self.label_df[constants.LABEL]))
-        self.n_classes = len(self.labels)
-
-    def _load_input(self):
-        super(RetrainConfig, self)._load_input()
-        self._load_label_df()
-        utils.save_model_info(self.model_folder)
