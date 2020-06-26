@@ -26,6 +26,10 @@ def run():
     images_paths = image_folder.list_paths_in_partition()
 
     config = ExtractConfig()
+    print("##############################################")
+    print("########### "+type(model_folder)+" #####################")
+    print("########### "+model_folder+" #####################")
+    print("##############################################")
     model = ExtractModel(model_folder, config)
     features = model.extract_features(image_folder)
 
