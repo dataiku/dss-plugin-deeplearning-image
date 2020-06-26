@@ -14,6 +14,7 @@ from collections import OrderedDict
 import StringIO
 import numpy as np
 from tensorflow.python.client import device_lib
+from datetime import datetime
 
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
@@ -316,10 +317,10 @@ def enrich_model(base_model, pooling, dropout, reg, n_classes, params, verbose):
 # TODO: Rename this function as it has a lot of border effects
 def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
     gpu_options = {}
-    print "load_gpu_options"
+    print("load_gpu_options")
     if should_use_gpu:
-        print "should use GPU"
-        list_gpu = map(int, list_gpu_str.replace(" ", "").split(","))
+        print("should use GPU")
+        list_gpu = list(map(int, list_gpu_str.replace(" ", "").split(",")))
         gpu_options["list_gpu"] = list_gpu
         gpu_options["n_gpu"] = len(list_gpu)
 
@@ -352,7 +353,7 @@ def get_weights_path(mf_path, config, suffix="", should_exist=True):
                               driver_core_image=model_weights_path.read(),
                               driver_core_backing_store=0)
         h5file.copy_file(weights_filename, overwrite=True)
-    print weights_filename
+    print(weights_filename)
     return weights_filename
 
    # if not os.path.isfile(model_weights_path) and should_exist:
@@ -395,9 +396,9 @@ def get_cached_file_from_folder(folder, file_path) :
         with folder.get_download_stream(file_path) as stream:
              with open(filename, 'wb') as f : 
                 f.write(stream.read())
-                print "cached file %s" %file_path
+                print("cached file %s" %file_path)
     else :
-        print "read from cache %s" %file_path
+        print("read from cache %s" %file_path)
     return filename
 
 def get_model_config_from_file(model_folder):
