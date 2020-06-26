@@ -14,11 +14,11 @@ import numpy as np
 
 class RetrainModel(DkuModel):
     def __init__(self, config):
-        super().__init__(config)
+        super(RetrainModel, self).__init__(config)
         self.model = None
 
     def _load_model_and_pp(self):
-        super().load(
+        super(RetrainModel, self).load(
             mf_path=self.config.model_folder,
             goal=constants.RETRAINING,
             input_shape=self.config.input_shape,

@@ -12,7 +12,7 @@ class RetrainConfig(DkuConfig):
         self.output_role = 'model_output'
 
     def _load_recipe_param(self):
-        super()._load_recipe_param()
+        super(RetrainConfig, self)._load_recipe_param()
 
         self.list_gpu = self.recipe_config["list_gpu"]
         self.gpu_allocation = self.recipe_config["gpu_allocation"]
@@ -48,6 +48,6 @@ class RetrainConfig(DkuConfig):
         self.n_classes = len(self.labels)
 
     def _load_input(self):
-        super()._load_input()
+        super(RetrainConfig, self)._load_input()
         self._load_label_df()
         utils.save_model_info(self.model_folder)

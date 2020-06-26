@@ -7,5 +7,5 @@ class ExtractConfig(DkuConfig):
         self.output_role = 'feature_dataset'
 
     def _load_recipe_param(self):
-        super()._load_recipe_param()
+        super(ExtractConfig, self)._load_recipe_param()
         self.extract_layer_index = int(self.recipe_config['extract_layer_index'])

@@ -3,14 +3,15 @@ import dku_deeplearning_image.utils as utils
 from keras.models import Model
 import dku_deeplearning_image.constants as constants
 
+
 class ExtractModel(DkuModel):
     def __init__(self, input_model_folder, config):
-        super().__init__(config)
+        super(ExtractModel, self).__init__(config)
         self.input_model_folder = input_model_folder
         self.load()
 
     def load(self):
-        super().load(
+        super(ExtractModel, self).load(
             mf_path=self.input_model_folder,
             goal=constants.SCORING
         )
