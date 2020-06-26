@@ -21,7 +21,7 @@ class ScoreModel(DkuModel):
             dku_model=self,
             images_folder=images_folder,
             images_paths=images_paths,
-            limit=self.config.max_nb_labels,
             min_threshold=self.config.min_threshold,
+            limit=self.config.max_nb_labels,
             labels_df=label_df
         )
