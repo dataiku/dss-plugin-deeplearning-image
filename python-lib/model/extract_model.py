@@ -6,8 +6,7 @@ import dku_deeplearning_image.constants as constants
 
 class ExtractModel(DkuModel):
     def __init__(self, input_model_folder, config):
-        super(ExtractModel, self).__init__(config)
-        self.input_model_folder = input_model_folder
+        super(ExtractModel, self).__init__(input_model_folder, config)
         self.load()
 
     def load(self):

@@ -3,8 +3,9 @@ import tensorflow as tf
 
 
 class DkuModel(object):
-    def __init__(self, config):
+    def __init__(self, input_model_folder, config):
         self.config = config
+        self.input_model_folder = input_model_folder
 
     def load(self, **kwargs):
         with tf.device('/cpu:0'):
@@ -14,7 +15,7 @@ class DkuModel(object):
         self.model_params = model_and_pp["model_params"]
         self.model_input_shape = utils.get_model_input_shape(
             model=self.base_model,
-            mf_path=self.config.model_folder
+            mf_path=self.input_model_folder
         )
 
     def get_name(self):
