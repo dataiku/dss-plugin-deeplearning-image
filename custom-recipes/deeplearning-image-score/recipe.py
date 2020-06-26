@@ -37,10 +37,6 @@ def write_output_dataset(output_dataset, images_paths, classification):
 def run():
     image_folder, label_df, model_folder, output_dataset = get_input_output()
     images_paths = image_folder.list_paths_in_partition()
-    print("##############################################")
-    print("########### "+type(model_folder)+" #####################")
-    print("########### "+model_folder+" #####################")
-    print("##############################################")
 
     config = ScoreConfig()
     model = ScoreModel(model_folder, config)
