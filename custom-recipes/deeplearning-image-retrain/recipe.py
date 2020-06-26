@@ -1,6 +1,6 @@
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role, get_recipe_config
-import dl_image_toolbox_utils as utils
-import config_utils as config_utils
+import dku_deeplearning_image.utils as utils
+import dku_deeplearning_image.config_utils as config_utils
 from sklearn.model_selection import train_test_split
 from keras import optimizers, initializers, metrics, regularizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
@@ -9,7 +9,7 @@ from keras.preprocessing.image import ImageDataGenerator
 import tensorflow as tf
 from tensorflow.python.client import device_lib
 import pandas as pd
-import constants
+import dku_deeplearning_image.constants as constants
 import math
 import os
 import shutil
