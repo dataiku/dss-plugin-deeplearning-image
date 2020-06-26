@@ -4,6 +4,9 @@ import dataiku
 
 
 class DkuConfig(object):
+    def __init__(self):
+        self.load()
+
     @utils.log_func(txt='config loading')
     def load(self):
         self._load_recipe_param()

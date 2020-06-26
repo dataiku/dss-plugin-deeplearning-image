@@ -10,6 +10,7 @@ class RetrainConfig(DkuConfig):
     def __init__(self):
         self.name = 'retrain'
         self.output_role = 'model_output'
+        super(RetrainConfig, self).__init__()
 
     def _load_recipe_param(self):
         super(RetrainConfig, self)._load_recipe_param()
