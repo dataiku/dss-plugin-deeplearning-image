@@ -442,7 +442,7 @@ def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_L
     return format_predictions_output(predictions, classify, labels_df, limit, min_threshold)
 
 
-def score(dku_model, images_folder, images_paths, limit, min_threshold, labels_df=None):
+def score(dku_model, images_folder, images_paths, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, labels_df=None):
     batch_size = constants.PREDICTION_BATCH_SIZE
     n = 0
     results = {"prediction": [], "error": []}
