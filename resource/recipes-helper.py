@@ -1,9 +1,9 @@
 import dataiku
 import glob
 import pandas as pd
-import config_utils as config_utils
+import dku_deeplearning_image.config_utils as config_utils
 #import tensorflow as tf
-import constants
+import dku_deeplearning_image.constants as constants
 import os
 
 # We deactivate GPU for this script, because all the methods only need to 

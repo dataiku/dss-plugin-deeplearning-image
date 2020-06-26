@@ -5,7 +5,7 @@ from keras.models import Model
 from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
-import constants
+import dku_deeplearning_image.constants as constants
 import threading
 import json
 from collections import OrderedDict
@@ -15,7 +15,7 @@ from tensorflow.python.client import device_lib
 
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
-import config_utils as config_utils
+import dku_deeplearning_image.config_utils as config_utils
 import pandas as pd
 
 # Support Truncated Images with PIL

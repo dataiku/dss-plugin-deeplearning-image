@@ -1,5 +1,5 @@
 import os
-import constants
+import dku_deeplearning_image.constants as constants
 import threading
 import json
 from collections import OrderedDict
@@ -7,7 +7,7 @@ import StringIO
 import numpy as np
 import sys
 import tables #to get the h5 file stream from the folder API as a file to be read by the keras API
-import config_utils as config_utils
+import dku_deeplearning_image.config_utils as config_utils
 # Support Truncated Images with PIL
 from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
