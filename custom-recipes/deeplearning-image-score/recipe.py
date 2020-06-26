@@ -23,7 +23,7 @@ def get_input_output():
     image_folder = file_manager.get_input_folder('image_folder')
     model_folder = file_manager.get_input_folder('model_folder')
     label_df = get_load_label_df(model_folder)
-    output_dataset = file_manager.get_output_dataset('feature_dataset')
+    output_dataset = file_manager.get_output_dataset('scored_dataset')
     return image_folder, label_df, model_folder, output_dataset
 
 
