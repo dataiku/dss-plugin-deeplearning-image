@@ -2,7 +2,7 @@ import dku_deeplearning_image.utils as utils
 import tensorflow as tf
 
 
-class DkuModel:
+class DkuModel(object):
     def __init__(self, config):
         self.config = config
 

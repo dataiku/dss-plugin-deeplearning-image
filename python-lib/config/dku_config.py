@@ -3,7 +3,7 @@ import dku_deeplearning_image.utils as utils
 import dataiku
 
 
-class DkuConfig:
+class DkuConfig(object):
     @utils.log_func(txt='config loading')
     def load(self):
         self._load_recipe_param()

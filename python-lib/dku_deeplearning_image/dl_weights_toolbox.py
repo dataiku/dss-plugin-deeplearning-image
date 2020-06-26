@@ -94,7 +94,7 @@ def get_weights_path(mf_path, config, suffix="", should_exist=True):
                               driver_core_image=model_weights_path.read(),
                               driver_core_backing_store=0)
         h5file.copy_file(weights_filename, overwrite=True)
-    print weights_filename
+    print(weights_filename)
     return weights_filename
 
    # if not os.path.isfile(model_weights_path) and should_exist:
@@ -145,5 +145,5 @@ def get_cached_file_from_folder(folder, file_path) :
         with folder.get_download_stream(file_path) as stream:
              with open(filename, 'wb') as f : 
                 f.write(stream.read())
-                print "cached file %s" %file_path
+                print("cached file %s" %file_path)
     return filename
