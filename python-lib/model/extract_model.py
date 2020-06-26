@@ -24,7 +24,5 @@ class ExtractModel(DkuModel):
         return utils.score(
             dku_model=self,
             images_folder=images_folder,
-            images_paths=images_paths,
-            min_threshold=self.config.min_threshold,
-            limit=self.config.max_nb_labels,
+            images_paths=images_paths
         )
