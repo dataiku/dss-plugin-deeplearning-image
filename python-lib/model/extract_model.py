@@ -7,6 +7,7 @@ class ExtractModel(DkuModel):
     def __init__(self, input_model_folder, config):
         super().__init__(config)
         self.input_model_folder = input_model_folder
+        self.load()
 
     def load(self):
         super().load(

@@ -1,5 +1,5 @@
 import pandas as pd
-import dl_image_toolbox_utils as utils
+import dku_deeplearning_image.utils as utils
 
 from model.extract_model import ExtractModel
 from config.extract_config import ExtractConfig
@@ -15,8 +15,8 @@ def get_input_output():
 
 
 @utils.log_func(txt='output dataset writing')
-def write_output_dataset(output_dataset, images_paths, predictions):
-    output_df = utils.build_output_df(images_paths, predictions)
+def write_output_dataset(output_dataset, images_paths, features):
+    output_df = utils.build_prediction_output_df(images_paths, features)
     output_dataset.write_with_schema(pd.DataFrame(output_df))
 
 
@@ -27,9 +27,9 @@ def run():
 
     config = ExtractConfig()
     model = ExtractModel(config, model_folder)
-    predictions = model.extract_features(image_folder)
+    features = model.extract_features(image_folder)
 
-    write_output_dataset(output_dataset, images_paths, predictions)
+    write_output_dataset(output_dataset, images_paths, features)
 
 
 run()

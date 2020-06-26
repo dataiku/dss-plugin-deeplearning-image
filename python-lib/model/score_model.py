@@ -3,14 +3,14 @@ import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
 
 class ScoreModel(DkuModel):
-    def __init__(self, config):
+    def __init__(self, input_model_folder, config):
         super().__init__(config)
-        self.predictions = None
-        self.model = None
+        self.input_model_folder = input_model_folder
+        self.load()
 
     def load(self):
         super().load(
-            mf_path=self.config.model_folder,
+            mf_path=self.input_model_folder,
             goal=constants.SCORING
         )
         self.model = self.base_model
