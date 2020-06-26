@@ -7,10 +7,16 @@ class DkuConfig(object):
     @utils.log_func(txt='config loading')
     def load(self):
         self._load_recipe_param()
+        print("####################################################")
+        print("#################### {} ########################".format('Init DkuConfig'))
+        print("####################################################")
         utils.display_gpu_device()
 
     def _load_recipe_param(self):
         self.recipe_config = get_recipe_config()
+        print("####################################################")
+        print("#################### {} ########################".format('_load_recipe_param DkuConfig'))
+        print("####################################################")
 
         should_use_gpu = self.recipe_config.get('should_use_gpu', False)
         self.gpu_options = utils.load_gpu_options(
