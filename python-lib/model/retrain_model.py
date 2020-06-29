@@ -15,6 +15,7 @@ import numpy as np
 class RetrainModel(DkuModel):
     def __init__(self, input_model_folder, config):
         super(RetrainModel, self).__init__(input_model_folder, config)
+        self.load()
 
     def _load_model_and_pp(self):
         super(RetrainModel, self).load(
