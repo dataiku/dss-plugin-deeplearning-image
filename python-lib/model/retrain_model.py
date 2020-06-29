@@ -19,7 +19,7 @@ class RetrainModel(DkuModel):
 
     def _load_model_and_pp(self):
         super(RetrainModel, self).load(
-            mf_path=self.config.model_folder,
+            mf_path=self.input_model_folder,
             goal=constants.RETRAINING,
             input_shape=self.config.input_shape,
             pooling=self.config.model_pooling,
