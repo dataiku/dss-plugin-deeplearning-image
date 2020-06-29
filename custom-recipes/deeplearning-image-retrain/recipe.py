@@ -19,6 +19,7 @@ def get_label_df(col_filename, col_label):
     label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
     return label_df
 
+
 def get_input_output(col_filename, col_label):
     file_manager = DkuFileManager()
     image_folder = file_manager.get_input_folder('image_folder')
@@ -26,6 +27,7 @@ def get_input_output(col_filename, col_label):
     label_df = get_label_df(col_filename, col_label)
     output_folder = file_manager.get_output_folder('model_output')
     return image_folder, label_df, model_folder, output_folder
+
 
 @utils.log_func(txt='recipe')
 def run():

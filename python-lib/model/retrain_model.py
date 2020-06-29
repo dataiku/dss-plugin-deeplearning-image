@@ -15,7 +15,6 @@ import numpy as np
 class RetrainModel(DkuModel):
     def __init__(self, input_model_folder, config):
         super(RetrainModel, self).__init__(input_model_folder, config)
-        self.model = None
 
     def _load_model_and_pp(self):
         super(RetrainModel, self).load(
@@ -59,15 +58,15 @@ class RetrainModel(DkuModel):
         )
         return ImageDataGenerator(**params_data_augment)
 
-    def _get_optimizer_class(self, optimizer):
-        if optimizer == "adam":
+    def _get_optimizer_class(self):
+        if self.config.optimizer == "adam":
             model_opti_class = optimizers.Adam
-        elif optimizer == "adagrad":
+        elif self.config.optimizer == "adagrad":
             model_opti_class = optimizers.Adagrad
-        elif optimizer == "sgd":
+        elif self.config.optimizer == "sgd":
             model_opti_class = optimizers.SGD
         else:
-            print("Optimizer not supporter: {}. Applying adam.".format(optimizer))
+            print("Optimizer not supporter: {}. Applying adam.".format(self.config.optimizer))
             model_opti_class = optimizers.Adam
         return model_opti_class
 
@@ -113,7 +112,7 @@ class RetrainModel(DkuModel):
         self.model.summary()
 
     def compile(self):
-        model_opti_class = self._get_optimizer_class(self.config.optimizer)
+        model_opti_class = self._get_optimizer_class()
 
         # Cleaning custom parameters
         params_opti = utils.clean_custom_params(self.config.custom_params_opti)
