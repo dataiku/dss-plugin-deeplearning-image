@@ -5,6 +5,8 @@ from model.retrain_model import RetrainModel
 from config.retrain_config import RetrainConfig
 from utils.dku_file_manager import DkuFileManager
 
+import pandas as pd
+
 import dku_deeplearning_image.constants as constants
 import dataiku
 
@@ -29,6 +31,29 @@ def get_input_output(col_filename, col_label):
     return image_folder, label_df, model_folder, output_folder
 
 
+def save_output_model(output_folder, model):
+    model.model_config[constants.RETRAINED] = True
+    model.model_config[constants.TOP_PARAMS] = model.model_params
+    utils.write_config(output_folder, model.model_config)
+
+    df_labels = pd.DataFrame({"id": range(len(model.labels)), "className": model.labels})
+    with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+        w.write((df_labels.to_csv(index=False)))
+
+    # This copies a local file to the managed folder
+    model_weights_path = utils.get_weights_path(
+        output_folder,
+        config=model.model_config,
+        suffix=constants.RETRAINED_SUFFIX,
+        should_exist=False
+    )
+
+    with open(model_weights_path) as f:
+        output_folder.upload_stream(model_weights_path, f)
+    # Computing model info
+    utils.save_model_info(output_folder)
+
+
 @utils.log_func(txt='recipe')
 def run():
     config = RetrainConfig()
@@ -37,11 +62,11 @@ def run():
         col_filename=config.col_filename,
         col_label=config.col_label
     )
-    images_paths = image_folder.list_paths_in_partition()
 
-    model = RetrainModel(model_folder, config)
+    model = RetrainModel(model_folder, label_df, config)
     model.retrain(image_folder, label_df, output_folder)
 
     save_output_model(output_folder, model)
+
 
 run()
