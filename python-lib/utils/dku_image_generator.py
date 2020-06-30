@@ -49,7 +49,7 @@ class DkuImageGenerator:
         y_batch_list = []
 
         for index, row in batch_df.iterrows():
-            X_batch, y_batch = self._process_one_image(self.images_folder)
+            X_batch, y_batch = self._process_one_image(row)
             X_batch_list.extend(X_batch)
             y_batch_list.extend(y_batch)
 
