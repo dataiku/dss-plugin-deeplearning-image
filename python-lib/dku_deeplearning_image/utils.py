@@ -26,14 +26,10 @@ from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+
 ###################################################################################################################
 ## MODELS LIST
 ###################################################################################################################
-
-from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
-from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
-from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
-from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
 
 
 # INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
@@ -103,10 +99,7 @@ def get_extract_layer_index(architecture, trained_on):
 
 
 def get_weights_urls(architecture, trained_on):
-    if is_keras_application(architecture):
-        return build_keras_application()[architecture]["weights"][trained_on]
-    else:
-        return {}
+    return build_keras_application()[architecture]["weights"][trained_on] if is_keras_application(architecture) else {}
 
 
 def should_save_weights_only(config):
@@ -121,23 +114,20 @@ def get_model_input_shape(model, mf_path):
     input_shape = model.input_shape[1:3]
 
     # Check that model has an actual input shape
-    if input_shape[0] == None or input_shape[1] == None:
-
-        config = config_utils.get_config(mf_path)
-        architecture = config["architecture"]
-
-        if not is_keras_application(architecture):
-            raise IOError("You must provide an input shape for your architecture '{}'".format(architecture))
-
-        return build_keras_application()[architecture].get("input_shape", (224, 224))
-
-    else:
+    if all(input_shape):
         return input_shape
+
+    config = get_model_config_from_file(mf_path)
+    architecture = config["architecture"]
+
+    if not is_keras_application(architecture):
+        raise IOError("You must provide an input shape for your architecture '{}'".format(architecture))
+
+    return build_keras_application()[architecture].get("input_shape", (224, 224))
 
 
 def get_layers_as_list(model):
-    layers = model.layers
-    return [layer.__class__.__name__ for layer in layers]
+    return [layer.__class__.__name__ for layer in model.layers]
 
 
 def get_model_summary(model):
@@ -147,13 +137,10 @@ def get_model_summary(model):
 
 
 def save_model_info(mf_path):
-    model_info = {}
-
-    # For SCORING
-    model_info[constants.SCORING] = compute_model_info(mf_path, constants.SCORING)
-
-    # For BEFORE_TRAIN
-    model_info[constants.BEFORE_TRAIN] = compute_model_info(mf_path, constants.BEFORE_TRAIN)
+    model_info = {
+        constants.SCORING: compute_model_info(mf_path, constants.SCORING),
+        constants.BEFORE_TRAIN: compute_model_info(mf_path, constants.BEFORE_TRAIN)
+    }
 
     with mf_path.get_writer(constants.MODEL_INFO_FILE) as w:
         w.write(json.dumps(model_info))
@@ -161,29 +148,10 @@ def save_model_info(mf_path):
 
 def compute_model_info(mf_path, goal):
     model_info = {}
-
+    model = load_instantiate_keras_model_preprocessing(mf_path, goal=goal, verbose=False)["model"]
     if goal == constants.SCORING:
-
-        model_and_pp_scoring = load_instantiate_keras_model_preprocessing(mf_path, goal=constants.SCORING,
-                                                                          verbose=False)
-        layers_scoring = get_layers_as_list(model_and_pp_scoring["model"])
-        summary_scoring = get_model_summary(model_and_pp_scoring["model"])
-
-        model_info = {
-            "layers": layers_scoring,
-            "summary": summary_scoring
-        }
-
-    elif goal == constants.BEFORE_TRAIN:
-
-        model_and_pp_bt = load_instantiate_keras_model_preprocessing(mf_path, goal=constants.BEFORE_TRAIN,
-                                                                     verbose=False)
-        summary_bt = get_model_summary(model_and_pp_bt["model"])
-
-        model_info = {
-            "summary": summary_bt
-        }
-
+        model_info['layers'] = get_layers_as_list(model)
+    model_info['summary'] = get_model_summary(model)
     return model_info
 
 
@@ -194,16 +162,50 @@ def compute_model_info(mf_path, goal):
 def load_instantiate_keras_model_preprocessing(mf_path, goal, input_shape=None, pooling=None,
                                                reg=None, dropout=None, n_classes=None, verbose=True):
     config = config_utils.get_config(mf_path)
-    architecture = config["architecture"]
-    trained_on = config["trained_on"]
 
-    if is_keras_application(architecture):
-        model_and_pp = load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes,
-                                              verbose)
-
+    if is_keras_application(config["architecture"]):
+        return load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes, verbose)
+    else:
+        raise TypeError('You must use a Keras Application.')
     # TODO : handle non keras application if such algorithms are available
 
-    return model_and_pp
+
+def load_keras_application_for_scoring(mf_path, architecture, config, retrained, top_params, **kwargs):
+    input_shape = top_params["input_shape"] if top_params else None
+    model = build_keras_application()[architecture]["model_func"](weights=None, include_top=(not top_params),
+                                                                  input_shape=input_shape)
+    if top_params:
+        model, _ = enrich_model(model, top_params, **kwargs)
+    suffix = constants.CUSTOM_TOP_SUFFIX if top_params else constants.RETRAINED_SUFFIX if retrained else ''
+    model_weights_path = get_weights_path(mf_path, config, suffix)
+    model.load_weights(model_weights_path)
+
+def load_keras_application_for_retraining(mf_path, architecture, config, retrained, top_params, input_shape, **kwargs):
+    input_shape = top_params["input_shape"] if retrained else input_shape
+    model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
+                                                                  input_shape=input_shape)
+    if top_params:
+        model, _ = enrich_model(model, top_params, **kwargs)
+    suffix = constants.CUSTOM_TOP_SUFFIX if top_params else constants.RETRAINED_SUFFIX if retrained else ''
+    model_weights_path = get_weights_path(mf_path, config, suffix)
+    model.load_weights(model_weights_path)
+
+    if not retrained:
+
+        model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
+                                                                      input_shape=input_shape)
+        model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
+        model.load_weights(model_weights_path)
+        model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
+        model_params["input_shape"] = input_shape
+
+    else:
+
+        model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
+                                                                      input_shape=top_params["input_shape"])
+        model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
+        model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
+        model.load_weights(model_weights_path)
 
 
 def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes, verbose):
@@ -216,8 +218,18 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
     if trained_on != constants.IMAGENET:
         raise IOError("The architecture '{}', trained on '{}' cannot be found".format(architecture, trained_on))
 
-    if retrained and top_params is None:
+    if retrained and not top_params:
         raise IOError("Your config file is missing some parameters : '{}'".format(constants.TOP_PARAMS))
+
+    input_shape = top_params["input_shape"] if top_params else input_shape
+    include_top = goal == constants.SCORING and not top_params
+
+    model = build_keras_application()[architecture]["model_func"](
+        weights=None,
+        input_shape=input_shape,
+        include_top=include_top
+    )
+
 
     if goal == constants.SCORING:
 
@@ -289,7 +301,7 @@ def select_param(param_name, param_val, top_params):
     return param_val if param_val is not None else top_params[param_name]
 
 
-def enrich_model(base_model, pooling, dropout, reg, n_classes, params, verbose):
+def enrich_model(base_model, params, pooling, dropout, reg, n_classes, verbose):
     # Init params if not done before
     params = {} if params is None else params
 
