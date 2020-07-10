@@ -20,13 +20,47 @@ import sys
 import tables  # to get the h5 file stream from the folder API as a file to be read by the keras API
 import dku_deeplearning_image.config_utils as config_utils
 import pandas as pd
+import copy as cp
 
 # Support Truncated Images with PIL
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
+###################################################################################################################
+###################################################################################################################
+## NEW FILE
+###################################################################################################################
+###################################################################################################################
 
+
+###################################################################################################################
+## MODEL UTILS
+###################################################################################################################
+
+def add_pooling(model_output, pooling):
+    if pooling == 'avg':
+        return GlobalAveragePooling2D()(model_output)
+    elif pooling == 'max':
+        return GlobalMaxPooling2D()(model_output)
+    else:
+        return Flatten()(model_output)
+
+
+def add_dropout(model_output, dropout):
+    return Dropout(dropout)(model_output) if dropout else None
+
+
+def get_regularizer(reg):
+    if reg:
+        reg_l1, reg_l2 = reg["l1"], reg["l2"]
+        if reg_l1 and reg_l2:
+            return regularizers.l1_l2(**reg)
+        elif reg_l2:
+            return regularizers.l2(reg["l2"])
+        elif reg_l1:
+            return regularizers.l1(reg["l1"])
+    return None
 ###################################################################################################################
 ## MODELS LIST
 ###################################################################################################################
@@ -171,41 +205,28 @@ def load_instantiate_keras_model_preprocessing(mf_path, goal, input_shape=None, 
 
 
 def load_keras_application_for_scoring(mf_path, architecture, config, retrained, top_params, **kwargs):
+    model_params = {}
     input_shape = top_params["input_shape"] if top_params else None
     model = build_keras_application()[architecture]["model_func"](weights=None, include_top=(not top_params),
                                                                   input_shape=input_shape)
     if top_params:
-        model, _ = enrich_model(model, top_params, **kwargs)
+        model, model_params = enrich_model(model, top_params, **kwargs)
     suffix = constants.CUSTOM_TOP_SUFFIX if top_params else constants.RETRAINED_SUFFIX if retrained else ''
     model_weights_path = get_weights_path(mf_path, config, suffix)
     model.load_weights(model_weights_path)
+    return model, model_params
 
 def load_keras_application_for_retraining(mf_path, architecture, config, retrained, top_params, input_shape, **kwargs):
     input_shape = top_params["input_shape"] if retrained else input_shape
     model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
                                                                   input_shape=input_shape)
-    if top_params:
-        model, _ = enrich_model(model, top_params, **kwargs)
-    suffix = constants.CUSTOM_TOP_SUFFIX if top_params else constants.RETRAINED_SUFFIX if retrained else ''
+    model, model_params = enrich_model(model, top_params, **kwargs)
+    suffix = constants.RETRAINED_SUFFIX if retrained else constants.NOTOP_SUFFIX
     model_weights_path = get_weights_path(mf_path, config, suffix)
     model.load_weights(model_weights_path)
-
-    if not retrained:
-
-        model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                      input_shape=input_shape)
-        model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
-        model.load_weights(model_weights_path)
-        model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
+    if input_shape:
         model_params["input_shape"] = input_shape
-
-    else:
-
-        model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                      input_shape=top_params["input_shape"])
-        model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-        model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
-        model.load_weights(model_weights_path)
+    return model, model_params
 
 
 def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes, verbose):
@@ -298,7 +319,7 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
 
 
 def select_param(param_name, param_val, top_params):
-    return param_val if param_val is not None else top_params[param_name]
+    return param_val if param_val else top_params[param_name]
 
 
 def enrich_model(base_model, params, pooling, dropout, reg, n_classes, verbose):
@@ -388,8 +409,8 @@ def get_weights_path(mf_path, config, suffix="", should_exist=True):
     return weights_filename
 
 
-def get_weights_filename(mf_path, config, suffix=""):
-    return "{}_{}_weights{}.h5".format(config["architecture"], config["trained_on"], suffix)
+def get_weights_filename():
+    return constants.WEIGHT_FILENAME
 
 
 def write_config(mf_path, config):

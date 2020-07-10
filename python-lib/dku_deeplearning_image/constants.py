@@ -22,5 +22,6 @@ PLUGIN_NAME = "dl-image-toolbox"
 TENSORFLOW_VERSION_FOR_TENSORBOARD="tensorflow==1.4.0"
 ENV_NAME_GPU = 'plugin_dl-image-gpu-api_node'
 ENV_NAME_CPU = 'plugin_dl-image-cpu-api_node'
+WEIGHT_FILENAME = 'model_weights'
 PREDICTION_BATCH_SIZE = 100
 DEFAULT_PRED_LIMIT = 5
