@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import os
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
