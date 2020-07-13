@@ -17,6 +17,5 @@ class DkuApplication:
         )
         return self.weights.get(trained_on)
 
-
     def jsonify(self):
         return self.name

@@ -9,4 +9,4 @@ class ExtractConfig(DkuConfig):
 
     def _load_recipe_param(self):
         super(ExtractConfig, self)._load_recipe_param()
-        self.extract_layer_index = int(self.recipe_config['extract_layer_index'])
+        self.extract_layer_index = int(self.recipe_config.get('extract_layer_index', -2))

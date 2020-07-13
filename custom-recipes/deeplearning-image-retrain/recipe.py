@@ -1,19 +1,15 @@
-from dataiku.customrecipe import get_input_names_for_role
 import dku_deeplearning_image.utils as utils
 
-from model.retrain_model import RetrainModel
+from recipe.retrain_recipe import RetrainRecipe
 from config.retrain_config import RetrainConfig
-from utils.dku_file_manager import DkuFileManager
+from utils_objects.dku_file_manager import DkuFileManager
 
 import pandas as pd
 
 import dku_deeplearning_image.constants as constants
-import dataiku
 
 
-def get_label_df(col_filename, col_label):
-    label_dataset_input_name = get_input_names_for_role('label_dataset')[0]
-    label_dataset = dataiku.Dataset(label_dataset_input_name)
+def format_label_df(label_dataset, col_filename, col_label):
     renaming_mapping = {
         col_filename: constants.FILENAME,
         col_label: constants.LABEL
@@ -22,51 +18,44 @@ def get_label_df(col_filename, col_label):
     return label_df
 
 
-def get_input_output(col_filename, col_label):
+def get_input_output():
     file_manager = DkuFileManager()
     image_folder = file_manager.get_input_folder('image_folder')
     model_folder = file_manager.get_input_folder('model_folder')
-    label_df = get_label_df(col_filename, col_label)
+    label_dataset = file_manager.get_input_dataset('label_dataset')
     output_folder = file_manager.get_output_folder('model_output')
-    return image_folder, label_df, model_folder, output_folder
+    return image_folder, label_dataset, model_folder, output_folder
 
 
 def save_output_model(output_folder, model):
-    model.model_config[constants.RETRAINED] = True
-    model.model_config[constants.TOP_PARAMS] = model.model_params
-    utils.write_config(output_folder, model.model_config)
+    utils.write_config(output_folder, model.jsonify_config())
 
-    df_labels = pd.DataFrame({"id": range(len(model.labels)), "className": model.labels})
+    labels = model.get_distinct_labels()
+    df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
     with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
         w.write((df_labels.to_csv(index=False)))
 
     # This copies a local file to the managed folder
-    model_weights_path = utils.get_weights_path(
-        output_folder,
-        config=model.model_config,
-        suffix=constants.RETRAINED_SUFFIX,
-        should_exist=False
-    )
+    model_weights_path = model.get_weights_path()
 
     with open(model_weights_path) as f:
         output_folder.upload_stream(model_weights_path, f)
-    # Computing model info
-    utils.save_model_info(output_folder)
+    # Computing recipe info
+    utils.save_model_info(output_folder, model)
 
 
 @utils.log_func(txt='recipe')
 def run():
     config = RetrainConfig()
 
-    image_folder, label_df, model_folder, output_folder = get_input_output(
-        col_filename=config.col_filename,
-        col_label=config.col_label
-    )
+    image_folder, label_dataset, model_folder, output_folder = get_input_output()
 
-    model = RetrainModel(model_folder, label_df, config)
-    model.retrain(image_folder, label_df, output_folder)
+    label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
+    recipe = RetrainRecipe(config)
 
-    save_output_model(output_folder, model)
+    new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
+
+    save_output_model(output_folder, new_model)
 
 
 run()

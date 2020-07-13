@@ -2,25 +2,23 @@
 
 import os
 from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
-from keras.models import Model
+from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
 from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
 import dku_deeplearning_image.constants as constants
+from dku_deeplearning_image.applications import APPLICATIONS
 import threading
 import json
 from collections import OrderedDict
-import StringIO
 import numpy as np
 from tensorflow.python.client import device_lib
 from datetime import datetime
 
 import sys
-import tables  # to get the h5 file stream from the folder API as a file to be read by the keras API
 import dku_deeplearning_image.config_utils as config_utils
+from utils_objects.dku_application import DkuApplication
 import pandas as pd
-import copy as cp
 
 # Support Truncated Images with PIL
 from PIL import ImageFile
@@ -48,7 +46,7 @@ def add_pooling(model_output, pooling):
 
 
 def add_dropout(model_output, dropout):
-    return Dropout(dropout)(model_output) if dropout else None
+    return Dropout(dropout)(model_output) if dropout else model_output
 
 
 def get_regularizer(reg):
@@ -61,6 +59,15 @@ def get_regularizer(reg):
         elif reg_l1:
             return regularizers.l1(reg["l1"])
     return None
+
+def get_application(architecture):
+
+    dku_application_params = list(filter(lambda x: x['name'] == architecture, APPLICATIONS))
+    if not dku_application_params:
+        available_apps = [x['name'] for x in APPLICATIONS]
+        raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+    return DkuApplication(**dku_application_params[0])
+
 ###################################################################################################################
 ## MODELS LIST
 ###################################################################################################################
@@ -68,305 +75,26 @@ def get_regularizer(reg):
 
 # INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
 #        with the label architecture_trainedon to make it available, along with new a constant in python-lib/constants.py
-def get_application(architecture):
-    from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
-    from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
-    from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
-    from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
-
-    keras_applications = {
-        constants.RESNET: {
-            "model_func": ResNet50,
-            "preprocessing": resnet50_preprocessing,
-            "input_shape": (224, 224),
-            "weights": {
-                constants.IMAGENET: {
-                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
-                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
-                }
-            }
-        },
-        constants.XCEPTION: {
-            "model_func": Xception,
-            "preprocessing": xception_preprocessing,
-            "input_shape": (299, 299),
-            "weights": {
-                constants.IMAGENET: {
-                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels.h5",
-                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels_notop.h5",
-                }
-            }
-        },
-        constants.INCEPTIONV3: {
-            "model_func": InceptionV3,
-            "preprocessing": inceptionv3_preprocessing,
-            "input_shape": (299, 299),
-            "weights": {
-                constants.IMAGENET: {
-                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels.h5",
-                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
-                }
-            }
-        },
-        constants.VGG16: {
-            "model_func": VGG16,
-            "preprocessing": vgg16_preprocessing,
-            "input_shape": (224, 224),
-            "weights": {
-                constants.IMAGENET: {
-                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5",
-                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
-                }
-            }
-        }
-    }
-    return keras_applications[architecture]
 
 
 def is_keras_application(architecture):
     return architecture in build_keras_application().keys()
 
 
-def get_extract_layer_index(architecture, trained_on):
-    # May be more complicated as the list of models grows
-    return -2
-
-
-def get_weights_urls(architecture, trained_on):
-    return build_keras_application()[architecture]["weights"][trained_on] if is_keras_application(architecture) else {}
-
-
-def should_save_weights_only(config):
-    return config["architecture"] in build_keras_application().keys()
-
-
 ###############################################################
 ## EXTRACT INFO FROM MODEL (SUMMARY AND LAYERS)
 ###############################################################
 
-def get_model_input_shape(model, mf_path):
-    input_shape = model.input_shape[1:3]
-
-    # Check that model has an actual input shape
-    if all(input_shape):
-        return input_shape
-
-    config = get_model_config_from_file(mf_path)
-    architecture = config["architecture"]
-
-    if not is_keras_application(architecture):
-        raise IOError("You must provide an input shape for your architecture '{}'".format(architecture))
-
-    return build_keras_application()[architecture].get("input_shape", (224, 224))
 
 
-def get_layers_as_list(model):
-    return [layer.__class__.__name__ for layer in model.layers]
-
-
-def get_model_summary(model):
-    summary_io = StringIO.StringIO()
-    model.summary(print_fn=lambda line: summary_io.write(line + "\n"))
-    return summary_io.getvalue()
-
-
-def save_model_info(mf_path):
+def save_model_info(mf_path, dku_model):
     model_info = {
-        constants.SCORING: compute_model_info(mf_path, constants.SCORING),
-        constants.BEFORE_TRAIN: compute_model_info(mf_path, constants.BEFORE_TRAIN)
+        constants.SCORING: dku_model.get_info(),
+        constants.BEFORE_TRAIN: dku_model.get_info(base=True)
     }
 
     with mf_path.get_writer(constants.MODEL_INFO_FILE) as w:
         w.write(json.dumps(model_info))
-
-
-def compute_model_info(mf_path, goal):
-    model_info = {}
-    model = load_instantiate_keras_model_preprocessing(mf_path, goal=goal, verbose=False)["model"]
-    if goal == constants.SCORING:
-        model_info['layers'] = get_layers_as_list(model)
-    model_info['summary'] = get_model_summary(model)
-    return model_info
-
-
-###################################################################################################################
-## LOAD MODEL
-###################################################################################################################
-
-def load_instantiate_keras_model_preprocessing(mf_path, goal, input_shape=None, pooling=None,
-                                               reg=None, dropout=None, n_classes=None, verbose=True):
-    config = config_utils.get_config(mf_path)
-
-    if is_keras_application(config["architecture"]):
-        return load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes, verbose)
-    else:
-        raise TypeError('You must use a Keras Application.')
-    # TODO : handle non keras application if such algorithms are available
-
-
-def load_keras_application_for_scoring(mf_path, architecture, config, retrained, top_params, **kwargs):
-    model_params = {}
-    input_shape = top_params["input_shape"] if top_params else None
-    model = build_keras_application()[architecture]["model_func"](weights=None, include_top=(not top_params),
-                                                                  input_shape=input_shape)
-    if top_params:
-        model, model_params = enrich_model(model, top_params, **kwargs)
-    suffix = constants.CUSTOM_TOP_SUFFIX if top_params else constants.RETRAINED_SUFFIX if retrained else ''
-    model_weights_path = get_weights_path(mf_path, config, suffix)
-    model.load_weights(model_weights_path)
-    return model, model_params
-
-def load_keras_application_for_retraining(mf_path, architecture, config, retrained, top_params, input_shape, **kwargs):
-    input_shape = top_params["input_shape"] if retrained else input_shape
-    model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                  input_shape=input_shape)
-    model, model_params = enrich_model(model, top_params, **kwargs)
-    suffix = constants.RETRAINED_SUFFIX if retrained else constants.NOTOP_SUFFIX
-    model_weights_path = get_weights_path(mf_path, config, suffix)
-    model.load_weights(model_weights_path)
-    if input_shape:
-        model_params["input_shape"] = input_shape
-    return model, model_params
-
-
-def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dropout, n_classes, verbose):
-    architecture = config["architecture"]
-    trained_on = config["trained_on"]
-    retrained = config.get(constants.RETRAINED, False)
-    top_params = config.get(constants.TOP_PARAMS, None)
-    model_params = {}
-
-    if trained_on != constants.IMAGENET:
-        raise IOError("The architecture '{}', trained on '{}' cannot be found".format(architecture, trained_on))
-
-    if retrained and not top_params:
-        raise IOError("Your config file is missing some parameters : '{}'".format(constants.TOP_PARAMS))
-
-    input_shape = top_params["input_shape"] if top_params else input_shape
-    include_top = goal == constants.SCORING and not top_params
-
-    model = build_keras_application()[architecture]["model_func"](
-        weights=None,
-        input_shape=input_shape,
-        include_top=include_top
-    )
-
-
-    if goal == constants.SCORING:
-
-        if not retrained:
-
-            if top_params is None:
-
-                model = build_keras_application()[architecture]["model_func"](weights=None, include_top=True)
-                model_weights_path = get_weights_path(mf_path, config)
-                model.load_weights(model_weights_path)
-
-            else:
-
-                model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                              input_shape=top_params["input_shape"])
-                model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-                model_weights_path = get_weights_path(mf_path, config, constants.CUSTOM_TOP_SUFFIX)
-                model.load_weights(model_weights_path)
-
-        else:
-
-            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                          input_shape=top_params["input_shape"])
-            model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-            model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
-            model.load_weights(model_weights_path)
-
-    elif goal == constants.RETRAINING:
-
-        if not retrained:
-
-            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                          input_shape=input_shape)
-            model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
-            model.load_weights(model_weights_path)
-            model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-            model_params["input_shape"] = input_shape
-
-        else:
-
-            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                          input_shape=top_params["input_shape"])
-            model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-            model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
-            model.load_weights(model_weights_path)
-
-    elif goal == constants.BEFORE_TRAIN:
-
-        if not retrained:
-
-            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                          input_shape=input_shape)
-            model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
-            model.load_weights(model_weights_path)
-
-        else:
-
-            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False,
-                                                                          input_shape=top_params["input_shape"])
-            model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
-            model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
-            model.load_weights(model_weights_path)
-
-    return {"model": model, "preprocessing": build_keras_application()[architecture]["preprocessing"],
-            "model_params": model_params}
-
-
-def select_param(param_name, param_val, top_params):
-    return param_val if param_val else top_params[param_name]
-
-
-def enrich_model(base_model, params, pooling, dropout, reg, n_classes, verbose):
-    # Init params if not done before
-    params = {} if params is None else params
-
-    # Loading appropriate params
-    params["pooling"] = select_param("pooling", pooling, params)
-    params["n_classes"] = select_param("n_classes", n_classes, params)
-
-    x = base_model.layers[-1].output
-
-    if params["pooling"] == 'None':
-        x = Flatten()(x)
-    elif params["pooling"] == 'avg':
-        x = GlobalAveragePooling2D()(x)
-    elif params["pooling"] == 'max':
-        x = GlobalMaxPooling2D()(x)
-
-    if dropout is not None and dropout != 0.0:
-        x = Dropout(dropout)(x)
-        if verbose:
-            print("Adding dropout to model with rate: {}".format(dropout))
-
-    regularizer = None
-    if reg is not None:
-        reg_l2 = reg["l2"]
-        reg_l1 = reg["l1"]
-        if (reg_l1 != 0.0) and (reg_l2 != 0.0):
-            regularizer = regularizers.l1_l2(l1=reg_l1, l2=reg_l2)
-        if (reg_l1 == 0.0) and (reg_l2 != 0.0):
-            regularizer = regularizers.l2(reg_l2)
-        if (reg_l1 != 0.0) and (reg_l2 == 0.0):
-            regularizer = regularizers.l1(reg_l1)
-        if verbose:
-            print("Using regularizer for model: {}".format(reg))
-
-    predictions = Dense(params["n_classes"], activation='softmax', name='predictions', kernel_regularizer=regularizer)(
-        x)
-    model = Model(input=base_model.input, output=predictions)
-
-    return model, params
-
-
-###################################################################################################################
-## GPU
-###################################################################################################################
 
 # TODO: Rename this function as it has a lot of border effects
 def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
@@ -396,21 +124,9 @@ def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
 ## FILES LOGIC
 ###################################################################################################################
 
-def get_weights_path(mf_path, config, suffix="", should_exist=True):
-    weights_filename = get_weights_filename(mf_path, config, suffix)
-    if should_exist:
-        model_weights_path = mf_path.get_download_stream(weights_filename)
-        # Hack to get the H5 stream coming from the folder API as a file
-        # Hack inspired from https://stackoverflow.com/questions/16654251/can-h5py-load-a-file-from-a-byte-array-in-memory
-        h5file = tables.open_file(weights_filename + "_temp", driver="H5FD_CORE",
-                                  driver_core_image=model_weights_path.read(),
-                                  driver_core_backing_store=0)
-        h5file.copy_file(weights_filename, overwrite=True)
-    return weights_filename
 
-
-def get_weights_filename():
-    return constants.WEIGHT_FILENAME
+def get_weights_filename(with_top=False):
+    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
 
 
 def write_config(mf_path, config):
@@ -493,50 +209,6 @@ def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_L
     predictions = model.predict(batch)
     return format_predictions_output(predictions, classify, labels_df, limit, min_threshold)
 
-
-def score(dku_model, images_folder, images_paths, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, labels_df=None):
-    batch_size = constants.PREDICTION_BATCH_SIZE
-    n = 0
-    results = {"prediction": [], "error": []}
-    num_images = len(images_paths)
-    while True:
-        if (n * batch_size) >= num_images: break
-        next_batch_list, error_indices = [], []
-        for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
-            img_path = images_paths[i]
-            try:
-                preprocessed_img = preprocess_img(
-                    img_path=images_folder.get_download_stream(img_path),
-                    img_shape=dku_model.model_input_shape,
-                    preprocessing=dku_model.preprocessing
-                )
-                next_batch_list.append(preprocessed_img)
-            except IOError as e:
-                print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
-                error_indices.append(index_in_batch)
-        next_batch = np.array(next_batch_list)
-
-        prediction_batch = get_predictions(
-            model=dku_model.model,
-            batch=next_batch,
-            classify=dku_model.get_name() == 'score',
-            limit=limit,
-            min_threshold=min_threshold,
-            labels_df=labels_df
-        )
-        error_batch = [0] * len(prediction_batch)
-
-        for err_index in error_indices:
-            prediction_batch.insert(err_index, None)
-            error_batch.insert(err_index, 1)
-
-        results["prediction"].extend(prediction_batch)
-        results["error"].extend(error_batch)
-        n += 1
-        print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
-    return results
-
-
 def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
@@ -572,6 +244,12 @@ def clean_custom_params(custom_params, params_type=""):
         value = string_to_arg(p["value"])
         cleaned_params[name] = value
     return cleaned_params
+
+
+def dbg_msg(msg, title=''):
+    print('DEBUG : {}'.format(title).center(100, '-'))
+    print(msg)
+    print(''.center(100, '-'))
 
 
 def display_gpu_device():
@@ -615,23 +293,15 @@ def threadsafe_generator(f):
     return g
 
 
-###############################################################
-## Dictionary as class
-###############################################################
-
-class AttributeDict(dict):
-    __getattr__ = dict.__getitem__
-    __setattr__ = dict.__setitem__
-
 
 ###############################################################
 ## MODEL CHECKPOINT FOR MULTI GPU
-## When using multiple GPUs, we need to save the base model,
+## When using multiple GPUs, we need to save the base recipe,
 ## not the one defined by multi_gpu_model
 ## see example: https://keras.io/utils/#multi_gpu_model
-## Therefore, to save the model after each epoch by leveraging
+## Therefore, to save the recipe after each epoch by leveraging
 ## ModelCheckpoint callback, we need to adapt it to save the
-## base model. To do so, we pass the base model to the callback.
+## base recipe. To do so, we pass the base recipe to the callback.
 ## Inspired by:
 ##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
 ###############################################################
@@ -653,14 +323,14 @@ class MultiGPUModelCheckpoint(ModelCheckpoint):
     def on_epoch_end(self, epoch, logs=None):
         # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
 
-        # First retrieve model
+        # First retrieve recipe
         model = self.model
 
-        # Then switching model to base model
+        # Then switching recipe to base recipe
         self.model = self.base_model
 
         # Calling super on_epoch_end
         super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
 
-        # Resetting model afterwards
+        # Resetting recipe afterwards
         self.model = model

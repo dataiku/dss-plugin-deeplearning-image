@@ -1,11 +1,9 @@
 import pandas as pd
 import dku_deeplearning_image.utils as utils
 
-from model.score_recipe import ScoreRecipe
+from recipe.score_recipe import ScoreRecipe
 from config.score_config import ScoreConfig
-from utils.dku_file_manager import DkuFileManager
-import dku_deeplearning_image.constants as constants
-
+from utils_objects.dku_file_manager import DkuFileManager
 
 def get_input_output():
     file_manager = DkuFileManager()
@@ -24,8 +22,9 @@ def write_output_dataset(output_dataset, image_folder, classification):
 
 @utils.log_func(txt='recipe')
 def run():
-    image_folder, model_folder, output_dataset = get_input_output()
     config = ScoreConfig()
+
+    image_folder, model_folder, output_dataset = get_input_output()
     recipe = ScoreRecipe(config)
 
     classification = recipe.compute(image_folder, model_folder)

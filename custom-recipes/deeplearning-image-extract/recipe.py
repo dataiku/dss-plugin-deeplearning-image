@@ -1,9 +1,9 @@
 import pandas as pd
 import dku_deeplearning_image.utils as utils
 
-from model.extract_model import ExtractModel
+from recipe.extract_recipe import ExtractRecipe
 from config.extract_config import ExtractConfig
-from utils.dku_file_manager import DkuFileManager
+from utils_objects.dku_file_manager import DkuFileManager
 
 
 def get_input_output():
@@ -15,21 +15,22 @@ def get_input_output():
 
 
 @utils.log_func(txt='output dataset writing')
-def write_output_dataset(output_dataset, images_paths, features):
+def write_output_dataset(output_dataset, image_folder, features):
+    images_paths = image_folder.list_paths_in_partition()
     output_df = utils.build_prediction_output_df(images_paths, features)
     output_dataset.write_with_schema(pd.DataFrame(output_df))
 
 
 @utils.log_func(txt='recipe')
 def run():
-    image_folder, model_folder, output_dataset = get_input_output()
-    images_paths = image_folder.list_paths_in_partition()
-
     config = ExtractConfig()
-    model = ExtractModel(model_folder, config)
-    features = model.extract_features(image_folder)
 
-    write_output_dataset(output_dataset, images_paths, features)
+    image_folder, model_folder, output_dataset = get_input_output()
+    recipe = ExtractRecipe(config)
+
+    features = recipe.compute(image_folder, model_folder)
+
+    write_output_dataset(output_dataset, image_folder, features)
 
 
 run()

@@ -1,36 +1,31 @@
-from .dku_recipe import DkuModel
+from .dku_recipe import DkuRecipe
+from utils_objects.dku_model import DkuModel
 import dku_deeplearning_image.utils as utils
-from utils.dku_image_generator import DkuImageGenerator
+from utils_objects.dku_image_generator import DkuImageGenerator
 import dku_deeplearning_image.constants as constants
 from sklearn.model_selection import train_test_split
-from keras.utils.training_utils import multi_gpu_model
 from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
-import numpy as np
 
 
-class RetrainModel(DkuModel):
-    def __init__(self, input_model_folder, label_df, config):
-        super(RetrainModel, self).__init__(input_model_folder, config)
-        self.load(label_df)
+class RetrainRecipe(DkuRecipe):
+    def __init__(self, config):
+        super(RetrainRecipe, self).__init__(config)
 
-    def _load_model_and_pp(self):
-        super(RetrainModel, self).load(
-            mf_path=self.input_model_folder,
-            goal=constants.RETRAINING,
-            input_shape=self.config.input_shape,
-            pooling=self.config.model_pooling,
-            reg=self.config.model_reg,
-            dropout=self.config.model_dropout,
-            n_classes=len(self.labels))
-        self.model_config = utils.get_model_config_from_file(self.input_model_folder)
+    def load_dku_model(self, model_folder, label_df):
+        self.dku_model = DkuModel(model_folder)
+        self.dku_model.label_df = label_df
+        self.dku_model.load_model(self.config, constants.RETRAINING,
+                                  use_gpu=self.config.use_gpu, n_gpu=self.config.n_gpu)
+        self._set_trainable_layers()
+        self.dku_model.print_summary()
 
     def _set_trainable_layers(self):
         print("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
-        layers = self.model.layers
+        layers = self.dku_model.get_layers()
         if self.config.layer_to_retrain == "all":
             n_last = len(layers)
         elif self.config.layer_to_retrain == "last":
@@ -73,24 +68,21 @@ class RetrainModel(DkuModel):
         return model_opti_class
 
     def _get_model_checkpoint(self, model_weights_path):
-        should_save_weights_only = utils.should_save_weights_only(self.model_config)
-
         if self.config.use_gpu:
-            mcheck = utils.MultiGPUModelCheckpoint(
+            return utils.MultiGPUModelCheckpoint(
                 filepath=model_weights_path,
-                base_model=self.base_model,
+                base_model=self.dku_model.get_base_model(),
                 monitor="val_loss",
                 save_best_only=True,
-                save_weights_only=should_save_weights_only
+                save_weights_only=True
             )
         else:
-            mcheck = ModelCheckpoint(
+            return ModelCheckpoint(
                 filepath=model_weights_path,
                 monitor="val_loss",
                 save_best_only=True,
-                save_weights_only=should_save_weights_only
+                save_weights_only=True
             )
-        return mcheck
 
     def _get_tensorboard(self, output_model_folder):
         log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
@@ -107,13 +99,6 @@ class RetrainModel(DkuModel):
             callback_list.append(self._get_tensorboard(output_model_folder))
         return callback_list
 
-    def load(self, label_df):
-        self.labels = list(np.unique(label_df[constants.LABEL]))
-        self._load_model_and_pp()
-        self.model = multi_gpu_model(self.base_model, self.config.n_gpu) if self.config.use_gpu else self.base_model
-        self._set_trainable_layers()
-        self.model.summary()
-
     def compile(self):
         model_opti_class = self._get_optimizer_class()
 
@@ -122,11 +107,11 @@ class RetrainModel(DkuModel):
         params_opti["lr"] = self.config.learning_rate
 
         model_opti = model_opti_class(**params_opti)
-        self.model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
+        self.dku_model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
 
     def _retrain(self, train_generator, test_generator, callback_list):
-        self.model.fit_generator(
-            train_generator,
+        self.dku_model.fit_generator(
+            generator=train_generator,
             steps_per_epoch=self.config.nb_steps_per_epoch,
             epochs=self.config.nb_epochs,
             validation_data=test_generator,
@@ -136,31 +121,29 @@ class RetrainModel(DkuModel):
             verbose=2
         )
 
-    def retrain(self, images_folder, label_df, output_model_folder):
+    def compute(self, image_folder, model_folder, label_df, output_folder):
+        self.load_dku_model(model_folder, label_df)
         self.compile()
+
         train_df, test_df = self._build_train_test_sets(label_df)
         extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
 
         dku_generator = DkuImageGenerator(
-            images_folder=images_folder,
-            labels=self.labels,
+            images_folder=image_folder,
+            labels=self.dku_model.get_distinct_labels(),
             input_shape=self.config.input_shape,
             batch_size=self.config.batch_size,
-            preprocessing=self.preprocessing,
+            preprocessing=self.dku_model.application.preprocessing,
             use_augmentation=self.config.data_augmentation,
             extra_images_gen=extra_images_gen,
             n_augm=self.config.n_augmentation
         )
         train_gen, test_gen = dku_generator.load(train_df), dku_generator.load(test_df)
 
-        model_weights_path = utils.get_weights_path(
-            output_model_folder,
-            config=self.model_config,
-            suffix=constants.RETRAINED_SUFFIX,
-            should_exist=False
-        )
+        model_weights_path = self.dku_model.get_weights_path()
+
         callbacks = self._get_callbacks(
-            output_model_folder=output_model_folder,
+            output_model_folder=output_folder,
             model_weights_path=model_weights_path
         )
         self._retrain(
@@ -169,3 +152,6 @@ class RetrainModel(DkuModel):
             callback_list=callbacks
         )
 
+        self.dku_model.retrained = True
+
+        return self.dku_model
