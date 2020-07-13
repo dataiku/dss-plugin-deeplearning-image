@@ -1,4 +1,4 @@
-from .dku_model import DkuModel
+from .dku_recipe import DkuModel
 import dku_deeplearning_image.utils as utils
 from keras.models import Model
 import dku_deeplearning_image.constants as constants

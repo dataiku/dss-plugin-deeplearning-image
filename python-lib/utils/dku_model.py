@@ -5,10 +5,10 @@ import json
 import pandas as pd
 import numpy as np
 import tables
+import tensorflow as tf
 
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
 from keras.models import Model
-from keras import regularizers
 
 class DkuModel:
     def __init__(self, folder):
@@ -23,8 +23,27 @@ class DkuModel:
             'application': self.application.jsonify()
         }
 
-    def load_model(self, **kwargs):
-        self.model = self.application.model_func(**kwargs)
+    def load_model(self, config, goal):
+        with tf.device('/cpu:0'):
+            self.model = self.application.model_func(
+                weights=None,
+                include_top=goal == constants.SCORING and not self.retrained,
+                input_shape=self.get_input_shape()
+            )
+
+            self.enrich(
+                pooling=config.get('pooling'),
+                dropout=config.get('dropout'),
+                reg=config.get('reg')
+            )
+
+            self.load_weights()
+
+    def load_weights(self):
+        self.load_weights_to_local()
+        weights_path = self.get_weights_path()
+        self.model.load_weights(weights_path)
+
 
     def get_model(self):
         assert self.model, "You must load the model before getting it. Killing process."
@@ -82,7 +101,7 @@ class DkuModel:
             print("------ \n Info: No csv file in the model folder, will not use class names. \n ------")
             self.label_df = None
 
-    def enrich(self, pooling=None, dropout=None, reg=None, verbose=False):
+    def enrich(self, pooling=None, dropout=None, reg=None):
         # Init params if not done before
         pooling = self.getattr('pooling', pooling)
         n_classes = len(self.get_distinct_labels())
@@ -95,8 +114,52 @@ class DkuModel:
         predictions = Dense(n_classes, activation='softmax', name='predictions', kernel_regularizer=regularizer)(x)
         self.model = Model(input=self.model.input, output=predictions)
 
-    def get_weights(self):
+    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, classify=True):
+        batch_size = constants.PREDICTION_BATCH_SIZE
+        images_paths = images_folder.list_paths_in_partition()
+        n = 0
+        results = {"prediction": [], "error": []}
+        num_images = len(images_paths)
+        while True:
+            if (n * batch_size) >= num_images: break
+            next_batch_list, error_indices = [], []
+            for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
+                img_path = images_paths[i]
+                try:
+                    preprocessed_img = utils.preprocess_img(
+                        img_path=images_folder.get_download_stream(img_path),
+                        img_shape=self.get_input_shape(),
+                        preprocessing=self.application.preprocessing
+                    )
+                    next_batch_list.append(preprocessed_img)
+                except IOError as e:
+                    print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                    error_indices.append(index_in_batch)
+            next_batch = np.array(next_batch_list)
+
+            prediction_batch = utils.get_predictions(
+                model=self.get_model(),
+                batch=next_batch,
+                classify=classify,
+                limit=limit,
+                min_threshold=min_threshold,
+                labels_df=self.get_label_df()
+            )
+            error_batch = [0] * len(prediction_batch)
+
+            for err_index in error_indices:
+                prediction_batch.insert(err_index, None)
+                error_batch.insert(err_index, 1)
+
+            results["prediction"].extend(prediction_batch)
+            results["error"].extend(error_batch)
+            n += 1
+            print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+        return results
+
+    def get_weights_path(self):
         weights_filename = utils.get_weights_filename()
+        return weights_filename
 
     def load_weights_to_local(self):
         weights_filename = utils.get_weights_filename()
