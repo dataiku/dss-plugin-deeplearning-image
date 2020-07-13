@@ -15,6 +15,7 @@ from keras.models import Model
 class DkuModel:
     def __init__(self, folder):
         self.folder = folder
+        self.load_config()
 
     def jsonify_config(self):
         return {

@@ -68,7 +68,7 @@ def get_regularizer(reg):
 
 # INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
 #        with the label architecture_trainedon to make it available, along with new a constant in python-lib/constants.py
-def build_keras_application():
+def get_application(architecture):
     from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
     from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
     from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
@@ -120,7 +120,7 @@ def build_keras_application():
             }
         }
     }
-    return keras_applications
+    return keras_applications[architecture]
 
 
 def is_keras_application(architecture):
