@@ -18,6 +18,3 @@ class DkuFileManager:
 
     def get_output_dataset(self, role):
         return self.get_file('output', 'dataset', role)
-
-
-

@@ -5,6 +5,7 @@ from recipe.score_recipe import ScoreRecipe
 from config.score_config import ScoreConfig
 from utils_objects.dku_file_manager import DkuFileManager
 
+
 def get_input_output():
     file_manager = DkuFileManager()
     image_folder = file_manager.get_input_folder('image_folder')
