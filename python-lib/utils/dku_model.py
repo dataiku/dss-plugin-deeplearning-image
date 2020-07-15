@@ -9,8 +9,7 @@ import numpy as np
 import tables
 import tensorflow as tf
 from keras.utils.training_utils import multi_gpu_model
-
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
+from keras.layers import Dense
 from keras.models import Model
 
 import copy as cp
@@ -26,7 +25,7 @@ class DkuModel:
             'trained_on': self.trained_on,
             'top_params': self.top_params,
             'extract_layer_default_index': self.extract_layer_default_index,
-            'application': self.application.jsonify()
+            'architecture': self.application.jsonify()
         }
 
     def load_model(self, config, goal, use_gpu=False, n_gpu=None):
@@ -39,7 +38,8 @@ class DkuModel:
                 input_shape=input_shape
             )
 
-            self.load_weights(with_top=include_top)
+            if goal == constants.RETRAINING:
+                self.load_weights(with_top=include_top)
 
             if self.top_params or goal == constants.RETRAINING:
                 self.enrich(
@@ -47,6 +47,10 @@ class DkuModel:
                     dropout=config.get('model_dropout'),
                     reg=config.get('model_reg')
                 )
+
+            if goal != constants.RETRAINING:
+                self.load_weights(with_top=include_top)
+
 
             self.top_params['input_shape'] = input_shape
 
@@ -63,12 +67,10 @@ class DkuModel:
     def load_weights(self, with_top=False):
         weights_path = self.get_weights_path(with_top=with_top)
         self.load_weights_to_local(weights_path)
-        utils.dbg_msg(weights_path, 'weights_path')
-        utils.dbg_msg(len(self.model.layers), 'len(self.model.layers)')
         self.model.load_weights(weights_path)
 
     def get_model(self):
-        assert self.model, "You must load the model before getting it. Killing process."
+        assert self.model, "You must load the recipe before getting it. Killing process."
         return self.model
 
     def get_input_shape(self):
@@ -126,16 +128,16 @@ class DkuModel:
         details_model_label = self.folder.get_path_details(constants.MODEL_LABELS_FILE)
         if details_model_label['exists'] and not details_model_label["directory"]:
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
-            label_df = pd.read_csv(labels_path, sep=",").set_index('id')
+            label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            print("------ \n Info: No csv file in the model folder, will not use class names. \n ------")
+            print("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
     def enrich(self, pooling=None, dropout=None, reg=None, n_classes=None):
         # Init params if not done before
         self.top_params['pooling'] = pooling or self.top_params.get('pooling')
-        self.top_params['n_classes'] = len(self.get_distinct_labels())
+        self.top_params['n_classes'] = n_classes or len(self.get_distinct_labels())
         x = self.get_base_model().layers[-1].output
 
         x = utils.add_pooling(x, self.top_params['pooling'])

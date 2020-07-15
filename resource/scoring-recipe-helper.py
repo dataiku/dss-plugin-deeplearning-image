@@ -14,7 +14,7 @@ def do(payload, config, plugin_config, inputs):
         required_columns = ["id", "className"]
         sep = ","
 
-        # Retrieving model folder
+        # Retrieving recipe folder
         model_folder_full_name = [inp for inp in inputs if inp["role"] == "modelFolder"][0]["fullName"]
         model_folder = dataiku.Folder(model_folder_full_name).get_path()
 
@@ -39,5 +39,5 @@ def retrieve_schema_from_pandas_compatible_csv_file(file_path, sep):
         df = pd.read_csv(file_path, sep=sep, nrows=0)
         return df.columns
     except Exception as e:
-        print "Unexpected exception : {}".format(e.message)
+        print("Unexpected exception : {}".format(e.message))
         return []

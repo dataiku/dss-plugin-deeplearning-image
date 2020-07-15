@@ -61,7 +61,6 @@ def get_regularizer(reg):
     return None
 
 def get_application(architecture):
-
     dku_application_params = list(filter(lambda x: x['name'] == architecture, APPLICATIONS))
     if not dku_application_params:
         available_apps = [x['name'] for x in APPLICATIONS]
@@ -197,7 +196,7 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
     if not classify:
         return predictions.tolist()
     formatted_predictions = []
-    id_pred = lambda index: labels_df.loc[index].className if labels_df is not None else str(index)
+    id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
     for pred in predictions:
         formatted_pred = get_ordered_dict(
             {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})

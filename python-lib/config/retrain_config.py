@@ -35,6 +35,8 @@ class RetrainConfig(DkuConfig):
         self.nb_validation_steps = int(self.recipe_config["nb_validation_steps"])
         self.data_augmentation = self.recipe_config["data_augmentation"]
         self.n_augmentation = int(self.recipe_config["n_augmentation"])
+        if self.n_augmentation and self.n_augmentation > self.batch_size:
+            raise ValueError("The number of augmentations must be lower than the batch size. Aborting.")
         self.custom_params_data_augment = self.recipe_config.get("model_custom_params_data_augmentation", [])
         self.use_tensorboard = self.recipe_config["tensorboard"]
         self.random_seed = int(self.recipe_config["random_seed"])
