@@ -17,7 +17,8 @@ import copy as cp
 class DkuModel:
     def __init__(self, folder):
         self.folder = folder
-        self.load_config()
+        if constants.CONFIG_FILE in self.folder.list_paths_in_partition():
+            self.load_config()
 
     def jsonify_config(self):
         return {
@@ -88,6 +89,9 @@ class DkuModel:
 
     def load_config(self):
         config = json.loads(self.folder.get_download_stream(constants.CONFIG_FILE).read())
+        self.set_config(config)
+
+    def set_config(self, config):
         self.retrained = config.get('retrained', False)
         self.trained_on = config.get('trained_on')
         self.top_params = config.get('top_params', {})
@@ -95,7 +99,10 @@ class DkuModel:
         self.extract_layer_default_index = config.get('extract_layer_default_index', -1)
 
         self.check_mandatory_attrs(['trained_on', 'architecture'])
-        self.application = utils.get_application(config.get('architecture'))
+        self.application = utils.get_application(self.architecture)
+
+    def get_weights_url(self):
+        return self.application.get_weights_url(self.trained_on)
 
     def save_config(self):
         with self.folder.get_writer(constants.CONFIG_FILE) as w:

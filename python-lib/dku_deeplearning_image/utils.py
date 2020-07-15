@@ -123,7 +123,6 @@ def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
 ## FILES LOGIC
 ###################################################################################################################
 
-
 def get_weights_filename(with_top=False):
     return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
 

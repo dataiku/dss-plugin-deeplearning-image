@@ -1,12 +1,10 @@
 from dataiku.runnables import Runnable
 import dataiku
-import urllib2, sys
 import requests
 import json
-import os
-import dl_weights_toolbox as utils
 import pandas as pd
-import constants
+import dku_deeplearning_image.constants as constants
+from utils_objects.dku_model import DkuModel
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
@@ -54,19 +52,23 @@ class MyRunnable(Runnable):
                 break
         
         if not output_folder_found:
-            output_folder_dss = project.create_managed_folder(output_folder_name,connection_name = connection_folder)
+            output_folder_dss = project.create_managed_folder(output_folder_name, connection_name=connection_folder)
 
-      
-        output_folder = dataiku.Folder(output_folder_name,project_key=self.project_key)
+        output_folder = dataiku.Folder(output_folder_name, project_key=self.project_key)
+
+        new_model = DkuModel(output_folder)
+
         # Building config file
         config = {
             "architecture": architecture,
             "trained_on": trained_on,
-            "extract_layer_default_index": utils.get_extract_layer_index(architecture, trained_on)
+            "extract_layer_default_index": -2
         }
 
+        new_model.set_config(config)
+
         # Downloading weights
-        url_to_weights = utils.get_weights_urls(architecture, trained_on)
+        url_to_weights = new_model.get_weights_url()
 
         def update_percent(percent, last_update_time):
             new_time = time.time()
@@ -92,14 +94,11 @@ class MyRunnable(Runnable):
                         percent = int(float(bytes_so_far) / total_size * 80)
                         update_time = update_percent(percent, update_time)
                         f.write(content)
+            raise ValueError()
 
-                        
-
-  
-    
         files_to_dl = [
-            {"url": url_to_weights["top"], "filename": utils.get_weights_filename("", config)},
-            {"url": url_to_weights["no_top"], "filename": utils.get_weights_filename("", config, "_notop")}
+            {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},
+            {"url": url_to_weights["no_top"], "filename": new_model.get_weights_path(with_top=False)}
         ]
 
         if trained_on == constants.IMAGENET:
@@ -122,12 +121,6 @@ class MyRunnable(Runnable):
             with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
                 w.write((mapping_df.to_csv(index=False,sep=",")))
             output_folder_dss.delete_file(imagenet_class_mapping_temp_file)
-            
-
-    
-       
-
-
             
         # Computing model info
         #utils.save_model_info(output_folder_path)
