@@ -15,7 +15,7 @@ def can_use_gpu():
     import pkg_resources
 
     dists = [d.project_name for d in pkg_resources.working_set]
-    return True
+    return True #'tensorflow-gpu' in dists
     
 def get_model_info(model_folder, goal):
     

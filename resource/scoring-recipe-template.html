@@ -39,7 +39,7 @@
               <div class="control-group">
                 <label class="control-label">Memory allocation rate per GPU</label>
                 <div class="controls">
-                  <input name=gpu_allocation style="width: 50px" type="number" min=0 max= required/>
+                  <input name=gpu_allocation style="width: 50px" type="number" min=0 max=1 step="0.1" ng-model="config.gpu_allocation" required/>
                 </div>
               </div>
           </div>
