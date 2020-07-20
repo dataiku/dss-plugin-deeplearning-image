@@ -1,12 +1,11 @@
 from dataiku.runnables import Runnable
 import dataiku
-import urllib2, sys
 import requests
 import json
-import os
-import dl_weights_toolbox as utils
 import pandas as pd
-import constants
+import dku_deeplearning_image.constants as constants
+from utils_objects.dku_model import DkuModel
+import dku_deeplearning_image.utils as utils
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
@@ -38,35 +37,33 @@ class MyRunnable(Runnable):
     def run(self, progress_callback):
 
         # Retrieving parameters
-        output_folder_name = self.config.get('outputName', '')
-        connection_folder = self.config.get('connectionFolder', '')
-        model = self.config.get('model', '')
-        architecture, trained_on = model.split('_')
+        output_managed_id = self.config.get('output_managed_folder')
+        output_new_folder_name = self.config.get('output_new_folder_name', '')
+        model_choice = self.config.get('model_choice')
         
         # Creating new Managed Folder if needed
         project = self.client.get_project(self.project_key)
-        output_folder_found = False
-        
-        for folder in project.list_managed_folders():
-            if output_folder_name == folder['name']:
-                output_folder_dss = project.get_managed_folder(folder['id'])
-                output_folder_found = True
-                break
-        
-        if not output_folder_found:
-            output_folder_dss = project.create_managed_folder(output_folder_name,connection_name = connection_folder)
 
-      
-        output_folder = dataiku.Folder(output_folder_name,project_key=self.project_key)
-        # Building config file
+        if output_new_folder_name:
+            output_folder_dss = project.create_managed_folder(output_new_folder_name)
+        else:
+            output_folder_dss = project.get_managed_folder(output_managed_id)
+
+        output_folder = dataiku.Folder(output_folder_dss.get_definition()['name'], project_key=self.project_key)
+        new_model = DkuModel(output_folder)
+
+        architecture, trained_on = model_choice.split('::')
         config = {
             "architecture": architecture,
             "trained_on": trained_on,
-            "extract_layer_default_index": utils.get_extract_layer_index(architecture, trained_on)
+            "extract_layer_default_index": -2
         }
+        utils.dbg_msg(config, 'config')
+
+        new_model.set_config(config)
 
         # Downloading weights
-        url_to_weights = utils.get_weights_urls(architecture, trained_on)
+        url_to_weights = new_model.get_weights_url()
 
         def update_percent(percent, last_update_time):
             new_time = time.time()
@@ -76,7 +73,7 @@ class MyRunnable(Runnable):
             else:
                 return last_update_time
 
-        def download_files_to_managed_folder(output_folder, files_info, chunk_size=8192):
+        def download_files_to_managed_folder(output_f, files_info, chunk_size=8192):
             total_size = 0
             bytes_so_far = 0
             for file_info in files_info:
@@ -85,7 +82,7 @@ class MyRunnable(Runnable):
                 file_info["response"] = response
             update_time = time.time()
             for file_info in files_info:
-                with output_folder.get_writer(file_info["filename"]) as f:
+                with output_f.get_writer(file_info["filename"]) as f:
                     for content in file_info["response"].iter_content(chunk_size=chunk_size):
                         bytes_so_far += len(content)
                         # Only scale to 80% because needs to compute model summary after download
@@ -93,44 +90,32 @@ class MyRunnable(Runnable):
                         update_time = update_percent(percent, update_time)
                         f.write(content)
 
-                        
-
-  
-    
-        files_to_dl = [
-            {"url": url_to_weights["top"], "filename": utils.get_weights_filename("", config)},
-            {"url": url_to_weights["no_top"], "filename": utils.get_weights_filename("", config, "_notop")}
-        ]
-
         if trained_on == constants.IMAGENET:
             # Downloading mapping id <-> name for imagenet classes
             # File used by Keras in all its 'decode_predictions' methods
             # Found here : https://github.com/keras-team/keras/blob/2.1.1/keras/applications/imagenet_utils.py
-            imagenet_id_class_mapping_url = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
-            imagenet_class_mapping_temp_file = "imagenet_classes_mapping.json"
-            files_to_dl.append({"url": imagenet_id_class_mapping_url, "filename": imagenet_class_mapping_temp_file})
+            class_mapping_url = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
+        else:
+            class_mapping_url = ''
+
+        files_to_dl = [
+            {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},
+            {"url": url_to_weights["no_top"], "filename": new_model.get_weights_path(with_top=False)}
+        ]
+
+        if class_mapping_url:
+            files_to_dl.append({"url": class_mapping_url, "filename": constants.CLASSES_MAPPING_FILE})
 
         output_folder_dss.put_file(constants.CONFIG_FILE, json.dumps(config))
         download_files_to_managed_folder(output_folder, files_to_dl)
 
-        if trained_on == constants.IMAGENET:
-            # Convert class mapping from json to csv
-           
-            mapping_df = pd.read_json(output_folder.get_download_stream (imagenet_class_mapping_temp_file), orient="index")
+        if class_mapping_url:
+            mapping_df = pd.read_json(output_folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
             mapping_df = mapping_df.reset_index()
             mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]         
             with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-                w.write((mapping_df.to_csv(index=False,sep=",")))
-            output_folder_dss.delete_file(imagenet_class_mapping_temp_file)
-            
-
-    
-       
-
-
-            
-        # Computing model info
-        #utils.save_model_info(output_folder_path)
+                w.write((mapping_df.to_csv(index=False, sep=",")))
+            output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
         
         return "<span>DONE</span>"
 
