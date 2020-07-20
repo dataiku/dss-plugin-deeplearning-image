@@ -39,10 +39,7 @@ def get_info_about_model(inputs):
 
     return add_can_use_gpu_to_resp({
         "layers": model_info["layers"],
-
         "summary": model_info["summary"],
-        # "layers": "zfNA",
-        # "summary": "NrfrerA",
         "default_layer_index": config["extract_layer_default_index"]
     })
 

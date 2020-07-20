@@ -21,6 +21,5 @@ class DkuConfig(object):
         self.n_gpu = self.gpu_options.get("n_gpu", 0)
         self.use_gpu = should_use_gpu and self.n_gpu > 1
 
-
     def get(self, key, default=None):
         return getattr(self, key, default)
