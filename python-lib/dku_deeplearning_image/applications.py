@@ -8,6 +8,7 @@ from dku_deeplearning_image import constants
 
 APPLICATIONS = [{
         "name": constants.RESNET,
+        "label": constants.RESNET_LABEL,
         "source": "keras",
         "model_func": ResNet50,
         "preprocessing": resnet50_preprocessing,
@@ -21,6 +22,7 @@ APPLICATIONS = [{
     },
     {
         "name": constants.XCEPTION,
+        "label": constants.XCEPTION_LABEL,
         "source": "keras",
         "model_func": Xception,
         "preprocessing": xception_preprocessing,
@@ -34,6 +36,7 @@ APPLICATIONS = [{
     },
     {
         "name": constants.INCEPTIONV3,
+        "label": constants.INCEPTIONV3_LABEL,
         "source": "keras",
         "model_func": InceptionV3,
         "preprocessing": inceptionv3_preprocessing,
@@ -47,6 +50,7 @@ APPLICATIONS = [{
     },
     {
         "name": constants.VGG16,
+        "label": constants.VGG16_LABEL,
         "source": "keras",
         "model_func": VGG16,
         "preprocessing": vgg16_preprocessing,

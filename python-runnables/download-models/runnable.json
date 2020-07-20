@@ -8,47 +8,27 @@
     "permissions" : ["WRITE_CONF"],
     "resultType" : "HTML",
     "resultLabel" : "model download output",
+    "paramsPythonSetup": "runnable-helper.py",
     "params": [
         {
-            "name": "outputName",
-            "label" : "Output folder name",
-            "type": "STRING",
+            "name": "output_managed_folder",
+            "label": "Output managed folder",
+            "type": "SELECT",
             "description":"Use a different folder for each downloaded model.",
-            "mandatory" : true
-        },
-        
-           {
-            "name": "connectionFolder",
-            "label" : "Connection folder",
-            "type": "STRING",
-            "description":"File with a valid connection",
-            "mandatory" : true,
-            "defaultValue" : "s3-instance-bucket"
-               
+            "getChoicesFromPython": true
         },
         {
-            "name": "model",
+            "name": "output_new_folder_name",
+            "label" : "Output folder name",
+            "type": "STRING",
+            "mandatory" : true,
+            "visibilityCondition": "model.output_managed_folder == 'create_new_folder'"
+        },
+        {
+            "name": "model_choice",
             "label": "Pre-trained model to download",
             "type": "SELECT",
-            "selectChoices": [
-                {
-                    "label": "Resnet trained on Imagenet",
-                    "value": "resnet_imagenet"
-                },
-                {
-                    "label": "Xception trained on Imagenet",
-                    "value": "xception_imagenet"
-                },
-                {
-                    "label": "Inception V3 trained on Imagenet",
-                    "value": "inceptionv3_imagenet"
-                },
-                {
-                    "label": "VGG16 trained on Imagenet",
-                    "value": "vgg16_imagenet"
-                }
-                /* Add other models here, e.g. the ones trained by Dataiku*/
-            ],
+            "getChoicesFromPython": true,
             "defaultValue": "resnet_imagenet",
             "mandatory": true
         }

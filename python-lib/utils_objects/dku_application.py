@@ -1,6 +1,7 @@
 class DkuApplication:
-    def __init__(self, name, source, model_func, preprocessing, weights, input_shape=None):
+    def __init__(self, name, label, source, model_func, preprocessing, weights, input_shape=None):
         self.name = name
+        self.label = label
         self.source = source
         self.model_func = model_func
         self.preprocessing = preprocessing
