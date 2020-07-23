@@ -2,13 +2,12 @@
 
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
-import StringIO
+from io import StringIO, BytesIO
 import json
 import pandas as pd
 import numpy as np
 import tables
 import tensorflow as tf
-from keras.utils.training_utils import multi_gpu_model
 from keras.layers import Dense
 from keras.models import Model
 
@@ -17,7 +16,8 @@ import copy as cp
 class DkuModel:
     def __init__(self, folder):
         self.folder = folder
-        if constants.CONFIG_FILE in self.folder.list_paths_in_partition():
+        utils.dbg_msg(self.folder.list_paths_in_partition(), 'self.folder.list_paths_in_partition()')
+        if '/{}'.format(constants.CONFIG_FILE) in self.folder.list_paths_in_partition():
             self.load_config()
 
     def jsonify_config(self):
@@ -28,20 +28,31 @@ class DkuModel:
             'extract_layer_default_index': self.extract_layer_default_index,
             'architecture': self.application.jsonify()
         }
+    
+    @tf.function
+    def test_decorated_function(self, **kwargs):
+        return self.application.model_func(**kwargs)
 
     def load_model(self, config, goal, use_gpu=False, n_gpu=None):
-        with tf.device('/cpu:0'):
-            include_top = goal == constants.SCORING and not self.retrained
-            input_shape = config.get('input_shape', self.get_input_shape())
-            self.model = self.application.model_func(
-                weights=None,
-                include_top=include_top,
-                input_shape=input_shape
-            )
+        strategy = tf.distribute.MirroredStrategy()
+        include_top = goal == constants.SCORING and not self.retrained
+        input_shape = config.get('input_shape', self.get_input_shape())
+        
+        utils.dbg_msg(input_shape, 'it has started !!!')
+        utils.dbg_msg(include_top, 'include_top')
+        self.model = self.application.model_func(
+            weights=None,
+            include_top=include_top,
+            input_shape=input_shape
+        )
+
+        utils.dbg_msg('it is over !!!') 
+        with strategy.scope():
+            
 
             if goal == constants.RETRAINING:
                 self.load_weights(with_top=include_top)
-
+            
             if self.top_params or goal == constants.RETRAINING:
                 self.enrich(
                     pooling=config.get('model_pooling'),
@@ -57,7 +68,7 @@ class DkuModel:
 
         if use_gpu and n_gpu:
             self.base_model = cp.deepcopy(self.model)
-            self.model = multi_gpu_model(self.model, n_gpu)
+            #self.model = multi_gpu_model(self.model, n_gpu)
 
     def get_base_model(self):
         return self.getattr('base_model', self.model)
@@ -83,7 +94,7 @@ class DkuModel:
 
     def get_model_summary(self, base=False):
         model = self.get_base_model() if base else self.get_model()
-        summary_io = StringIO.StringIO()
+        summary_io = StringIO()
         model.summary(print_fn=lambda line: summary_io.write(line + "\n"))
         return summary_io.getvalue()
 

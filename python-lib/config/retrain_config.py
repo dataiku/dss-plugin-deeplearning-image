@@ -12,8 +12,6 @@ class RetrainConfig(DkuConfig):
 
         self.col_filename = self.recipe_config["col_filename"]
         self.col_label = self.recipe_config["col_label"]
-        self.list_gpu = self.recipe_config["list_gpu"]
-        self.gpu_allocation = self.recipe_config["gpu_allocation"]
         self.train_ratio = float(self.recipe_config["train_ratio"])
         self.input_shape = (int(self.recipe_config["image_width"]), int(self.recipe_config["image_height"]), 3)
         self.batch_size = int(self.recipe_config["batch_size"])

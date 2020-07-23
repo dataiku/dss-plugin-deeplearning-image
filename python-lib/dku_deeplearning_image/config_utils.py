@@ -1,21 +1,30 @@
 #To move some utils function that does not needs Keras and so can be called from the backend without GPU installed and configured
 import json
 import os
-import constants
+import dku_deeplearning_image.constants as constants
+import tensorflow as tf
 
 def get_config(model_folder):
     return json.loads(model_folder.get_download_stream(constants.CONFIG_FILE).read())
 
-
 def deactivate_gpu():
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
-def can_use_gpu():
-    # Check that 'tensorflow-gpu' is installed on the current code-env
+def get_tensorflow_version():
     import pkg_resources
+    tf_lib = pkg_resources.working_set.by_key.get('tensorflow')
+    tf_lib_gpu = pkg_resources.working_set.by_key.get('tensorflow-gpu')
+    if tf_lib and tf_lib_gpu:
+        raise IOError(
+            'Both tensorflow and tensorflow-gpu are installed. You should use an isolated env to prevent conflicts.')
+    elif tf_lib_gpu:
+        print('WARNING: You are using an obsolete version of tensorlow for which cpu and gpu versions are separated.')
+        return tf_lib_gpu.version
+    return tf_lib.version
 
-    dists = [d.project_name for d in pkg_resources.working_set]
-    return True #'tensorflow-gpu' in dists
+def can_use_gpu():
+    real_n_gpus = len(tf.config.experimental.list_physical_devices('GPU'))
+    return True # real_n_gpus > 0
     
 def get_model_info(model_folder, goal):
     

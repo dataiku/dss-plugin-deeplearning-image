@@ -14,7 +14,7 @@ def format_label_df(label_dataset, col_filename, col_label):
         col_filename: constants.FILENAME,
         col_label: constants.LABEL
     }
-    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
+    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[list(renaming_mapping.values())]
     return label_df
 
 
@@ -33,12 +33,12 @@ def save_output_model(output_folder, model):
     labels = model.get_distinct_labels()
     df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
     with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-        w.write((df_labels.to_csv(index=False)))
+        w.write((df_labels.to_csv(index=False).encode()))
 
     # This copies a local file to the managed folder
     model_weights_path = model.get_weights_path()
 
-    with open(model_weights_path) as f:
+    with open(model_weights_path, 'rb') as f:
         output_folder.upload_stream(model_weights_path, f)
     # Computing recipe info
     utils.save_model_info(output_folder, model)

@@ -31,6 +31,7 @@ class DkuImageGenerator:
         img_filename = row[constants.FILENAME]
         label = row[constants.LABEL]
         label_index = self.labels.index(label)
+        utils.dbg_msg(img_filename, 'img_filename')
         try:
             image = self._preprocess_img(self.images_folder, img_filename)
             if self.use_augmentation:
@@ -40,7 +41,7 @@ class DkuImageGenerator:
                 X_batch = [image]
                 y_batch = [label_index]
         except IOError as e:
-            print("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
+            print("Cannot read the image '{}', skipping its. Error: {}".format(img_filename, e))
             X_batch, y_batch = [], []
         return X_batch, y_batch
 
@@ -63,6 +64,7 @@ class DkuImageGenerator:
 
     @utils.threadsafe_generator
     def load(self, image_df):
+        utils.dbg_msg(image_df, 'image_df')
         n_images = image_df.shape[0]
         batch_size_adapted = self._get_batch_size_adapted()
         n_batch = int(math.ceil(n_images * 1.0 / batch_size_adapted))
