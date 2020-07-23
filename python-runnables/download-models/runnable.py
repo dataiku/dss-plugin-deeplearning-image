@@ -8,8 +8,7 @@ from utils_objects.dku_model import DkuModel
 import dku_deeplearning_image.utils as utils
 import time
 
-
-# We deactivate GPU for this script, because all the methods only need to
+# We deactivate GPU for this script, because all the methods only need to 
 # fetch information about model and do not make computation
 
 class MyRunnable(Runnable):
@@ -26,12 +25,14 @@ class MyRunnable(Runnable):
         self.plugin_config = plugin_config
         self.client = dataiku.api_client()
 
+        
     def get_progress_target(self):
         """
-        If the runnable will return some progress info, have this function return a tuple of
+        If the runnable will return some progress info, have this function return a tuple of 
         (target, unit) where unit is one of: SIZE, FILES, RECORDS, NONE
         """
         return (100, 'NONE')
+
 
     def run(self, progress_callback):
 
@@ -39,7 +40,7 @@ class MyRunnable(Runnable):
         output_managed_id = self.config.get('output_managed_folder')
         output_new_folder_name = self.config.get('output_new_folder_name', '')
         model_choice = self.config.get('model_choice')
-
+        
         # Creating new Managed Folder if needed
         project = self.client.get_project(self.project_key)
 
@@ -111,10 +112,10 @@ class MyRunnable(Runnable):
         if class_mapping_url:
             mapping_df = pd.read_json(output_folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
             mapping_df = mapping_df.reset_index()
-            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
+            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]         
             with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
                 w.write((mapping_df.to_csv(index=False, sep=",").encode()))
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
-
+        
         return "<span>DONE</span>"
 

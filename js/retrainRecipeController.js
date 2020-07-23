@@ -1,4 +1,4 @@
-var app = angular.module('deepLearningImageToolsDev.retrain', []);
+var app = angular.module('deepLearningImageTools.retrain', []);
 
 app.controller('retrainRecipeController', function($scope) {
 

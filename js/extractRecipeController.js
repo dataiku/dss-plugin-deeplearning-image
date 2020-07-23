@@ -1,4 +1,4 @@
-var app = angular.module('deepLearningImageToolsDev.extract', []);
+var app = angular.module('deepLearningImageTools.extract', []);
 
 app.controller('extractRecipeController', function($scope) {
 

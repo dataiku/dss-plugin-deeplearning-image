@@ -1,4 +1,4 @@
-var app = angular.module('deepLearningImageToolsDev.scoring', []);
+var app = angular.module('deepLearningImageTools.scoring', []);
 
 app.controller('scoringRecipeController', function($scope) {
 
