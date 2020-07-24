@@ -33,7 +33,7 @@ class RetrainRecipe(DkuRecipe):
         elif self.config.layer_to_retrain == "n_last":
             n_last = self.config.layer_to_retrain_n
         else:
-            n_last = 0
+            raise ValueError("Error in # layers to retrain. You must retrain at least one layer.")
 
         for i, lay in enumerate(layers):
             lay.trainable = i >= (len(layers) - n_last)
