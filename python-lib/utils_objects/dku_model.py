@@ -137,7 +137,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            print("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
+            utils.log_info("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
@@ -175,7 +175,7 @@ class DkuModel(object):
                     )
                     next_batch_list.append(preprocessed_img)
                 except IOError as e:
-                    print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                    utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
                     error_indices.append(index_in_batch)
             next_batch = np.array(next_batch_list)
 
@@ -196,7 +196,7 @@ class DkuModel(object):
             results["prediction"].extend(prediction_batch)
             results["error"].extend(error_batch)
             n += 1
-            print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+            utils.log_info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
         return results
 
     def get_weights_path(self, with_top=False):

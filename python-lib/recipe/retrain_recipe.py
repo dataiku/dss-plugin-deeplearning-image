@@ -24,7 +24,7 @@ class RetrainRecipe(DkuRecipe):
         self.dku_model.print_summary()
 
     def _set_trainable_layers(self):
-        print("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
+        utils.log_info("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
         layers = self.dku_model.get_layers()
         if self.config.layer_to_retrain == "all":
             n_last = len(layers)
@@ -47,7 +47,7 @@ class RetrainRecipe(DkuRecipe):
         return train_df, test_df
 
     def _get_tf_image_data_gen(self):
-        print("Using data augmentation with {} images generated per training image\n".format(
+        utils.log_info("Using data augmentation with {} images generated per training image\n".format(
             self.config.n_augmentation))
         params_data_augment = utils.clean_custom_params(
             custom_params=self.config.custom_params_data_augment,
@@ -63,7 +63,7 @@ class RetrainRecipe(DkuRecipe):
         elif self.config.optimizer == "sgd":
             model_opti_class = optimizers.SGD
         else:
-            print("Optimizer not supporter: {}. Applying adam.".format(self.config.optimizer))
+            utils.log_info("Optimizer not supporter: {}. Applying adam.".format(self.config.optimizer))
             model_opti_class = optimizers.Adam
         return model_opti_class
 

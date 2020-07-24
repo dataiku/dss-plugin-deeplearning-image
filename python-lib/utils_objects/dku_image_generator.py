@@ -40,7 +40,7 @@ class DkuImageGenerator(object):
                 X_batch = [image]
                 y_batch = [label_index]
         except IOError as e:
-            print("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
+            utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
             X_batch, y_batch = [], []
         return X_batch, y_batch
 

@@ -19,6 +19,9 @@ import sys
 import dku_deeplearning_image.config_utils as config_utils
 from utils_objects.dku_application import DkuApplication
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Support Truncated Images with PIL
 from PIL import ImageFile
@@ -98,9 +101,9 @@ def save_model_info(mf_path, dku_model):
 # TODO: Rename this function as it has a lot of border effects
 def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
     gpu_options = {}
-    print("load_gpu_options")
+    log_info("load_gpu_options")
     if should_use_gpu:
-        print("should use GPU")
+        log_info("should use GPU")
         list_gpu = list(map(int, list_gpu_str.replace(" ", "").split(",")))
         gpu_options["list_gpu"] = list_gpu
         gpu_options["n_gpu"] = len(list_gpu)
@@ -156,9 +159,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                print("cached file %s" % file_path)
+                log_info("cached file %s" % file_path)
     else:
-        print("read from cache %s" % file_path)
+        log_info("read from cache %s" % file_path)
     return filename
 
 
@@ -169,7 +172,7 @@ def get_model_config_from_file(model_folder):
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
     output["images"] = images_paths
-    print("------->" + str(output))
+    log_info("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output
@@ -181,9 +184,9 @@ def build_prediction_output_df(images_paths, predictions):
 def log_func(txt):
     def inner(f):
         def wrapper(*args, **kwargs):
-            print('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
             res = f(*args, **kwargs)
-            print('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
             return res
 
         return wrapper
@@ -245,18 +248,20 @@ def clean_custom_params(custom_params, params_type=""):
 
 
 def dbg_msg(msg, title=''):
-    print('DEBUG : {}'.format(title).center(100, '-'))
-    print(msg)
-    print(''.center(100, '-'))
+    logger.debug('DEBUG : {}'.format(title).center(100, '-'))
+    logger.debug(msg)
+    logger.debug(''.center(100, '-'))
 
 
 def display_gpu_device():
-    print(device_lib.list_local_devices())
+    log_info(device_lib.list_local_devices())
     if tf.test.gpu_device_name():
-        print('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
+        log_info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
     else:
-        print("Please install GPU version of TF")
+        log_info("Please install GPU version of TF")
 
+def log_info(*args):
+    logger.info(*args)
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR

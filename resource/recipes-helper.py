@@ -46,15 +46,10 @@ def get_info_about_model(inputs):
 
 def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
-
     model_info = config_utils.get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
-
     label_dataset = get_label_dataset(inputs)
     columns = [c["name"] for c in label_dataset.read_schema()]
-
     model_config = config_utils.get_config(model_folder)
-    # return add_can_use_gpu_to_resp({"summary": "NA SUMMARY TO DISPLAY", "columns": columns, "model_config": model_config})
-    # print(model_info)
     return add_can_use_gpu_to_resp({"summary": model_info["summary"], "columns": columns, "model_config": model_config})
 
 
