@@ -1,6 +1,6 @@
 from .dku_recipe import DkuRecipe
 import dku_deeplearning_image.constants as constants
-from utils_objects.dku_model import DkuModel
+from utils_objects import DkuModel
 
 
 class ExtractRecipe(DkuRecipe):

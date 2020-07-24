@@ -7,7 +7,7 @@ from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
 import dku_deeplearning_image.constants as constants
-from dku_deeplearning_image.applications import APPLICATIONS
+from dku_deeplearning_image import APPLICATIONS
 import threading
 import json
 from collections import OrderedDict
@@ -17,7 +17,7 @@ from datetime import datetime
 
 import sys
 import dku_deeplearning_image.config_utils as config_utils
-from utils_objects.dku_application import DkuApplication
+from utils_objects import DkuApplication
 import pandas as pd
 import logging
 

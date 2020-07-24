@@ -1,9 +1,9 @@
 import pandas as pd
 import dku_deeplearning_image.utils as utils
 
-from recipe.extract_recipe import ExtractRecipe
-from config.extract_config import ExtractConfig
-from utils_objects.dku_file_manager import DkuFileManager
+from recipe import ExtractRecipe
+from config import ExtractConfig
+from utils_objects import DkuFileManager
 
 
 def get_input_output():
