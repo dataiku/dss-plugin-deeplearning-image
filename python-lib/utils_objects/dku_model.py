@@ -162,7 +162,8 @@ class DkuModel(object):
                             kernel_regularizer=regularizer)(x)
         self.model = Model(input=self.model.input, output=predictions)
 
-    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, classify=True):
+    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT,
+              min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
         batch_size = constants.PREDICTION_BATCH_SIZE
         images_paths = images_folder.list_paths_in_partition()
         n = 0
