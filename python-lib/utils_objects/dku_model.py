@@ -38,26 +38,32 @@ class DkuModel(object):
                 include_top=include_top,
                 input_shape=input_shape
             )
-
-            if goal == constants.RETRAINING:
-                self.load_weights(with_top=include_top)
-
-            if self.top_params or goal == constants.RETRAINING:
-                self.enrich(
-                    pooling=config.get('model_pooling'),
-                    dropout=config.get('model_dropout'),
-                    reg=config.get('model_reg')
-                )
-
-            if goal != constants.RETRAINING:
-                self.load_weights(with_top=include_top)
-
+            self._load_weights_and_enrich(config, goal, include_top)
 
             self.top_params['input_shape'] = input_shape
 
         if use_gpu and n_gpu:
             self.base_model = cp.deepcopy(self.model)
             self.model = multi_gpu_model(self.model, n_gpu)
+
+    def _load_weights_and_enrich(self, config, goal, include_top):
+        # Order of execution of load_weights() and enrich() has to change according to a condition.
+        # This way of doing so is more readable like that, it is however not the best for a DRY standpoint
+        enrich_kwargs = {
+            "pooling": config.get('model_pooling'),
+            "dropout": config.get('model_dropout'),
+            "reg": config.get('model_reg')
+        }
+        load_weights_kwargs = {
+            "with_top": include_top
+        }
+        if goal == constants.RETRAINING:
+            self.load_weights(**load_weights_kwargs)
+            self.enrich(**enrich_kwargs)
+        else:
+            if self.top_params:
+                self.enrich(**enrich_kwargs)
+            self.load_weights(**load_weights_kwargs)
 
     def get_base_model(self):
         return self.getattr('base_model', self.model)
