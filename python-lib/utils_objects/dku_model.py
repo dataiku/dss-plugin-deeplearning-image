@@ -14,7 +14,7 @@ from keras.models import Model
 
 import copy as cp
 
-class DkuModel:
+class DkuModel(object):
     def __init__(self, folder):
         self.folder = folder
         if constants.CONFIG_FILE in self.folder.list_paths_in_partition():

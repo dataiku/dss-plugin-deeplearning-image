@@ -1,7 +1,7 @@
 from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
 import dataiku
 
-class DkuFileManager:
+class DkuFileManager(object):
     def get_file(self, side, type_, role):
         dku_func = get_input_names_for_role if side == 'input' else get_output_names_for_role
         dku_type = dataiku.Folder if type_ == 'folder' else dataiku.Dataset
