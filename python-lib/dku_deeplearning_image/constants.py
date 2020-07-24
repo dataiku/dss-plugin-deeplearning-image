@@ -32,3 +32,5 @@ ENV_NAME_CPU = 'plugin_dl-image-cpu-api_node'
 WEIGHT_FILENAME = 'model_weights'
 PREDICTION_BATCH_SIZE = 100
 DEFAULT_PRED_LIMIT = 5
+COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
+COMPILE_METRICS = ["accuracy"]

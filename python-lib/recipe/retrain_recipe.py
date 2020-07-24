@@ -107,7 +107,11 @@ class RetrainRecipe(DkuRecipe):
         params_opti["lr"] = self.config.learning_rate
 
         model_opti = model_opti_class(**params_opti)
-        self.dku_model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
+        self.dku_model.compile(
+            optimizer=model_opti,
+            loss=constants.COMPILE_LOSS_FUNCTION,
+            metrics=constants.COMPILE_METRICS
+        )
 
     def _retrain(self, train_generator, test_generator, callback_list):
         self.dku_model.fit_generator(
