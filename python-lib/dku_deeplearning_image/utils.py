@@ -208,7 +208,6 @@ def get_ordered_dict(predictions):
 
 
 def preprocess_img(img_path, img_shape, preprocessing):
-    # dbg_msg(img_path, 'img_path')
     img = load_img(img_path, target_size=img_shape)
     array = img_to_array(img)
     array = preprocessing(array)

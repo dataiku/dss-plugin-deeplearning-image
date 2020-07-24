@@ -58,7 +58,6 @@ class MyRunnable(Runnable):
             "trained_on": trained_on,
             "extract_layer_default_index": -2
         }
-        utils.dbg_msg(config, 'config')
 
         new_model.set_config(config)
 

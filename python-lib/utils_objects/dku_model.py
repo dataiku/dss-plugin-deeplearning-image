@@ -16,7 +16,6 @@ import copy as cp
 class DkuModel:
     def __init__(self, folder):
         self.folder = folder
-        utils.dbg_msg(self.folder.list_paths_in_partition(), 'self.folder.list_paths_in_partition()')
         if '/{}'.format(constants.CONFIG_FILE) in self.folder.list_paths_in_partition():
             self.load_config()
 
@@ -37,16 +36,11 @@ class DkuModel:
         strategy = tf.distribute.MirroredStrategy()
         include_top = goal == constants.SCORING and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
-        
-        utils.dbg_msg(input_shape, 'it has started !!!')
-        utils.dbg_msg(include_top, 'include_top')
         self.model = self.application.model_func(
             weights=None,
             include_top=include_top,
             input_shape=input_shape
         )
-
-        utils.dbg_msg('it is over !!!') 
         with strategy.scope():
             
 
@@ -136,7 +130,6 @@ class DkuModel:
 
     def get_distinct_labels(self):
         label_df = self.get_label_df()
-        utils.dbg_msg(label_df, 'label_df')
         return self.get_or_load('distinct_labels', list(np.unique(label_df[constants.LABEL])))
 
     def get_label_df(self):
