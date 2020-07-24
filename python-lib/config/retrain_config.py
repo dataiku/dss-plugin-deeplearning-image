@@ -21,7 +21,7 @@ class RetrainConfig(DkuConfig):
         self.model_reg = self.recipe_config.get("model_reg")
         self.model_dropout = float(self.recipe_config.get("model_dropout"))
         self.layer_to_retrain = self.recipe_config.get("layer_to_retrain")
-        self.layer_to_retrain_n = int(self.recipe_config.get('layer_to_retrain_n', 0))
+        self.layer_to_retrain_n = int(self.recipe_config.get('layer_to_retrain_n', 1))
         self.optimizer = self.recipe_config.get("model_optimizer")
         self.learning_rate = self.recipe_config.get("model_learning_rate")
         self.custom_params_opti = self.recipe_config.get("model_custom_params_opti", [])
@@ -36,7 +36,8 @@ class RetrainConfig(DkuConfig):
 
     def _check_params(self):
         super(RetrainConfig, self)._check_params()
-        assert self.col_filename, "You must provide a column name for image filename"
-        assert self.col_label, "You must provide a column name for image label"
+        assert self.col_filename, "You must provide a column name for image filename."
+        assert self.col_label, "You must provide a column name for image label."
+        assert self.layer_to_retrain_n, "You must retrain at least one layer."
         if self.n_augmentation and self.n_augmentation > self.batch_size:
             raise ValueError("The number of augmentations must be lower than the batch size. Aborting.")
