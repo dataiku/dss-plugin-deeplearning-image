@@ -37,22 +37,19 @@ def get_gpu_list():
         'value': gpu.id
     } for gpu in GPUtil.getGPUs()]
 
+
 def get_info_scoring(inputs):
     return {}
 
 
 def get_info_about_model(inputs):
     model_folder = get_model_folder_path(inputs)
-
     model_info = config_utils.get_model_info(model_folder, goal=constants.SCORING)
     config = config_utils.get_config(model_folder)
 
     return {
         "layers": model_info["layers"],
-
         "summary": model_info["summary"],
-        # "layers": "zfNA",
-        # "summary": "NrfrerA",
         "default_layer_index": config["extract_layer_default_index"]
     }
 
