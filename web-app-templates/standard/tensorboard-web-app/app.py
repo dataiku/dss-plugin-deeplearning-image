@@ -1,7 +1,7 @@
 import requests
 from flask import request, Response
 import dataiku
-dataiku.use_plugin_libs("deeplearning-image-cpu")
+dataiku.use_plugin_libs("deeplearning-image")
 from tensorboard_handle import TensorboardThread
 import time
 import os
