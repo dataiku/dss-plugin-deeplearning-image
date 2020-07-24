@@ -73,7 +73,7 @@ def get_application(architecture):
 
 
 def is_keras_application(architecture):
-    return architecture in build_keras_application().keys()
+    return architecture in [app.name for app in APPLICATIONS]
 
 
 ###############################################################
@@ -85,35 +85,20 @@ def log_device_placement():
 
 def can_use_gpu():
     return len(tf.config.experimental.list_physical_devices('GPU')) > 0
-    
-def add_virtual_gpus(n_gpus, memory_limit=1024):
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    if gpus:
-        try:
-            tf.config.experimental.set_virtual_device_configuration(
-                gpus[0],
-                [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=memory_limit) for i in range(n_gpus)]
-            )
-        except RuntimeError as e:
-            print(e)
-
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     print("load_gpu_options")
     if should_use_gpu and can_use_gpu():
         print("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
-        gpus_to_use = [gpu for gpu in gpus if gpu.name in gpu_list or not gpu_list]
-        
-        tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
-        logical_devices = tf.config.list_logical_devices('GPU')
+        gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         if memory_limit:
-            new_logical_gpus = [
-                tf.config.experimental.VirtualDeviceConfiguration(
-                    memory_limit=int(memory_limit)
-                ) for i in range(len(gpus_to_use))
-            ]
-            tf.config.experimental.set_virtual_device_configuration(gpus_to_use, new_logical_gpus)
+            for gpu in gpus_to_use:
+                tf.config.experimental.set_virtual_device_configuration(
+                    gpu,
+                    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
+                )
+        tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
         config_utils.deactivate_gpu()
 

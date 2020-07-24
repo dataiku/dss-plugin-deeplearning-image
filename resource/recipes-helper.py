@@ -2,9 +2,9 @@ import dataiku
 import glob
 import pandas as pd
 import dku_deeplearning_image.config_utils as config_utils
-import tensorflow as tf
 import dku_deeplearning_image.constants as constants
 import os
+import GPUtil
 
 
 # We deactivate GPU for this script, because all the methods only need to
@@ -32,9 +32,10 @@ def do(payload, config, plugin_config, inputs):
 
 
 def get_gpu_list():
-    gpus = tf.config.experimental.list_physical_devices('GPU')
-    return [{'label': gpu.name, 'value': gpu.name} for gpu in gpus]
-
+    return [{
+        'label': 'GPU:{} - {}'.format(gpu.id, gpu.name, gpu.memoryTotal),
+        'value': gpu.id
+    } for gpu in GPUtil.getGPUs()]
 
 def get_info_scoring(inputs):
     return {}

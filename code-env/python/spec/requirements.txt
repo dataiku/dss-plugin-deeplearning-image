@@ -6,3 +6,4 @@ Pillow==7.2.0
 pip==20.1.1
 tables==3.6.1
 keras-preprocessing==1.1.0
+gputil
