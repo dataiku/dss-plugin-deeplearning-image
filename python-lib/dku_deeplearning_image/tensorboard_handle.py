@@ -32,21 +32,19 @@ class TensorboardCustomServer(tb.program.TensorBoardServer):
         pass  # Werkzeug's `serving.run_simple` handles this
 
 
-def get_logdir(folder_name):
-    # Retrieve model managed-folder path
-    client = dataiku.api_client()
-    project_key = os.environ["DKU_CURRENT_PROJECT_KEY"]
-    project = client.get_project(project_key)
-    filtered_folders = list(filter(lambda x: x['name'] == folder_name, project.list_managed_folders()))
-    if not filtered_folders:
-        raise DataikuException(
-            "The folder '{}' (in project '{}' cannot be found".format(folder_name, project_key))
-    folder_path = dataiku.Folder(filtered_folders[0]['id'], project_key=project_key).get_path()
-    log_path = os.path.join(folder_path, constants.TENSORBOARD_LOGS)
-    return log_path
+def get_logdir(folder_id):
+    folder = dataiku.Folder(folder_id)
+    try:
+        folder_path = folder.get_path()
+        return os.path.join(folder_path, constants.TENSORBOARD_LOGS)
+    except Exception as err:
+        raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
 
 
-def start_server_and_return_url(folder_name, host="127.0.0.1"):
+def start_server_and_return_url(folder_id, host="127.0.0.1"):
     program = tb.program.TensorBoard(server_class=TensorboardCustomServer)
-    program.configure(logdir=get_logdir(folder_name), host=host)
+    program.configure(
+        logdir=get_logdir(folder_id),
+        host=host
+    )
     return program.launch()
