@@ -168,8 +168,9 @@ class DkuModel(object):
         # Init params if not done before
         self.top_params['pooling'] = pooling or self.top_params.get('pooling')
         self.top_params['n_classes'] = n_classes or len(self.get_distinct_labels())
-        x = self.get_base_model().layers[-1].output
+        base_model = self.get_base_model()
 
+        x = base_model.layers[-1].output
         x = utils.add_pooling(x, self.top_params['pooling'])
         x = utils.add_dropout(x, dropout)
 
@@ -177,7 +178,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=self.model.input, output=predictions)
+        self.model = Model(input=base_model.input, output=predictions)
 
     def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT,
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
