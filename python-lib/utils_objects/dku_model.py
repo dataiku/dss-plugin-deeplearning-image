@@ -2,6 +2,7 @@
 
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
+from utils_objects import DkuFileManager
 import StringIO
 import json
 import pandas as pd
@@ -79,8 +80,10 @@ class DkuModel(object):
     def save_label_df(self):
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
-        with self.folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-            w.write((df_labels.to_csv(index=False)))
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.MODEL_LABELS_FILE,
+            content=df_labels.to_csv(index=False))
 
     def save_weights(self):
         # This copies a local file to the managed folder
@@ -134,8 +137,10 @@ class DkuModel(object):
         return self.application.get_weights_url(self.trained_on)
 
     def save_config(self):
-        with self.folder.get_writer(constants.CONFIG_FILE) as w:
-            w.write(json.dumps(self.jsonify_config()))
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.CONFIG_FILE,
+            content=json.dumps(self.jsonify_config()))
 
     def get_info(self, base=False):
         return {

@@ -18,3 +18,8 @@ class DkuFileManager(object):
 
     def get_output_dataset(self, role):
         return self.get_file('output', 'dataset', role)
+
+    @staticmethod
+    def write_to_folder(folder, file_path, content):
+        with folder.get_writer(file_path) as w:
+            w.write(content)

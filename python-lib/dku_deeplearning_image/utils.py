@@ -14,6 +14,7 @@ from collections import OrderedDict
 import numpy as np
 from tensorflow.python.client import device_lib
 from datetime import datetime
+from utils_objects import DkuFileManager
 
 import sys
 import dku_deeplearning_image.config_utils as config_utils
@@ -94,9 +95,10 @@ def save_model_info(mf_path, dku_model):
         constants.SCORING: dku_model.get_info(),
         constants.BEFORE_TRAIN: dku_model.get_info(base=True)
     }
-
-    with mf_path.get_writer(constants.MODEL_INFO_FILE) as w:
-        w.write(json.dumps(model_info))
+    DkuFileManager.write_to_folder(
+        folder=mf_path,
+        file_path=constants.MODEL_INFO_FILE,
+        content=json.dumps(model_info))
 
 # TODO: Rename this function as it has a lot of border effects
 def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
@@ -128,11 +130,6 @@ def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
 
 def get_weights_filename(with_top=False):
     return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
-
-
-def write_config(mf_path, config):
-    with mf_path.get_writer(constants.CONFIG_FILE) as w:
-        w.write(json.dumps(config))
 
 
 def get_file_path(folder_path, file_name):
