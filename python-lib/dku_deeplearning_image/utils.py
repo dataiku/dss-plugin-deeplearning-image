@@ -278,14 +278,6 @@ class threadsafe_iter:
             return self.it.__next__()
 
 
-def threadsafe_generator(f):
-    """A decorator that takes a generator function and makes it thread-safe.
-    """
-    def g(*a, **kw):
-        return threadsafe_iter(f(*a, **kw))
-    return g
-
-
 ###############################################################
 ## MODEL CHECKPOINT FOR MULTI GPU
 ## When using multiple GPUs, we need to save the base recipe,
