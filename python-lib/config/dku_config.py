@@ -10,7 +10,6 @@ class DkuConfig(object):
     def load(self):
         self._load_recipe_param()
         self._check_params()
-        utils.display_gpu_device()
 
     def _load_recipe_param(self):
         self.recipe_config = get_recipe_config()
