@@ -50,6 +50,6 @@
     
     "paramsTemplate" : "retrain-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.retrain",
-    "paramsPythonSetup": "recipes-helper.py"
+    "paramsPythonSetup": "params_helper/recipes-helper.py"
 
 }
