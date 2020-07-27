@@ -10,13 +10,10 @@ import threading
 import json
 from collections import OrderedDict
 import numpy as np
-from tensorflow.python.client import device_lib
 from datetime import datetime
-from utils_objects import DkuFileManager
 
 import sys
 import dku_deeplearning_image.config_utils as config_utils
-from utils_objects import DkuApplication
 import pandas as pd
 import logging
 
@@ -56,15 +53,6 @@ def get_regularizer(reg):
             return regularizers.l1(reg["l1"])
     return None
 
-
-def get_application(architecture):
-    dku_application_params = list(filter(lambda x: x['name'] == architecture, APPLICATIONS))
-    if not dku_application_params:
-        available_apps = [x['name'] for x in APPLICATIONS]
-        raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
-    return DkuApplication(**dku_application_params[0])
-
-
 ###################################################################################################################
 ## MODELS LIST
 ###################################################################################################################
@@ -103,21 +91,6 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
         tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
         config_utils.deactivate_gpu()
-
-###############################################################
-## EXTRACT INFO FROM MODEL (SUMMARY AND LAYERS)
-###############################################################
-
-
-def save_model_info(mf_path, dku_model):
-    model_info = {
-        constants.SCORING: dku_model.get_info(),
-        constants.BEFORE_TRAIN: dku_model.get_info(base=True)
-    }
-    DkuFileManager.write_to_folder(
-        folder=mf_path,
-        file_path=constants.MODEL_INFO_FILE,
-        content=json.dumps(model_info))
 
 ###################################################################################################################
 ## FILES LOGIC

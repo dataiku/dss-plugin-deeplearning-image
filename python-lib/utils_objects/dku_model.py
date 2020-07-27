@@ -1,7 +1,11 @@
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
-from io import StringIO, BytesIO
+from dku_deeplearning_image import APPLICATIONS
+
+from io import StringIO
 from utils_objects import DkuFileManager
+from utils_objects import DkuApplication
+
 import json
 import pandas as pd
 import numpy as np
@@ -125,7 +129,7 @@ class DkuModel(object):
         self.extract_layer_default_index = config.get('extract_layer_default_index', -1)
 
         self.check_mandatory_attrs(['trained_on', 'architecture'])
-        self.application = utils.get_application(self.architecture)
+        self.application = self.get_application()
 
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
@@ -141,6 +145,32 @@ class DkuModel(object):
             'layers': self.get_layers_as_list(base),
             'summary': self.get_model_summary(base)
         }
+
+    def save_info(self):
+        model_info = {
+            constants.SCORING: self.get_info(),
+            constants.BEFORE_TRAIN: self.get_info(base=True)
+        }
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.MODEL_INFO_FILE,
+            content=json.dumps(model_info))
+
+
+    def save_to_folder(self):
+        utils.log_info("Starting model saving...")
+        self.save_config()
+        self.save_label_df()
+        self.save_weights()
+        self.save_info()
+        utils.log_info("Model has been successfully saved.")
+
+    def get_application(self):
+        dku_application_params = list(filter(lambda x: x['name'] == self.architecture, APPLICATIONS))
+        if not dku_application_params:
+            available_apps = [x['name'] for x in APPLICATIONS]
+            raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+        return DkuApplication(**dku_application_params[0])
 
     def get_or_load(self, attr, default):
         if not self.hasattr(attr):
