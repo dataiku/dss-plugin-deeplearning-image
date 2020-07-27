@@ -1,14 +1,9 @@
-import pandas as pd
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
 
 from recipe import RetrainRecipe
 from config import RetrainConfig
 from utils_objects import DkuFileManager
-
-
-
-
 
 
 def format_label_df(label_dataset, col_filename, col_label):
@@ -30,33 +25,20 @@ def get_input_output():
 
 
 def save_output_model(output_folder, model):
-    utils.write_config(output_folder, model.jsonify_config())
-
-    labels = model.get_distinct_labels()
-    df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
-    with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-        w.write((df_labels.to_csv(index=False)))
-
-    # This copies a local file to the managed folder
-    model_weights_path = model.get_weights_path()
-
-    with open(model_weights_path) as f:
-        output_folder.upload_stream(model_weights_path, f)
-    # Computing recipe info
+    output_model = model.deepcopy(folder=output_folder)
+    output_model.save_config()
+    output_model.save_label_df()
+    output_model.save_weights()
     utils.save_model_info(output_folder, model)
 
 
 @utils.log_func(txt='recipe')
 def run():
     config = RetrainConfig()
-
     image_folder, label_dataset, model_folder, output_folder = get_input_output()
-
     label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
     recipe = RetrainRecipe(config)
-
     new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
-
     save_output_model(output_folder, new_model)
 
 

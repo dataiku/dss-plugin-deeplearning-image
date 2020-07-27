@@ -133,9 +133,6 @@ def get_weights_filename(with_top=False):
 def write_config(mf_path, config):
     with mf_path.get_writer(constants.CONFIG_FILE) as w:
         w.write(json.dumps(config))
-    # config_path = get_file_path(mf_path, constants.CONFIG_FILE)
-    # with open(config_path, 'w') as f:
-    #   json.dump(config, f)
 
 
 def get_file_path(folder_path, file_name):

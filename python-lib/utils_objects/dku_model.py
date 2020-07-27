@@ -65,6 +65,29 @@ class DkuModel(object):
                 self.enrich(**enrich_kwargs)
             self.load_weights(**load_weights_kwargs)
 
+    def deepcopy(self, **kwargs):
+        new_model = cp.deepcopy(self)
+        new_model.update_attributes(**kwargs)
+        return new_model
+
+    def update_attributes(self, **kwargs):
+        for attr, value in kwargs.items():
+            utils.dbg_msg(kwargs, 'kwargs')
+            if self.hasattr(attr):
+                self.setattr(attr, value)
+
+    def save_label_df(self):
+        labels = self.get_distinct_labels()
+        df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
+        with self.folder.get_writer(constants.MODEL_LABELS_FILE) as w:
+            w.write((df_labels.to_csv(index=False)))
+
+    def save_weights(self):
+        # This copies a local file to the managed folder
+        model_weights_path = self.get_weights_path()
+        with open(model_weights_path) as f:
+            self.folder.upload_stream(model_weights_path, f)
+
     def get_base_model(self):
         return self.getattr('base_model', self.model)
 
