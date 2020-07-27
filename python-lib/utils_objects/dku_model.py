@@ -28,10 +28,6 @@ class DkuModel(object):
             'extract_layer_default_index': self.extract_layer_default_index,
             'architecture': self.application.jsonify()
         }
-    
-    @tf.function
-    def test_decorated_function(self, **kwargs):
-        return self.application.model_func(**kwargs)
 
     def load_model(self, config, goal, use_gpu=False, n_gpu=None):
         strategy = tf.distribute.MirroredStrategy()
