@@ -57,7 +57,7 @@
         },
         {
             "name": "model_folder_id",
-            "type": "MANAGED_FOLDER",
+            "type": "FOLDER",
             "label": "Folder name",
             "description": "Name of the image classification model folder"
         },

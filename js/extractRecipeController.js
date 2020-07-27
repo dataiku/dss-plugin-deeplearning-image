@@ -31,7 +31,7 @@ app.controller('extractRecipeController', function($scope) {
     };
 
     var initVariables = function() {
-        initVariable("gpu_allocation", 0.5);
+        initVariable("gpu_allocation", 1);
         initVariable("list_gpu", "0");
     };
 

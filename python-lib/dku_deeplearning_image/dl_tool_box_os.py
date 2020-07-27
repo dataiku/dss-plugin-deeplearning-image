@@ -1,16 +1,19 @@
+#This package is mostly a duplicate of utils.py but using os command with the folder to work on the api node. NEED REFACTOR
+
 import os
-from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
-from keras.models import Model
-from keras.callbacks import ModelCheckpoint
-from keras import regularizers
+#from keras.preprocessing.image import img_to_array, load_img
+#from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
+#from keras.models import Model
+#from keras.callbacks import ModelCheckpoint
+#from keras import regularizers
+#import tensorflow as tf
 import constants
 import threading
 import json
 from collections import OrderedDict
 import StringIO
 import numpy as np
-import tensorflow as tf
+
 import sys
 
 # Support Truncated Images with PIL
@@ -21,63 +24,66 @@ ImageFile.LOAD_TRUNCATED_IMAGES = True
 ## MODELS LIST
 ###################################################################################################################
 
-from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
-from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
-from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
-from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
+
 
 
 # INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
 #        with the label architecture_trainedon to make it available, along with new a constant in python-lib/constants.py
-keras_applications = {
-    constants.RESNET: {
-        "model_func": ResNet50, 
-        "preprocessing": resnet50_preprocessing,
-        "input_shape": (224, 224),
-        "weights": {
-            constants.IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
+def build_keras_application():
+    from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
+    from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
+    from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
+    from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
+    keras_applications = {
+        constants.RESNET: {
+            "model_func": ResNet50, 
+            "preprocessing": resnet50_preprocessing,
+            "input_shape": (224, 224),
+            "weights": {
+                constants.IMAGENET: {
+                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
+                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                }
             }
-        }
-    },
-    constants.XCEPTION: {
-        "model_func": Xception,
-        "preprocessing": xception_preprocessing,
-        "input_shape": (299, 299),
-        "weights": {
-            constants.IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels_notop.h5",
+        },
+        constants.XCEPTION: {
+            "model_func": Xception,
+            "preprocessing": xception_preprocessing,
+            "input_shape": (299, 299),
+            "weights": {
+                constants.IMAGENET: {
+                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels.h5",
+                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels_notop.h5",
+                }
             }
-        }
-    },
-    constants.INCEPTIONV3: {
-        "model_func": InceptionV3,
-        "preprocessing": inceptionv3_preprocessing,
-        "input_shape": (299, 299),
-        "weights": {
-            constants.IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
+        },
+        constants.INCEPTIONV3: {
+            "model_func": InceptionV3,
+            "preprocessing": inceptionv3_preprocessing,
+            "input_shape": (299, 299),
+            "weights": {
+                constants.IMAGENET: {
+                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels.h5",
+                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                }
             }
-        }
-    },
-    constants.VGG16: {
-        "model_func": VGG16,
-        "preprocessing": vgg16_preprocessing,
-        "input_shape": (224, 224),
-        "weights": {
-            constants.IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
+        },
+        constants.VGG16: {
+            "model_func": VGG16,
+            "preprocessing": vgg16_preprocessing,
+            "input_shape": (224, 224),
+            "weights": {
+                constants.IMAGENET: {
+                    "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5",
+                    "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                }
             }
         }
     }
-}
+    return keras_applications
 
 def is_keras_application(architecture):
-    return architecture in keras_applications.keys()
+    return architecture in build_keras_application().keys()
 
 def get_extract_layer_index(architecture, trained_on):
     # May be more complicated as the list of models grows
@@ -86,12 +92,12 @@ def get_extract_layer_index(architecture, trained_on):
 
 def get_weights_urls(architecture, trained_on):
     if is_keras_application(architecture):
-        return keras_applications[architecture]["weights"][trained_on]
+        return build_keras_application()[architecture]["weights"][trained_on]
     else:
         return {}
 
 def should_save_weights_only(config):
-    if config["architecture"] in keras_applications.keys():
+    if config["architecture"] in build_keras_application().keys():
         return True
     return False
 
@@ -112,7 +118,7 @@ def get_model_input_shape(model, mf_path):
         if not is_keras_application(architecture):
             raise IOError("You must provide an input shape for your architecture '{}'".format(architecture))
 
-        return keras_applications[architecture].get("input_shape", (224, 224))
+        return build_keras_application()[architecture].get("input_shape", (224, 224))
 
     else:
         return input_shape
@@ -208,20 +214,20 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
             
             if top_params is None:
 
-                model = keras_applications[architecture]["model_func"](weights=None, include_top=True)
+                model = build_keras_application()[architecture]["model_func"](weights=None, include_top=True)
                 model_weights_path = get_weights_path(mf_path, config)
                 model.load_weights(model_weights_path)
 
             else:
 
-                model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
+                model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
                 model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
                 model_weights_path = get_weights_path(mf_path, config, constants.CUSTOM_TOP_SUFFIX)
                 model.load_weights(model_weights_path)
 
         else:
 
-            model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
+            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
             model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
             model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
             model.load_weights(model_weights_path)
@@ -230,7 +236,7 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
 
         if not retrained:
 
-            model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=input_shape)
+            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=input_shape)
             model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
             model.load_weights(model_weights_path)
             model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
@@ -238,7 +244,7 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
 
         else:
 
-            model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
+            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
             model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
             model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
             model.load_weights(model_weights_path)
@@ -247,24 +253,27 @@ def load_keras_application(config, mf_path, goal, input_shape, pooling, reg, dro
 
         if not retrained:
 
-            model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=input_shape)
+            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=input_shape)
             model_weights_path = get_weights_path(mf_path, config, constants.NOTOP_SUFFIX)
             model.load_weights(model_weights_path)
 
         else:
 
-            model = keras_applications[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
+            model = build_keras_application()[architecture]["model_func"](weights=None, include_top=False, input_shape=top_params["input_shape"])
             model, model_params = enrich_model(model, pooling, dropout, reg, n_classes, top_params, verbose)
             model_weights_path = get_weights_path(mf_path, config, constants.RETRAINED_SUFFIX)
             model.load_weights(model_weights_path)
 
-    return {"model": model, "preprocessing": keras_applications[architecture]["preprocessing"], "model_params": model_params}
+    return {"model": model, "preprocessing": build_keras_application()[architecture]["preprocessing"], "model_params": model_params}
 
 def select_param(param_name, param_val, top_params):
     return param_val if param_val is not None else top_params[param_name]
 
 def enrich_model(base_model, pooling, dropout, reg, n_classes, params, verbose):
-
+ 
+    from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout, Dense
+    from keras.models import Model
+    
     # Init params if not done before
     params = {} if params is None else params
     
@@ -400,6 +409,7 @@ def get_ordered_dict(predictions):
 
 
 def preprocess_img(img_path, img_shape, preprocessing):
+    from keras.preprocessing.image import img_to_array, load_img
     img = load_img(img_path,target_size=img_shape)
     array = img_to_array(img)
     array = preprocessing(array)
@@ -460,43 +470,3 @@ def threadsafe_generator(f):
         return ThreadsafeIterator(f(*a, **kw))
     return g
 
-###############################################################
-## MODEL CHECKPOINT FOR MULTI GPU
-## When using multiple GPUs, we need to save the base model,
-## not the one defined by multi_gpu_model
-## see example: https://keras.io/utils/#multi_gpu_model
-## Therefore, to save the model after each epoch by leveraging 
-## ModelCheckpoint callback, we need to adapt it to save the 
-## base model. To do so, we pass the base model to the callback.
-## Inspired by: 
-##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
-###############################################################
-
-class MultiGPUModelCheckpoint(ModelCheckpoint):
-
-    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
-        super(MultiGPUModelCheckpoint, self).__init__(filepath, 
-                                                      monitor=monitor,
-                                                      verbose=verbose,
-                                                      save_best_only=save_best_only,
-                                                      save_weights_only=save_weights_only,
-                                                      mode=mode,
-                                                      period=period)
-        self.base_model = base_model
-
-    def on_epoch_end(self, epoch, logs=None):
-        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
-
-        # First retrieve model
-        model = self.model
-
-        # Then switching model to base model
-        self.model = self.base_model
-
-        # Calling super on_epoch_end
-        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
-
-        # Resetting model afterwards
-        self.model = model

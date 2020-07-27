@@ -1,11 +1,16 @@
 # This file is the actual code for the Python runnable create-api-service
+
+
 import dataiku
 from dataiku.runnables import Runnable
+import constants
 import os
 import sys
 import shutil
 import logging
-
+import inspect
+import dl_tool_box_os  #This package is mostly a duplicate of utils.py but using os command with the folder to work on the api node. NEED REFACTOR
+import constants
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
                     format='deeplearning-image-macro %(levelname)s - %(message)s')
@@ -47,6 +52,7 @@ def get_params(config, client, project):
 
         list_endpoints = [endpoint.get("id") for endpoint in project.get_api_service(
             service_id).get_settings().get_raw()["endpoints"]]
+        endpoint_id = config.get('endpoint_id')
         if endpoint_id in list_endpoints:
             print("Will override endpoint %s" % endpoint_id)
         else:
@@ -74,10 +80,10 @@ def get_params(config, client, project):
     #TO-DO custom html select to get the list of API service packages
     """
 
-    max_nb_labels = config.get("max_nb_labels")
+    max_nb_labels = int(config.get("max_nb_labels"))
     assert max_nb_labels, "Max number of labels is empty"
-    assert type(max_nb_labels) is int, "Max number of labels is not an int : %s " % type(
-        max_nb_labels)
+    assert type(max_nb_labels) is int, "Max number of labels is not an int : %s and value is %s" % (type(
+        max_nb_labels), str(max_nb_labels))
     assert max_nb_labels > 0, "Max number of labels must be strictly greater than 0"
     params["max_nb_labels"] = max_nb_labels
 
@@ -90,9 +96,9 @@ def get_params(config, client, project):
     params["min_threshold"] = min_threshold
 
     if use_gpu:
-        env_name = 'plugin_deeplearning-image-gpu-api_node'
+        env_name = constants.ENV_NAME_GPU
     else:
-        env_name = 'plugin_deeplearning-image-cpu-api_node'
+        env_name = constants.ENV_NAME_CPU
 
     params['code_env_name'] = env_name
 
@@ -103,32 +109,14 @@ def copy_plugin_to_dss_folder(plugin_id, folder_id, project_key, force_copy=Fals
     """
     Copy python-lib from a plugin to a managed folder
     """
+    folder = dataiku.Folder(folder_id, project_key=project_key)
+    source = inspect.getsource(dl_tool_box_os)
+    folder.upload_stream("python-lib/dl_tool_box_os.py", source)
+    source_constants = inspect.getsource(constants)
+    folder.upload_stream("python-lib/constants.py", source_constants)
 
-    root_path = dataiku.get_custom_variables(
-        project_key=project_key)['dip.home']
-    # TODO change this to plugins/installed/...
-    plugin_lib_path = os.path.join(
-        root_path, 'plugins', 'installed', plugin_id, 'python-lib')
-
-    folder_path = dataiku.Folder(folder_id, project_key=project_key).get_path()
-    lib_folder_path = os.path.join(folder_path, 'python-lib')
-
-    if os.path.isdir(lib_folder_path) and force_copy:
-        shutil.rmtree(lib_folder_path)
-
-    if not os.path.isdir(lib_folder_path):
-        os.mkdir(lib_folder_path)
-        sys.path.append(lib_folder_path)
-
-        for item in os.listdir(plugin_lib_path):
-            s = os.path.join(plugin_lib_path, item)
-            d = os.path.join(lib_folder_path, item)
-            if os.path.isdir(s):
-                shutil.copytree(s, d, symlinks=False, ignore=None)
-            else:
-                shutil.copy2(s, d)
-    else:
-        logger.info('python-lib already exists in folder')
+    
+    
 
 
 def get_api_service(params, project):
@@ -155,13 +143,14 @@ def create_api_code_env(client, env_name, use_gpu):
     my_env = client.get_code_env('PYTHON', env_name)
     env_def = my_env.get_definition()
     if use_gpu:
-        env_def['specPackageList'] = 'scikit-learn==0.19\ntensorflow-gpu==1.4.0\nkeras==2.1.2\nh5py>=2.7.1\nPillow\npip==9.0.1'
+        env_def['specPackageList'] = 'scikit-learn==0.19\ntensorflow-gpu==1.8.0\nkeras==2.1.5\nh5py>=2.7.1\nPillow\npip==9.0.1'
     else:
-        env_def['specPackageList'] = 'scikit-learn==0.19\ntensorflow==1.4.0\nkeras==2.1.2\nh5py>=2.7.1\nPillow\npip==9.0.1'
+        env_def['specPackageList'] = 'scikit-learn==0.19\ntensorflow==1.8.0\nkeras==2.1.5\nh5py>=2.7.1\nPillow\npip==9.0.1'
     env_def['desc']['installCorePackages'] = True
     my_env.set_definition(env_def)
     my_env.update_packages()
 
+ 
 
 def get_model_endpoint_settings(params):
     """
@@ -210,8 +199,9 @@ model_folder_path = folders[0]
 
 #Load plugin libs
 sys.path.append(os.path.join(model_folder_path, "python-lib"))
-import dl_image_toolbox_utils as utils
+import dl_tool_box_os as utils
 import constants
+
 
 max_nb_labels = {0}
 min_threshold = {1}

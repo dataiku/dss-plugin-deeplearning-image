@@ -1,0 +1,1 @@
+from dku_deeplearning_image.applications import APPLICATIONS
