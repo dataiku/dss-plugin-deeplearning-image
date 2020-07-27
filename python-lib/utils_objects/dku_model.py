@@ -82,7 +82,7 @@ class DkuModel(object):
     def save_weights(self):
         # This copies a local file to the managed folder
         model_weights_path = self.get_weights_path()
-        with open(model_weights_path) as f:
+        with open(model_weights_path, 'rb') as f:
             self.folder.upload_stream(model_weights_path, f)
 
     def get_base_model(self):
