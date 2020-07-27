@@ -7,3 +7,4 @@ pip==20.1.1
 tables==3.6.1
 keras-preprocessing==1.1.0
 GPUtil==1.4.0
+flask>=1.0,<1.1

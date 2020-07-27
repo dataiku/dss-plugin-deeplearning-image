@@ -1,0 +1,20 @@
+{
+    "meta": {
+        "label" : "Tensorboard: monitor they re-training of deep learning models",
+        "icon": "icon-bar-chart"
+    },
+    "libraries" : [],
+    "hasBackend": "true",
+    "paramsPythonSetup": "webapp-helper.py",
+    "params": [
+        {
+            "name": "Retrained model folder",
+            "type": "SELECT",
+            "label": "Folder containing retrained model",
+            "mandatory": true,
+            "getChoicesFromPython": true
+        }
+    ],
+    "baseType": "STANDARD",
+    "roles": []
+}
