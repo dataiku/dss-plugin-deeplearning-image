@@ -120,10 +120,6 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
-    def save_info(self):
-        with self.folder.get_writer(constants.MODEL_INFO_FILE) as w:
-            w.write(json.dumps(self.get_info()))
-
     def get_or_load(self, attr, default):
         if not self.hasattr(attr):
             self.setattr(attr, default)
