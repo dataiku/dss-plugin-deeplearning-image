@@ -33,18 +33,15 @@ class DkuModel(object):
         strategy = tf.distribute.MirroredStrategy()
         include_top = goal == constants.SCORING and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
-        self.model = self.application.model_func(
+        self.base_model = self.application.model_func(
             weights=None,
             include_top=include_top,
             input_shape=input_shape
         )
+        self.model = cp.deepcopy(self.base_model)
         with strategy.scope():
             self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape
-
-        if use_gpu and n_gpu:
-            self.base_model = cp.deepcopy(self.model)
-            #self.model = multi_gpu_model(self.model, n_gpu)
 
     def _load_weights_and_enrich(self, config, goal, include_top):
         # Order of execution of load_weights() and enrich() has to change according to a condition.
