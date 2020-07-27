@@ -42,5 +42,5 @@
     ],
     "paramsTemplate" : "scoring-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.scoring",
-    "paramsPythonSetup": "recipes-helper.py"
+    "paramsPythonSetup": "params_helper/recipes-helper.py"
 }

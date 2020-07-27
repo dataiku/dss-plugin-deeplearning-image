@@ -43,5 +43,5 @@
     ],
     "paramsTemplate" : "extract-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.extract",
-    "paramsPythonSetup": "recipes-helper.py"
+    "paramsPythonSetup": "params_helper/recipes-helper.py"
 }
