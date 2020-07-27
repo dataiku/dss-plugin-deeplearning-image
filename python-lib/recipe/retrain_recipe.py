@@ -1,7 +1,7 @@
 from .dku_recipe import DkuRecipe
-from utils_objects.dku_model import DkuModel
+from utils_objects import DkuModel
 import dku_deeplearning_image.utils as utils
-from utils_objects.dku_image_generator import DkuImageGenerator
+from utils_objects import DkuImageGenerator
 import dku_deeplearning_image.constants as constants
 from sklearn.model_selection import train_test_split
 from keras.preprocessing.image import ImageDataGenerator
@@ -24,7 +24,7 @@ class RetrainRecipe(DkuRecipe):
         self.dku_model.print_summary()
 
     def _set_trainable_layers(self):
-        print("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
+        utils.log_info("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
         layers = self.dku_model.get_layers()
         if self.config.layer_to_retrain == "all":
             n_last = len(layers)
@@ -33,7 +33,7 @@ class RetrainRecipe(DkuRecipe):
         elif self.config.layer_to_retrain == "n_last":
             n_last = self.config.layer_to_retrain_n
         else:
-            n_last = 0
+            raise ValueError("Error in # layers to retrain. You must retrain at least one layer.")
 
         for i, lay in enumerate(layers):
             lay.trainable = i >= (len(layers) - n_last)
@@ -47,7 +47,7 @@ class RetrainRecipe(DkuRecipe):
         return train_df, test_df
 
     def _get_tf_image_data_gen(self):
-        print("Using data augmentation with {} images generated per training image\n".format(
+        utils.log_info("Using data augmentation with {} images generated per training image\n".format(
             self.config.n_augmentation))
         params_data_augment = utils.clean_custom_params(
             custom_params=self.config.custom_params_data_augment,
@@ -63,7 +63,7 @@ class RetrainRecipe(DkuRecipe):
         elif self.config.optimizer == "sgd":
             model_opti_class = optimizers.SGD
         else:
-            print("Optimizer not supporter: {}. Applying adam.".format(self.config.optimizer))
+            utils.log_info("Optimizer not supporter: {}. Applying adam.".format(self.config.optimizer))
             model_opti_class = optimizers.Adam
         return model_opti_class
 
@@ -107,7 +107,11 @@ class RetrainRecipe(DkuRecipe):
         params_opti["lr"] = self.config.learning_rate
 
         model_opti = model_opti_class(**params_opti)
-        self.dku_model.compile(optimizer=model_opti, loss='categorical_crossentropy', metrics=['accuracy'])
+        self.dku_model.compile(
+            optimizer=model_opti,
+            loss=constants.COMPILE_LOSS_FUNCTION,
+            metrics=constants.COMPILE_METRICS
+        )
 
     def _retrain(self, train_generator, test_generator, callback_list):
         self.dku_model.fit_generator(

@@ -4,7 +4,7 @@ import dku_deeplearning_image.constants as constants
 import math
 
 
-class DkuImageGenerator:
+class DkuImageGenerator(object):
     def __init__(self, images_folder, labels, input_shape, batch_size, preprocessing,
                  use_augmentation, extra_images_gen=None, n_augm=None):
         self.images_folder = images_folder
@@ -40,7 +40,7 @@ class DkuImageGenerator:
                 X_batch = [image]
                 y_batch = [label_index]
         except IOError as e:
-            print("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
+            utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
             X_batch, y_batch = [], []
         return X_batch, y_batch
 

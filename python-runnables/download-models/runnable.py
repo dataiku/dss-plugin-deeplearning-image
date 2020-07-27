@@ -4,7 +4,7 @@ import requests
 import json
 import pandas as pd
 import dku_deeplearning_image.constants as constants
-from utils_objects.dku_model import DkuModel
+from utils_objects import DkuModel
 import dku_deeplearning_image.utils as utils
 import time
 

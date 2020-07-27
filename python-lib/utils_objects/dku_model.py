@@ -3,6 +3,7 @@
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
 from io import StringIO, BytesIO
+from utils_objects import DkuFileManager
 import json
 import pandas as pd
 import numpy as np
@@ -13,7 +14,7 @@ from keras.models import Model
 
 import copy as cp
 
-class DkuModel:
+class DkuModel(object):
     def __init__(self, folder):
         self.folder = folder
         if '/{}'.format(constants.CONFIG_FILE) in self.folder.list_paths_in_partition():
@@ -42,27 +43,56 @@ class DkuModel:
             input_shape=input_shape
         )
         with strategy.scope():
-            
-
-            if goal == constants.RETRAINING:
-                self.load_weights(with_top=include_top)
-            
-            if self.top_params or goal == constants.RETRAINING:
-                self.enrich(
-                    pooling=config.get('model_pooling'),
-                    dropout=config.get('model_dropout'),
-                    reg=config.get('model_reg')
-                )
-
-            if goal != constants.RETRAINING:
-                self.load_weights(with_top=include_top)
-
-
+            self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape
 
         if use_gpu and n_gpu:
             self.base_model = cp.deepcopy(self.model)
             #self.model = multi_gpu_model(self.model, n_gpu)
+
+    def _load_weights_and_enrich(self, config, goal, include_top):
+        # Order of execution of load_weights() and enrich() has to change according to a condition.
+        # This way of doing so is more readable like that, it is however not the best for a DRY standpoint
+        enrich_kwargs = {
+            "pooling": config.get('model_pooling'),
+            "dropout": config.get('model_dropout'),
+            "reg": config.get('model_reg')
+        }
+        load_weights_kwargs = {
+            "with_top": include_top
+        }
+        if goal == constants.RETRAINING:
+            self.load_weights(**load_weights_kwargs)
+            self.enrich(**enrich_kwargs)
+        else:
+            if self.top_params:
+                self.enrich(**enrich_kwargs)
+            self.load_weights(**load_weights_kwargs)
+
+    def deepcopy(self, **kwargs):
+        new_model = cp.deepcopy(self)
+        new_model.update_attributes(**kwargs)
+        return new_model
+
+    def update_attributes(self, **kwargs):
+        for attr, value in kwargs.items():
+            utils.dbg_msg(kwargs, 'kwargs')
+            if self.hasattr(attr):
+                self.setattr(attr, value)
+
+    def save_label_df(self):
+        labels = self.get_distinct_labels()
+        df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.MODEL_LABELS_FILE,
+            content=df_labels.to_csv(index=False))
+
+    def save_weights(self):
+        # This copies a local file to the managed folder
+        model_weights_path = self.get_weights_path()
+        with open(model_weights_path) as f:
+            self.folder.upload_stream(model_weights_path, f)
 
     def get_base_model(self):
         return self.getattr('base_model', self.model)
@@ -110,18 +140,16 @@ class DkuModel:
         return self.application.get_weights_url(self.trained_on)
 
     def save_config(self):
-        with self.folder.get_writer(constants.CONFIG_FILE) as w:
-            w.write(json.dumps(self.jsonify_config()))
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.CONFIG_FILE,
+            content=json.dumps(self.jsonify_config()))
 
     def get_info(self, base=False):
         return {
             'layers': self.get_layers_as_list(base),
             'summary': self.get_model_summary(base)
         }
-
-    def save_info(self):
-        with self.folder.get_writer(constants.MODEL_INFO_FILE) as w:
-            w.write(json.dumps(self.get_info()))
 
     def get_or_load(self, attr, default):
         if not self.hasattr(attr):
@@ -141,7 +169,7 @@ class DkuModel:
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            print("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
+            utils.log_info("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
@@ -160,7 +188,8 @@ class DkuModel:
                             kernel_regularizer=regularizer)(x)
         self.model = Model(input=self.model.input, output=predictions)
 
-    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, classify=True):
+    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT,
+              min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
         batch_size = constants.PREDICTION_BATCH_SIZE
         images_paths = images_folder.list_paths_in_partition()
         n = 0
@@ -179,7 +208,7 @@ class DkuModel:
                     )
                     next_batch_list.append(preprocessed_img)
                 except IOError as e:
-                    print("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                    utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
                     error_indices.append(index_in_batch)
             next_batch = np.array(next_batch_list)
 
@@ -200,7 +229,7 @@ class DkuModel:
             results["prediction"].extend(prediction_batch)
             results["error"].extend(error_batch)
             n += 1
-            print("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+            utils.log_info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
         return results
 
     def get_weights_path(self, with_top=False):

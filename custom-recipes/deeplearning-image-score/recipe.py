@@ -1,9 +1,9 @@
 import pandas as pd
 import dku_deeplearning_image.utils as utils
 
-from recipe.score_recipe import ScoreRecipe
-from config.score_config import ScoreConfig
-from utils_objects.dku_file_manager import DkuFileManager
+from recipe import ScoreRecipe
+from config import ScoreConfig
+from utils_objects import DkuFileManager
 
 
 def get_input_output():

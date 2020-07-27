@@ -1,4 +1,4 @@
-class DkuApplication:
+class DkuApplication(object):
     def __init__(self, name, label, source, model_func, preprocessing, weights, input_shape=None):
         self.name = name
         self.label = label

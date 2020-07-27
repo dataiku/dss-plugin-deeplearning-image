@@ -2,6 +2,9 @@ import dataiku
 import glob
 import pandas as pd
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 def do(payload, config, plugin_config, inputs):
     if "method" not in payload:
@@ -39,5 +42,5 @@ def retrieve_schema_from_pandas_compatible_csv_file(file_path, sep):
         df = pd.read_csv(file_path, sep=sep, nrows=0)
         return df.columns
     except Exception as e:
-        print("Unexpected exception : {}".format(e.message))
+        logger.info("Unexpected exception : {}".format(e.message))
         return []

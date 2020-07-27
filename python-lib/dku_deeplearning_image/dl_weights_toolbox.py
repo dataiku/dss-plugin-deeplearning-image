@@ -94,7 +94,6 @@ def get_weights_path(mf_path, config, suffix="", should_exist=True):
                               driver_core_image=model_weights_path.read(),
                               driver_core_backing_store=0)
         h5file.copy_file(weights_filename, overwrite=True)
-    print(weights_filename)
     return weights_filename
 
    # if not os.path.isfile(model_weights_path) and should_exist:

@@ -7,6 +7,9 @@ from werkzeug.serving import make_server
 from tensorflow import logging
 from tensorboard.backend import application
 import tensorboard.default as tb_default
+import logging
+
+logger = logging.getLogger(__name__)
 
 class TensorboardThread(Thread):
 
@@ -53,12 +56,12 @@ class TensorboardThread(Thread):
               plugins=tb_default.get_plugins())
 
     def run(self):
-        print("Launching tensorboard :")
-        print("Your tensorboard dashboard will be accessible on http://<SERVER ADDRESS>:{}".format(self.get_port()))
+        logger.info("Launching tensorboard :")
+        logger.info("Your tensorboard dashboard will be accessible on http://<SERVER ADDRESS>:{}".format(self.get_port()))
         self.srv.serve_forever()
 
     def stop(self):
-        print("Stopping tensorboard process")
+        logger.info("Stopping tensorboard process")
         self.srv.shutdown()
 
 

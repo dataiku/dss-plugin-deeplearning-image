@@ -7,18 +7,22 @@ from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
 import dku_deeplearning_image.constants as constants
-from dku_deeplearning_image.applications import APPLICATIONS
+from dku_deeplearning_image import APPLICATIONS
 import threading
 import json
 from collections import OrderedDict
 import numpy as np
 from tensorflow.python.client import device_lib
 from datetime import datetime
+from utils_objects import DkuFileManager
 
 import sys
 import dku_deeplearning_image.config_utils as config_utils
-from utils_objects.dku_application import DkuApplication
+from utils_objects import DkuApplication
 import pandas as pd
+import logging
+
+logger = logging.getLogger(__name__)
 
 # Support Truncated Images with PIL
 from PIL import ImageFile
@@ -112,10 +116,10 @@ def save_model_info(mf_path, dku_model):
         constants.SCORING: dku_model.get_info(),
         constants.BEFORE_TRAIN: dku_model.get_info(base=True)
     }
-
-    with mf_path.get_writer(constants.MODEL_INFO_FILE) as w:
-        w.write(json.dumps(model_info).encode())
-
+    DkuFileManager.write_to_folder(
+        folder=mf_path,
+        file_path=constants.MODEL_INFO_FILE,
+        content=json.dumps(model_info))
 
 ###################################################################################################################
 ## FILES LOGIC
@@ -123,11 +127,6 @@ def save_model_info(mf_path, dku_model):
 
 def get_weights_filename(with_top=False):
     return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
-
-
-def write_config(mf_path, config):
-    with mf_path.get_writer(constants.CONFIG_FILE) as w:
-        w.write(json.dumps(config).encode())
 
 
 def get_file_path(folder_path, file_name):
@@ -151,9 +150,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                print("cached file %s" % file_path)
+                log_info("cached file %s" % file_path)
     else:
-        print("read from cache %s" % file_path)
+        log_info("read from cache %s" % file_path)
     return filename
 
 
@@ -164,7 +163,7 @@ def get_model_config_from_file(model_folder):
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
     output["images"] = images_paths
-    print("------->" + str(output))
+    log_info("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output
@@ -176,9 +175,9 @@ def build_prediction_output_df(images_paths, predictions):
 def log_func(txt):
     def inner(f):
         def wrapper(*args, **kwargs):
-            print('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
             res = f(*args, **kwargs)
-            print('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
             return res
 
         return wrapper
@@ -241,9 +240,9 @@ def clean_custom_params(custom_params, params_type=""):
 
 
 def dbg_msg(msg, title=''):
-    print('DEBUG : {}'.format(title).center(100, '-'))
-    print(msg)
-    print(''.center(100, '-'))
+    logger.debug('DEBUG : {}'.format(title).center(100, '-'))
+    logger.debug(msg)
+    logger.debug(''.center(100, '-'))
 
 
 def display_gpu_device():
@@ -254,6 +253,8 @@ def display_gpu_device():
 #     else:
 #         print("Please install GPU version of TF")
 
+def log_info(*args):
+    logger.info(*args)
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR

@@ -9,6 +9,7 @@ class DkuConfig(object):
     @utils.log_func(txt='config loading')
     def load(self):
         self._load_recipe_param()
+        self._check_params()
         utils.display_gpu_device()
 
     def _load_recipe_param(self):
@@ -23,6 +24,9 @@ class DkuConfig(object):
             gpu_list=gpu_list,
             memory_limit=gpu_memory_limit)
         self.use_gpu = should_use_gpu
+
+    def _check_params(self):
+        pass
 
     def get(self, key, default=None):
         return getattr(self, key, default)
