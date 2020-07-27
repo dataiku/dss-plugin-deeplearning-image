@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
 from io import StringIO, BytesIO
