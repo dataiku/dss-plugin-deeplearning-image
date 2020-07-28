@@ -4,6 +4,7 @@ from dataiku.runnables import Runnable
 import os
 import sys
 import shutil
+from config import ApiDeployerConfig
 from api_designer_utils import *
 
 
@@ -32,8 +33,7 @@ class MyRunnable(Runnable):
         return None
 
     def run(self, progress_callback):
-
-        params = get_params(self.config, self.client, self.project)
+        config = ApiDeployerConfig(self.config, project=self.project)
         copy_plugin_to_dss_folder(self.plugin_id, params.get(
             "model_folder_id"), self.project_key)
        # create_api_code_env(self.client, params.get(
