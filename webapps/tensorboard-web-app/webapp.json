@@ -5,7 +5,7 @@
     },
     "libraries" : [],
     "hasBackend": "true",
-    "paramsPythonSetup": "params_helper/webapp-helper.py",
+    "paramsPythonSetup": "helpers/webapp-helper.py",
     "params": [
         {
             "name": "Retrained model folder",
