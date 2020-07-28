@@ -37,7 +37,7 @@ class CustomCheck:
         except AssertionError:
             formatted_err_msg = self.format_err_mesg(parameter)
             if self.severity == logging.ERROR:
-                DSSParameterError(formatted_err_msg)
+                raise DSSParameterError(formatted_err_msg)
             else:
                 logger.log(self.severity, formatted_err_msg)
 
@@ -75,6 +75,9 @@ class CustomCheck:
     def _between_strict(self, value):
         return float(self.op[0]) < value < float(self.op[1])
 
+    def _is_type(self, value):
+        return isinstance(value, self.op)
+
     def _custom(self, value):
         return self.cond
 
@@ -98,5 +101,5 @@ class DSSParameter:
         self.print_success_message()
 
     def print_success_message(self):
-        logger.info('All the parameters have successfully been checked.')
+        logger.info('All checks have been successfully done for {}.'.format(self.name))
 

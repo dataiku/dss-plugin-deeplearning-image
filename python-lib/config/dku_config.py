@@ -21,10 +21,14 @@ class DkuConfig(object):
             should_use_gpu=should_use_gpu,
             gpu_list=gpu_list,
             memory_limit=gpu_memory_limit)
-        self.add_param(DSSParameter(name='use_gpu', value=self.config.get('should_use_gpu', False)))
+        self.add_param(name='use_gpu', value=self.config.get('should_use_gpu', False))
 
     def add_param(self, name, **dss_param_kwargs):
         setattr(self, name, DSSParameter(name=name, **dss_param_kwargs))
 
     def get(self, key, default=None):
         return getattr(self, key, default)
+
+    def __getattr__(self, item):
+        attr = object.__getattribute__(self, item)
+        return attr.value if isinstance(attr, DSSParameter) else attr

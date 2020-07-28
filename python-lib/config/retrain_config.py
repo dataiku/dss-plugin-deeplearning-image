@@ -22,14 +22,14 @@ class RetrainConfig(DkuConfig):
         self.add_param(name='model_dropout', value=float(self.config.get("model_dropout")))
         self.add_param(name='layer_to_retrain', value=self.config.get("layer_to_retrain"))
         self.add_param(name='layer_to_retrain_n', value=int(self.config.get("layer_to_retrain_n")), required=True)
-        self.add_param(name='optimizer', value=self.config.get("optimizer"))
-        self.add_param(name='learning_rate', value=self.config.get("learning_rate"))
-        self.add_param(name='custom_params_opti', value=self.config.get("custom_params_opti"))
+        self.add_param(name='optimizer', value=self.config.get("model_optimizer"))
+        self.add_param(name='learning_rate', value=self.config.get("model_learning_rate"))
+        self.add_param(name='custom_params_opti', value=self.config.get("model_custom_params_opti"))
         self.add_param(name='nb_epochs', value=int(self.config.get("nb_epochs")))
         self.add_param(name='nb_steps_per_epoch', value=int(self.config.get("nb_steps_per_epoch")))
         self.add_param(name='nb_validation_steps', value=int(self.config.get("nb_validation_steps")))
         self.add_param(name='data_augmentation', value=self.config.get("data_augmentation"))
-        n_augmentation = int(self.config.get("n_augmentation"))
+        n_augmentation = int(self.config.get("n_augmentation")) if self.data_augmentation else 0
         self.add_param(
             name='n_augmentation',
             value=n_augmentation,
