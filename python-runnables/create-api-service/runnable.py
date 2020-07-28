@@ -5,7 +5,7 @@ import os
 import sys
 import shutil
 from config import ApiDeployerConfig
-from api_designer_utils import *
+from dku_deeplearning_image.api_designer_utils import copy_plugin_to_dss_folder
 
 
 class MyRunnable(Runnable):
@@ -34,8 +34,7 @@ class MyRunnable(Runnable):
 
     def run(self, progress_callback):
         config = ApiDeployerConfig(self.config, project=self.project)
-        copy_plugin_to_dss_folder(self.plugin_id, params.get(
-            "model_folder_id"), self.project_key)
+        copy_plugin_to_dss_folder(self.plugin_id, config.get("model_folder_id"), self.project_key)
        # create_api_code_env(self.client, params.get(
         #    'code_env_name'), params.get('use_gpu'))
         api_service = get_api_service(params, self.project)

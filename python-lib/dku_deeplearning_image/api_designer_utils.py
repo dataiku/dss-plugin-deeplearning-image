@@ -20,16 +20,21 @@ def copy_plugin_to_dss_folder(plugin_id, folder_id, project_key, force_copy=Fals
     """
     Copy python-lib from a plugin to a managed folder
     """
+    required_files = {
+        'config': ['__init__.py', 'api_deployer_config.py', 'dku_config.py'],
+        'dku_deeplearning_image': ['__init__.py', 'utils.py', 'constants.py', 'applications.py'],
+        'utils_objects': ['__init__.py', 'dku_model.py', 'dku_application.py'],
+    }
+    SOURCE_DIR = 'python-lib'
+    plugin = dataiku.api_client().get_plugin(plugin_id)
     folder = dataiku.Folder(folder_id, project_key=project_key)
-    source = inspect.getsource(dl_tool_box_os)
-    folder.upload_stream("python-lib/dl_tool_box_os.py", source)
-    source_constants = inspect.getsource(constants)
-    folder.upload_stream("python-lib/constants.py", source_constants)
+    for foldername, files in required_files.items():
+        for filename in files:
+            path = os.path.join(SOURCE_DIR, foldername, filename)
+            file_content = plugin.get_file(path)
+            folder.upload_stream(path, file_content)
 
     
-    
-
-
 def get_api_service(params, project):
     """
     Create or get an api service dss object and return it
