@@ -1,45 +1,39 @@
-# This file is the actual code for the Python runnable create-api-service
 import dataiku
 from dataiku.runnables import Runnable
-import os
-import sys
-import shutil
 from config import ApiDeployerConfig
-from dku_deeplearning_image.api_designer_utils import copy_plugin_to_dss_folder
+from dku_deeplearning_image.api_designer_utils import copy_plugin_to_dss_folder,\
+    get_api_service, build_model_endpoint_settings, create_python_endpoint, get_html_result
 
 
 class MyRunnable(Runnable):
-    """The base interface for a Python runnable"""
-
     def __init__(self, project_key, config, plugin_config):
-        """
-        :param project_key: the project in which the runnable executes
-        :param config: the dict of the configuration of the object
-        :param plugin_config: contains the plugin settings
-        :param client: DSS client
-        :param project: DSS project in which the macro is executed
-        :param plugin_id: name of the plugin in use
-        """
         self.project_key = project_key
         self.config = config
         self.plugin_config = plugin_config
         self.client = dataiku.api_client()
         self.project = self.client.get_project(self.project_key)
         self.plugin_id = "deeplearning-image"
-        # TODO way of getting the plugin_id within the macro? plugin_config
-        # seems empty
+        self.plugin = self.client.get_plugin(self.plugin_id)
 
     def get_progress_target(self):
         return None
 
     def run(self, progress_callback):
         config = ApiDeployerConfig(self.config, project=self.project)
-        copy_plugin_to_dss_folder(self.plugin_id, config.get("model_folder_id"), self.project_key)
-       # create_api_code_env(self.client, params.get(
-        #    'code_env_name'), params.get('use_gpu'))
-        api_service = get_api_service(params, self.project)
-        endpoint_settings = get_model_endpoint_settings(params)
+        model_folder_id = config.get("model_folder_id")
+        endpoint_id = config.get("endpoint_id")
+        service_id = config.get("service_id")
+        copy_plugin_to_dss_folder(self.plugin, config.get("model_folder_id"), self.project_key)
+        api_service = get_api_service(
+            service_id=service_id,
+            create_new=config.get("create_new_service"),
+            project=self.project
+        )
+        endpoint_settings = build_model_endpoint_settings(
+            endpoint_id=endpoint_id,
+            code_env_name=config.get("code_env_name"),
+            model_folder_id=model_folder_id,
+            max_nb_labels=config.get('max_nb_labels'),
+            min_threshold=config.get('min_threshold'))
         create_python_endpoint(api_service, endpoint_settings)
-        html_str = get_html_result(params)
-
-        return html_str
+        return get_html_result(self.plugin_id, model_folder_id, service_id, endpoint_id)
