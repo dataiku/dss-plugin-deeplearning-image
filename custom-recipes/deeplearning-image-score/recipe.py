@@ -1,5 +1,6 @@
 import pandas as pd
 import dku_deeplearning_image.utils as utils
+from dataiku.customrecipe import get_recipe_config
 
 from recipe import ScoreRecipe
 from config import ScoreConfig
@@ -23,7 +24,8 @@ def write_output_dataset(output_dataset, image_folder, classification):
 
 @utils.log_func(txt='recipe')
 def run():
-    config = ScoreConfig()
+    recipe_config = get_recipe_config()
+    config = ScoreConfig(recipe_config)
 
     image_folder, model_folder, output_dataset = get_input_output()
     recipe = ScoreRecipe(config)

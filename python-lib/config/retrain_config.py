@@ -1,12 +1,10 @@
 from .dku_config import DkuConfig
-from dataiku.customrecipe import get_recipe_config
 
 
 class RetrainConfig(DkuConfig):
-    def __init__(self):
+    def __init__(self, config):
         self.name = 'retrain'
         self.output_role = 'model_output'
-        config = get_recipe_config()
         super(RetrainConfig, self).__init__(config)
 
     def _load_recipe_param(self, config):
