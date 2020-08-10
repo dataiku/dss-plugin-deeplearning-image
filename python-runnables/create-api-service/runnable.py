@@ -1,7 +1,7 @@
 import dataiku
 from dataiku.runnables import Runnable
 from config import ApiDeployerConfig
-from dku_deeplearning_image.api_designer_utils import copy_plugin_to_dss_folder,\
+from api_designer_utils.api_designer_utils import copy_plugin_to_dss_folder,\
     get_api_service, build_model_endpoint_settings, create_python_endpoint, get_html_result
 
 
@@ -25,11 +25,12 @@ class MyRunnable(Runnable):
         service_id = config.get("service_id")
         copy_plugin_to_dss_folder(self.plugin, config.get("model_folder_id"), self.project_key)
         api_service = get_api_service(
-            service_id=service_id,
-            create_new=config.get("create_new_service"),
-            project=self.project
+            project=self.project,
+            create_new_service=config.get("create_new_service"),
+            service_id=service_id
         )
         endpoint_settings = build_model_endpoint_settings(
+            plugin=self.plugin,
             endpoint_id=endpoint_id,
             code_env_name=config.get("code_env_name"),
             model_folder_id=model_folder_id,

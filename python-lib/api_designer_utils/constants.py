@@ -1,8 +1,20 @@
-TEST_IMG_DIR = 'test_images'
+import os
+
+PYTHON_LIB_DIR = 'python-lib'
+API_DESIGNER_UTILS_DIR = os.path.join(PYTHON_LIB_DIR, 'api_designer_utils')
+
+TEMPLATE_FILENAME = 'api_service_template.py'
+TEMPLATE_PATH = os.path.join(API_DESIGNER_UTILS_DIR, TEMPLATE_FILENAME)
+TEST_IMG_DIR = os.path.join(API_DESIGNER_UTILS_DIR, 'test_images')
 TEST_QUERIES = [{
     "name": "Score lion image",
-    "img_filename": 'test_lion_1.png'
+    "img_filename": 'test_lion_1.jpg'
 }]
+
+PY_FILES_DEST_DIR = os.path.join('api_deployer', 'python-lib')
+
+SPEC_PATH = 'code-env/python/spec/requirements.txt'
+
 ENDPOINT_SETTINGS_BASE = {
     "type": "PY_FUNCTION",
     "userFunctionName": "api_py_function",

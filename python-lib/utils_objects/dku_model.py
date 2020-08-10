@@ -2,7 +2,7 @@ import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
 from dku_deeplearning_image import APPLICATIONS
 
-from io import StringIO
+from io import StringIO, BytesIO
 from utils_objects import DkuFileManager
 from utils_objects import DkuApplication
 
@@ -13,6 +13,7 @@ import tables
 import tensorflow as tf
 from keras.layers import Dense
 from keras.models import Model
+import base64
 
 import copy as cp
 
@@ -210,38 +211,45 @@ class DkuModel(object):
                             kernel_regularizer=regularizer)(x)
         self.model = Model(input=base_model.input, output=predictions)
 
-    def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT,
+    def score_b64_image(self, img_b64, **kwargs):
+        img_b64_decode = base64.b64decode(img_b64)
+        image = BytesIO(img_b64_decode)
+        return self.score([image], **kwargs)
+
+    def score_image_folder(self, images_folder, **kwargs):
+        images_paths = images_folder.list_paths_in_partition()
+        images = []
+        for path in images_paths:
+            try:
+                images.append(images_folder.get_download_stream(path))
+            except IOError as e:
+                utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
+                images.append(None)
+        return self.score(images, **kwargs)
+
+    def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
         batch_size = constants.PREDICTION_BATCH_SIZE
-        images_paths = images_folder.list_paths_in_partition()
         n = 0
         results = {"prediction": [], "error": []}
-        num_images = len(images_paths)
+        num_images = len(images)
         while True:
             if (n * batch_size) >= num_images: break
             next_batch_list, error_indices = [], []
             for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
-                img_path = images_paths[i]
-                try:
+                image = images[i]
+                if image:
                     preprocessed_img = utils.preprocess_img(
-                        img_path=images_folder.get_download_stream(img_path),
+                        img_path=image,
                         img_shape=self.get_input_shape(),
                         preprocessing=self.application.preprocessing
                     )
                     next_batch_list.append(preprocessed_img)
-                except IOError as e:
-                    utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_path, e))
+                else:
                     error_indices.append(index_in_batch)
             next_batch = np.array(next_batch_list)
 
-            prediction_batch = utils.get_predictions(
-                model=self.get_model(),
-                batch=next_batch,
-                classify=classify,
-                limit=limit,
-                min_threshold=min_threshold,
-                labels_df=self.get_label_df()
-            )
+            prediction_batch = self.get_predictions_for_batch(next_batch, classify, limit, min_threshold)
             error_batch = [0] * len(prediction_batch)
 
             for err_index in error_indices:
@@ -253,6 +261,16 @@ class DkuModel(object):
             n += 1
             utils.log_info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
         return results
+
+    def get_predictions_for_batch(self, batch, classify, limit, min_threshold):
+        return utils.get_predictions(
+                model=self.get_model(),
+                batch=batch,
+                classify=classify,
+                limit=limit,
+                min_threshold=min_threshold,
+                labels_df=self.get_label_df()
+        )
 
     def get_weights_path(self, with_top=False):
         weights_filename = utils.get_weights_filename(with_top)

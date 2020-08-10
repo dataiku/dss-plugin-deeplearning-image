@@ -1,65 +1,45 @@
-import dataiku
-import pandas as pd
-from dataiku.customrecipe import *
-import numpy as np
-import json
-import os
-import glob
-from io import BytesIO
 from ast import literal_eval
-import base64
 import sys
 import logging
-from recipe import ScoreRecipe
+import os
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
                     format="deeplearning-image-api-node \%(levelname)s - \%(message)s")
 
 model_folder_path = folders[0]
+# python_lib_path = os.path.join(model_folder_path, {python_lib_dir})
+python_lib_path = os.path.join(model_folder_path, 'api_deployer/python_lib')
 
 #Load plugin libs
-sys.path.append(os.path.join(model_folder_path, "python-lib"))
-import dl_tool_box_os as utils
-import constants
+sys.path.append(python_lib_path)
 
+from config import ScoreConfig
+from utils_objects import DkuModel
+from utils_objects import VirtualManagedFolder
+import dku_deeplearning_image.constants as constants
 
-max_nb_labels = {max_nb_labels}
-min_threshold = {min_threshold}
+CONFIGS = {
+    'max_nb_labels': 2,
+    'min_threshold': 0.1
+}
 
+def get_model_folder(model_folder_path):
+    return VirtualManagedFolder(model_folder_path)
 
-# Model
-model_and_pp = utils.load_instantiate_keras_model_preprocessing(model_folder_path, goal=constants.SCORING)
-model = model_and_pp["model"]
-preprocessing = model_and_pp["preprocessing"]
-model_input_shape = utils.get_model_input_shape(model, model_folder_path)
+def load_and_get_model(model_folder, config):
+    dku_model = DkuModel(model_folder)
+    dku_model.load_model(config, constants.SCORING)
+    return dku_model
 
-# (classId -> Name) mapping
-labels_df = None
-labels_path = utils.get_file_path(model_folder_path, constants.MODEL_LABELS_FILE)
-if os.path.isfile(labels_path):
-    labels_df = pd.read_csv(labels_path, sep=",")
-    labels_df = labels_df.set_index('id')
-else:
-    logger.info("No csv file in the model folder, will not use class names.")
+def score_image(model, config, img_b64):
+    predictions = model.score_b64_image(img_b64, limit=config['max_nb_labels'], min_threshold=config['min_threshold'], classify=True)
+    return predictions
 
+config = ScoreConfig(CONFIGS)
+model_folder = get_model_folder(model_folder_path)
+model = load_and_get_model(model_folder, config)
 
 def api_py_function(img_b64):
-    #takes in input the image encoded as base64 base64.b64encode(open(img_path, "rb").read())
-    #preprocess the image and score it
-
-    logger.info("Start loading image")
-    img_b64_decode = base64.b64decode(img_b64)
-    img = BytesIO(img_b64_decode)
-    logger.info("Finished loading image")
-
-    logger.info("Start preprocessing image")
-    preprocessed_img = utils.preprocess_img(img, model_input_shape, preprocessing)
-    logger.info("Finished preprocessing image")
-    batch_im = np.expand_dims(preprocessed_img, 0)
-
-    logger.info("Start predicting")
-    prediction_batch = utils.get_predictions(model, batch_im, max_nb_labels, min_threshold, labels_df)
-    logger.info("Finished predicting")
-
+    prediction_batch = score_image(model, CONFIGS, img_b64)
     return literal_eval(prediction_batch[0])
