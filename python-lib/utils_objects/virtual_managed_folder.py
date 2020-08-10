@@ -9,8 +9,7 @@ class VirtualManagedFolder:
         return os.path.join(self.path, *args)
 
     def get_download_stream(self, file_path):
-        with open(self.get_absolute_path(file_path), 'rb') as f:
-            return f
+        return open(self.get_absolute_path(file_path), 'rb')
 
     def get_path_details(self, path):
         absolute_path = self.get_absolute_path(path)

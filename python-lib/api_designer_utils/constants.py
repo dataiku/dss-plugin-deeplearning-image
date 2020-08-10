@@ -3,7 +3,7 @@ import os
 PYTHON_LIB_DIR = 'python-lib'
 API_DESIGNER_UTILS_DIR = os.path.join(PYTHON_LIB_DIR, 'api_designer_utils')
 
-TEMPLATE_FILENAME = 'api_service_template.py'
+TEMPLATE_FILENAME = 'api_service_template.pyt'
 TEMPLATE_PATH = os.path.join(API_DESIGNER_UTILS_DIR, TEMPLATE_FILENAME)
 TEST_IMG_DIR = os.path.join(API_DESIGNER_UTILS_DIR, 'test_images')
 TEST_QUERIES = [{
@@ -11,7 +11,7 @@ TEST_QUERIES = [{
     "img_filename": 'test_lion_1.jpg'
 }]
 
-PY_FILES_DEST_DIR = os.path.join('api_deployer', 'python-lib')
+PY_FILES_DEST_DIR = os.path.join('api_deployer', 'python-lib') + '.zip'
 
 SPEC_PATH = 'code-env/python/spec/requirements.txt'
 

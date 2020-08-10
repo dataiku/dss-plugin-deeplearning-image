@@ -3,31 +3,42 @@ import api_designer_utils.constants as constants
 import os
 import logging
 import base64
+import zipfile
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
                     format='deeplearning-image-macro %(levelname)s - %(message)s')
 
 
+def list_all_paths_rec(d, paths):
+    for folder in d:
+        if not 'children' in folder:
+            paths.append(folder['path'])
+        else:
+            list_all_paths_rec(folder['children'], paths)
+
+def list_all_paths(folder):
+    paths = []
+    list_all_paths_rec(folder, paths)
+    return paths
+
 def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     """
     Copy python-lib from a plugin to a managed folder
     """
-    required_files = {
-        'config': ['__init__.py', 'api_deployer_config.py', 'dku_config.py'],
-        'dku_deeplearning_image': ['__init__.py', 'utils.py', 'constants.py', 'applications.py'],
-        'recipe': ['__init__.py', 'score_recipe.py'],
-        'utils_objects': ['__init__.py', 'dku_model.py', 'dku_application.py', 'virtual_managed_folder.py'],
-    }
-    SOURCE_DIR = constants.PYTHON_LIB_DIR
+    python_lib_dir = list(filter(lambda x: x['name'] == 'python-lib', plugin.list_files()))
+    required_files = list_all_paths(python_lib_dir)
     DEST_DIR = constants.PY_FILES_DEST_DIR
+    zip_file = BytesIO()
     folder = dataiku.Folder(folder_id, project_key=project_key)
-    for foldername, files in required_files.items():
-        for filename in files:
-            source_path = os.path.join(SOURCE_DIR, foldername, filename)
-            dest_path = os.path.join(DEST_DIR, foldername, filename)
+    with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipper:
+        for path in required_files:
+            source_path = path
+            dest_path = '/'.join(path.split('/')[1:])
             file_content = plugin.get_file(source_path).read()
-            folder.upload_stream(dest_path, file_content)
+            zipper.writestr(dest_path, data=file_content)
+    folder.upload_stream(DEST_DIR, zip_file.getvalue())
 
 
 def get_api_service(project, create_new_service, service_id=None):
@@ -75,7 +86,8 @@ def build_model_endpoint_settings(plugin, endpoint_id, code_env_name, model_fold
     endpoint_settings["code"] = format_code_template(
         plugin=plugin,
         max_nb_labels=max_nb_labels,
-        min_threshold=min_threshold)
+        min_threshold=min_threshold,
+        python_lib_dir=constants.PY_FILES_DEST_DIR)
     return endpoint_settings
 
 

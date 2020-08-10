@@ -29,6 +29,6 @@ class DkuConfig(object):
     def get(self, key, default=None):
         return getattr(self, key, default)
 
-    def __getattr__(self, item):
+    def __getattribute__(self, item):
         attr = object.__getattribute__(self, item)
         return attr.value if isinstance(attr, DSSParameter) else attr
