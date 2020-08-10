@@ -77,9 +77,9 @@ def can_use_gpu():
     return len(tf.config.experimental.list_physical_devices('GPU')) > 0
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
-    print("load_gpu_options")
+    log_info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        print("should use GPU")
+        log_info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         if memory_limit:
