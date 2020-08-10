@@ -27,16 +27,15 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     """
     Copy python-lib from a plugin to a managed folder
     """
-    python_lib_dir = list(filter(lambda x: x['name'] == 'python-lib', plugin.list_files()))
+    python_lib_dir = list(filter(lambda x: x['name'] == constants.PYTHON_LIB_DIR, plugin.list_files()))
     required_files = list_all_paths(python_lib_dir)
     DEST_DIR = constants.PY_FILES_DEST_DIR
     zip_file = BytesIO()
     folder = dataiku.Folder(folder_id, project_key=project_key)
     with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipper:
         for path in required_files:
-            source_path = path
             dest_path = '/'.join(path.split('/')[1:])
-            file_content = plugin.get_file(source_path).read()
+            file_content = plugin.get_file(path).read()
             zipper.writestr(dest_path, data=file_content)
     folder.upload_stream(DEST_DIR, zip_file.getvalue())
 
