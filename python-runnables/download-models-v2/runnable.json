@@ -1,6 +1,6 @@
 {
     "meta" : {
-        "label" : "Download pre-trained model",
+        "label" : "Download pre-trained model (v2)",
         "description" : "Use this macro to download model files to your project.",
         "icon" : "icon-cloud-download"
     },

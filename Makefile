@@ -1,4 +1,4 @@
-PLUGIN_VERSION=0.1.6
+PLUGIN_VERSION=1.0.0
 PLUGIN_ID=deeplearning-image
 
 plugin:
