@@ -1,7 +1,6 @@
 import os
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
 import dku_deeplearning_image.constants as constants

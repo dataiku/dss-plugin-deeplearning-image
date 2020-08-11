@@ -8,7 +8,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
-import tensorflow as tf
 import shutil
 
 
