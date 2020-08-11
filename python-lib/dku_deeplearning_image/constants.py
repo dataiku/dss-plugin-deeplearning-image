@@ -1,3 +1,5 @@
+PLUGIN_ID = 'deeplearning-image'
+
 RESNET = "resnet"
 RESNET_LABEL = "Resnet"
 XCEPTION = "xception"

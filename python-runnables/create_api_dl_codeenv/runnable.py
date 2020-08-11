@@ -1,8 +1,7 @@
-# This file is the actual code for the Python runnable create_api_dl_codeenv
+import dataiku
 from dataiku.runnables import Runnable
-import constants
-import dataiku 
-from api_designer_utils import *
+import dku_deeplearning_image.constants as constants
+import api_designer_utils.utils as utils
 
 class MyRunnable(Runnable):
     """The base interface for a Python runnable"""
@@ -29,13 +28,7 @@ class MyRunnable(Runnable):
         Do stuff here. Can return a string or raise an exception.
         The progress_callback is a function expecting 1 value: current progress
         """
-        use_gpu = self.config.get("use_gpu")
-        code_env_name = constants.ENV_NAME_CPU
-        if use_gpu : 
-            code_env_name = constants.ENV_NAME_GPU
-            
         client = dataiku.api_client()
-        create_api_code_env(client, code_env_name, use_gpu)
-        
-        return "code env build is OK"
-        
+        plugin = client.get_plugin(constants.PLUGIN_ID)
+        utils.create_api_code_env(plugin, client, constants.ENV_NAME)
+        return "The code env {} has been successfully created.".format(constants.ENV_NAME)

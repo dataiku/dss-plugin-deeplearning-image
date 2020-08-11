@@ -2,6 +2,7 @@ import dataiku
 from dataiku.runnables import Runnable
 from config import ApiDeployerConfig
 import api_designer_utils.utils as utils
+import dku_deeplearning_image.constants as constants
 
 
 class MyRunnable(Runnable):
@@ -11,8 +12,7 @@ class MyRunnable(Runnable):
         self.plugin_config = plugin_config
         self.client = dataiku.api_client()
         self.project = self.client.get_project(self.project_key)
-        self.plugin_id = "deeplearning-image"
-        self.plugin = self.client.get_plugin(self.plugin_id)
+        self.plugin = self.client.get_plugin(constants.PLUGIN_ID)
 
     def get_progress_target(self):
         return None

@@ -4,9 +4,6 @@ import GPUtil
 import json
 
 
-# We deactivate GPU for this script, because all the methods only need to
-# fetch information about recipe and do not make computation
-
 def do(payload, config, plugin_config, inputs):
     response = {}
     if "method" not in payload:
