@@ -12,7 +12,6 @@ import numpy as np
 from datetime import datetime
 
 import sys
-import dku_deeplearning_image.config_utils as config_utils
 import pandas as pd
 import logging
 
@@ -72,8 +71,14 @@ def is_keras_application(architecture):
 def log_device_placement():
     tf.debugging.set_log_device_placement(True)
 
+
+def deactivate_gpu():
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+
 def can_use_gpu():
     return len(tf.config.experimental.list_physical_devices('GPU')) > 0
+
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     print("load_gpu_options")
@@ -89,7 +94,7 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
                 )
         tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
-        config_utils.deactivate_gpu()
+        deactivate_gpu()
 
 ###################################################################################################################
 ## FILES LOGIC

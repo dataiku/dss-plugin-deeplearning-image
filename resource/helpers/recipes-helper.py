@@ -1,19 +1,16 @@
 import dataiku
-import dku_deeplearning_image.config_utils as config_utils
 import dku_deeplearning_image.constants as constants
 import GPUtil
+import json
 
 
 # We deactivate GPU for this script, because all the methods only need to
 # fetch information about recipe and do not make computation
-# config_utils.deactivate_gpu()
 
 def do(payload, config, plugin_config, inputs):
     response = {}
     if "method" not in payload:
         return response
-
-    client = dataiku.api_client()
 
     if payload["method"] == "get-info-scoring":
         response = get_info_scoring(inputs)
@@ -39,10 +36,25 @@ def get_info_scoring(inputs):
     return {}
 
 
+def download_json(folder, path):
+    return json.loads(folder.get_download_stream(path).read())
+
+
+def get_model_config(model_folder):
+    return download_json(model_folder, constants.CONFIG_FILE)
+
+
+def get_model_info(model_folder, goal):
+    if '/{}'.format(constants.MODEL_INFO_FILE) in model_folder.list_paths_in_partition():
+        return download_json(model_folder, constants.MODEL_INFO_FILE)[goal]
+    else:
+        return {"summary": "Not Available before 1st run", "layers": "Not Available before 1st run"}
+
+
 def get_info_about_model(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = config_utils.get_model_info(model_folder, goal=constants.SCORING)
-    config = config_utils.get_config(model_folder)
+    model_info = get_model_info(model_folder, goal=constants.SCORING)
+    config = get_model_config(model_folder)
 
     return {
         "layers": model_info["layers"],
@@ -53,10 +65,10 @@ def get_info_about_model(inputs):
 
 def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = config_utils.get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
+    model_info = get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
     label_dataset = get_label_dataset(inputs)
     columns = [c["name"] for c in label_dataset.read_schema()]
-    model_config = config_utils.get_config(model_folder)
+    model_config = get_model_config(model_folder)
     return {"summary": model_info["summary"], "columns": columns, "model_config": model_config}
 
 
