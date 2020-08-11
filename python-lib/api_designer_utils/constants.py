@@ -10,7 +10,7 @@ TEST_QUERIES = [{
     "img_filename": 'test_lion_1.jpg'
 }]
 PY_FILES_DEST_DIR = os.path.join('api_deployer', 'python-lib') + '.zip'
-SPEC_PATH = 'code-env/python/spec/requirements.txt'
+SPEC_PATH = os.path.join(API_DESIGNER_UTILS_DIR, 'requirements.txt')
 ENDPOINT_SETTINGS_BASE = {
     "type": "PY_FUNCTION",
     "userFunctionName": "api_py_function",

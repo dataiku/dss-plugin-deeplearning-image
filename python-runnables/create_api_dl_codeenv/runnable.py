@@ -30,5 +30,7 @@ class MyRunnable(Runnable):
         """
         client = dataiku.api_client()
         plugin = client.get_plugin(constants.PLUGIN_ID)
-        utils.create_api_code_env(plugin, client, constants.ENV_NAME)
-        return "The code env {} has been successfully created.".format(constants.ENV_NAME)
+        python_interpreter = self.config.get('python_interpreter')
+        custom_interpreter = self.config.get('custom_interpreter') if python_interpreter == 'CUSTOM' else ''
+        utils.create_api_code_env(plugin, client, constants.ENV_NAME, python_interpreter, custom_interpreter)
+        return utils.get_codeenv_output_msg(plugin, constants.ENV_NAME)

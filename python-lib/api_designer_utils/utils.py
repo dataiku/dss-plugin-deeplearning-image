@@ -47,15 +47,28 @@ def get_api_service(project, create_new_service, service_id=None):
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
 
 
-def create_api_code_env(plugin, client, env_name):
+def create_api_code_env(plugin, client, env_name, python_interpreter, custom_interpreter):
     already_exist = len([env.get('envName') for env in client.list_code_envs() if env == env_name])
     if not already_exist:
-        _ = client.create_code_env(env_lang='PYTHON', env_name=env_name, deployment_mode='DESIGN_MANAGED')
+        try:
+            _ = client.create_code_env(
+                env_lang='PYTHON',
+                env_name=env_name,
+                deployment_mode='DESIGN_MANAGED',
+                params={
+                    'pythonInterpreter': python_interpreter,
+                    'customInterpreter': custom_interpreter
+                }
+            )
+        except Exception as err:
+            raise Exception('Error when creating the code env.'
+                            'It is often due to the fact that the selected interpreter does not exist.')
     my_env = client.get_code_env('PYTHON', env_name)
     env_def = my_env.get_definition()
     libraries_to_install = plugin.get_file(constants.SPEC_PATH).read()
-    env_def['specPackageList'] = libraries_to_install
+    env_def['specPackageList'] = libraries_to_install.decode('utf-8')
     env_def['desc']['installCorePackages'] = True
+    print('env_def', env_def)
     my_env.set_definition(env_def)
     my_env.update_packages()
 
@@ -117,3 +130,9 @@ def get_html_result(project_key, model_folder_id, service_id, endpoint_id):
         model_folder_id=model_folder_id,
         service_id=service_id,
         endpoint_id=endpoint_id)
+
+
+def get_codeenv_output_msg(plugin, env_name):
+    libraries_to_install = plugin.get_file(constants.SPEC_PATH).read().decode('utf-8')
+    return "The code env {} has been successfully created with following packages : \n {}.".format(
+        env_name, libraries_to_install)

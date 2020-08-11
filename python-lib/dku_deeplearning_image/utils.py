@@ -101,7 +101,7 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
 ###################################################################################################################
 
 def get_weights_filename(with_top=False):
-    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
+    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else constants.NOTOP_SUFFIX)
 
 
 def get_file_path(folder_path, file_name):
