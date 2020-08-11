@@ -1,8 +1,7 @@
 import dataiku
 from dataiku.runnables import Runnable
 from config import ApiDeployerConfig
-from api_designer_utils.api_designer_utils import copy_plugin_to_dss_folder,\
-    get_api_service, build_model_endpoint_settings, create_python_endpoint, get_html_result
+import api_designer_utils.utils as utils
 
 
 class MyRunnable(Runnable):
@@ -23,18 +22,18 @@ class MyRunnable(Runnable):
         model_folder_id = config.get("model_folder_id")
         endpoint_id = config.get("endpoint_id")
         service_id = config.get("service_id")
-        copy_plugin_to_dss_folder(self.plugin, config.get("model_folder_id"), self.project_key)
-        api_service = get_api_service(
+        utils.copy_plugin_to_dss_folder(self.plugin, config.get("model_folder_id"), self.project_key)
+        api_service = utils.get_api_service(
             project=self.project,
             create_new_service=config.get("create_new_service"),
             service_id=service_id
         )
-        endpoint_settings = build_model_endpoint_settings(
+        endpoint_settings = utils.build_model_endpoint_settings(
             plugin=self.plugin,
             endpoint_id=endpoint_id,
             code_env_name=config.get("code_env_name"),
             model_folder_id=model_folder_id,
             max_nb_labels=config.get('max_nb_labels'),
             min_threshold=config.get('min_threshold'))
-        create_python_endpoint(api_service, endpoint_settings)
-        return get_html_result(self.project_key, model_folder_id, service_id, endpoint_id)
+        utils.create_python_endpoint(api_service, endpoint_settings)
+        return utils.get_html_result(self.project_key, model_folder_id, service_id, endpoint_id)

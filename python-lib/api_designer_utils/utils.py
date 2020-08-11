@@ -11,17 +11,17 @@ logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party modu
                     format='deeplearning-image-macro %(levelname)s - %(message)s')
 
 
-def list_all_paths_rec(d, paths):
-    for folder in d:
-        if not 'children' in folder:
-            paths.append(folder['path'])
-        else:
-            list_all_paths_rec(folder['children'], paths)
-
 def list_all_paths(folder):
+    def list_all_paths_rec(d, paths):
+        for fd in d:
+            if not 'children' in fd:
+                paths.append(fd['path'])
+            else:
+                list_all_paths_rec(fd['children'], paths)
     paths = []
     list_all_paths_rec(folder, paths)
     return paths
+
 
 def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     """
@@ -29,7 +29,7 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     """
     python_lib_dir = list(filter(lambda x: x['name'] == constants.PYTHON_LIB_DIR, plugin.list_files()))
     required_files = list_all_paths(python_lib_dir)
-    DEST_DIR = constants.PY_FILES_DEST_DIR
+    dest_dir = constants.PY_FILES_DEST_DIR
     zip_file = BytesIO()
     folder = dataiku.Folder(folder_id, project_key=project_key)
     with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipper:
@@ -37,7 +37,7 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
             dest_path = '/'.join(path.split('/')[1:])
             file_content = plugin.get_file(path).read()
             zipper.writestr(dest_path, data=file_content)
-    folder.upload_stream(DEST_DIR, zip_file.getvalue())
+    folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
 def get_api_service(project, create_new_service, service_id=None):
@@ -92,8 +92,7 @@ def build_model_endpoint_settings(plugin, endpoint_id, code_env_name, model_fold
 
 def format_code_template(plugin, **kwargs):
     template_content = plugin.get_file(constants.TEMPLATE_PATH).read().decode('utf-8')
-    template_content_formatted = template_content.format(**kwargs)
-    return template_content_formatted
+    return template_content.format(**kwargs)
 
 
 def create_python_endpoint(api_service, setting_dict):

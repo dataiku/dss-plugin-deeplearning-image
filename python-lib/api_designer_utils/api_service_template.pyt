@@ -15,7 +15,7 @@ from utils_objects import DkuModel
 from utils_objects import VirtualManagedFolder
 import dku_deeplearning_image.constants as constants
 
-CONFIGS = {{
+config = {{
     'max_nb_labels': {max_nb_labels},
     'min_threshold': {min_threshold}
 }}
@@ -40,11 +40,11 @@ def score_image(md, conf, img_b64):
     return predictions
 
 
-config = ScoreConfig(CONFIGS)
+dku_config = ScoreConfig(config)
 model_folder = get_model_folder(model_folder_path)
-model = load_and_get_model(model_folder, config)
+model = load_and_get_model(model_folder, dku_config)
 
 
 def api_py_function(img_b64):
-    prediction_batch = score_image(model, CONFIGS, img_b64)
+    prediction_batch = score_image(model, config, img_b64)
     return prediction_batch['prediction'][0]
