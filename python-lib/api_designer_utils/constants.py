@@ -27,5 +27,5 @@ HTML_RESPONSE_TEMPLATE = """
 <div>Model folder : {model_folder_id}</div>
 <div>API service : {service_id}</div>
 <div>Endpoint : {endpoint_id}</div>
-<a href="/projects/{plugin_id}/api-designer/">See Service in API designer</a>
+<a href="/projects/{project_key}/api-designer/">See Service in API designer</a>
 """

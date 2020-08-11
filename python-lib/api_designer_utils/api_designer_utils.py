@@ -109,12 +109,12 @@ def create_python_endpoint(api_service, setting_dict):
     api_setting.save()
 
 
-def get_html_result(plugin_id, model_folder_id, service_id, endpoint_id):
+def get_html_result(project_key, model_folder_id, service_id, endpoint_id):
     """
     Get the result html string of the macro
     """
     return constants.HTML_RESPONSE_TEMPLATE.format(
-        plugin_id=plugin_id,
+        project_key=project_key,
         model_folder_id=model_folder_id,
         service_id=service_id,
         endpoint_id=endpoint_id)

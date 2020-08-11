@@ -37,4 +37,4 @@ class MyRunnable(Runnable):
             max_nb_labels=config.get('max_nb_labels'),
             min_threshold=config.get('min_threshold'))
         create_python_endpoint(api_service, endpoint_settings)
-        return get_html_result(self.plugin_id, model_folder_id, service_id, endpoint_id)
+        return get_html_result(self.project_key, model_folder_id, service_id, endpoint_id)
