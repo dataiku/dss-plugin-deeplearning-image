@@ -8,7 +8,7 @@
     "paramsPythonSetup": "helpers/webapp-helper.py",
     "params": [
         {
-            "name": "Retrained model folder",
+            "name": "retrained_model_folder",
             "type": "SELECT",
             "label": "Folder containing retrained model",
             "mandatory": true,
