@@ -14,7 +14,7 @@ class RetrainConfig(DkuConfig):
         self.add_param(name='train_ratio', value=float(self.config.get("train_ratio")))
         self.add_param(
             name='input_shape',
-            value=(int(self.config.get("image_width")), int(self.config.get("image_height")), 3))
+            value=(int(self.config.get("image_height"), int(self.config.get("image_width"))), 3))
         self.add_param(name='batch_size', value=int(self.config.get("batch_size")))
         self.add_param(name='model_pooling', value=self.config.get("model_pooling"))
         self.add_param(name='model_reg', value=self.config.get("model_reg"))

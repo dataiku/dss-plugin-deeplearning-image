@@ -46,10 +46,10 @@
          </div>
       </div>
       <div class="control-group">
-         <label class="control-label">Image width/height</label>
+         <label class="control-label">Image Shape (Height | Width)</label>
          <div class="controls">
-            <input style="width: 98px;" type="number" min="197" step="1" ng-model="config.image_width"/ ng-disabled="retrained" required>
             <input style="width: 98px; margin-left: 8px;" type="number" min="197" step="1" ng-model="config.image_height" ng-disabled="retrained" required/>
+            <input style="width: 98px;" type="number" min="197" step="1" ng-model="config.image_width" ng-disabled="retrained" required>
             <span class="help-inline" ng-if="retrained">Input model has already be retrained. Pooling and size are already set.</span>
          </div>
       </div>
