@@ -1,4 +1,4 @@
-PLUGIN_ID = 'deeplearning-image'
+PLUGIN_ID = 'deeplearning-image-v2'
 
 RESNET = "resnet"
 RESNET_LABEL = "Resnet"

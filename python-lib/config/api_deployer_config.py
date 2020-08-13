@@ -60,7 +60,3 @@ class ApiDeployerConfig(DkuConfig):
                 {'type': 'exists', 'err_msg': "Min threshold is empty"},
                 {'type': 'between', 'op': [0, 1], 'err_msg': "Min threshold must be between 0 and 1"}
             ])
-
-        self.add_param(
-            name='code_env_name',
-            value=constants.ENV_NAME_GPU if self.use_gpu else constants.ENV_NAME_CPU)
