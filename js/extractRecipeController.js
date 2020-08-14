@@ -21,9 +21,7 @@ app.controller('extractRecipeController', function($scope) {
     };
 
     var initVariable = function(varName, initValue) {
-        if ($scope.config[varName] == undefined) {
-            $scope.config[varName] = initValue;
-        }
+        $scope.config[varName] = $scope.config[varName] || initValue;
     };
 
     var getStylesheetUrl = function(pluginId) {
@@ -42,14 +40,10 @@ app.controller('extractRecipeController', function($scope) {
             var defaultLayerIndex = data["default_layer_index"];
             $scope.layers = preprocessLayers(data.layers);
             $scope.modelSummary = data.summary;
-
-            if ($scope.config.extract_layer_index == undefined) {
-                $scope.config.extract_layer_index = defaultLayerIndex
-            }
+            $scope.config.extract_layer_index = $scope.config.extract_layer_index || defaultLayerIndex
             $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
-            // TODO : Deal when failing to retrieve info
             $scope.finishedLoading = true;
         });
     };

@@ -29,11 +29,7 @@ app.controller('retrainRecipeController', function($scope) {
     };
 
     $scope.getShowHideAdvancedParamsMessage = function() {
-        if ($scope.showAdvancedParams) {
-            return "Hide Model Summary";
-        } else {
-            return "Show Model Summary";
-        }
+        return $scope.showAdvancedParams ? "Hide Model Summary" : "Show Model Summary";
     };
 
     $scope.showHideAdvancedParams = function() {
@@ -50,15 +46,12 @@ app.controller('retrainRecipeController', function($scope) {
             $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
-            // TODO : Deal when failing to retrieve info
             $scope.finishedLoading = true;
         });
     };
 
     var initVariable = function(varName, initValue) {
-        if ($scope.config[varName] == undefined) {
-            $scope.config[varName] = initValue;
-        }
+        $scope.config[varName] = $scope.config[varName] || initValue;
     };
 
     var getStylesheetUrl = function(pluginId) {
