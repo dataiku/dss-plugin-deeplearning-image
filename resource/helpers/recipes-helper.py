@@ -19,6 +19,7 @@ def do(payload, config, plugin_config, inputs):
         response = get_info_retrain(inputs)
 
     add_gpu_options_to_resp(response)
+    add_plugin_id(response)
     return response
 
 
@@ -86,6 +87,8 @@ def get_label_dataset(inputs):
 def get_input_name_from_role(inputs, role):
     return [inp for inp in inputs if inp["role"] == role][0]["fullName"]
 
+def add_plugin_id(response):
+    response['pluginId'] = constants.PLUGIN_ID
 
 def add_gpu_options_to_resp(response):
     response["gpu_list"] = get_gpu_list()

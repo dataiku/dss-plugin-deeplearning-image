@@ -3,11 +3,7 @@ var app = angular.module('deepLearningImageTools.extract', []);
 app.controller('extractRecipeController', function($scope) {
 
     $scope.getShowHideAdvancedParamsMessage = function() {
-        if ($scope.showAdvancedParams) {
-            return "Hide Model Summary";
-        } else {
-            return "Show Model Summary";
-        }
+        return $scope.showAdvancedParams ? "Hide Model Summary" : "Show Model Summary";
     };
 
     $scope.showHideAdvancedParams = function() {
@@ -30,6 +26,10 @@ app.controller('extractRecipeController', function($scope) {
         }
     };
 
+    var getStylesheetUrl = function(pluginId) {
+        return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
+    }
+
     var initVariables = function() {
         initVariable("gpu_usage", 'all');
         initVariable("gpu_memory", 'all');
@@ -46,6 +46,7 @@ app.controller('extractRecipeController', function($scope) {
             if ($scope.config.extract_layer_index == undefined) {
                 $scope.config.extract_layer_index = defaultLayerIndex
             }
+            $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
             // TODO : Deal when failing to retrieve info

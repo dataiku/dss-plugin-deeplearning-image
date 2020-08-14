@@ -7,6 +7,7 @@ app.controller('scoringRecipeController', function($scope) {
 
         $scope.callPythonDo({method: "get-info-scoring"}).then(function(data) {
             handleGPU(data);
+            $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
             $scope.canUseGPU = false;
@@ -19,6 +20,10 @@ app.controller('scoringRecipeController', function($scope) {
             $scope.config[varName] = initValue;
         }
     };
+
+    var getStylesheetUrl = function(pluginId) {
+        return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
+    }
 
     var initVariables = function() {
         initVariable("max_nb_labels", 5);

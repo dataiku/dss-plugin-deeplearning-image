@@ -47,6 +47,7 @@ app.controller('retrainRecipeController', function($scope) {
             $scope.labelColumns = data["columns"];
             $scope.modelSummary = data["summary"];
             initPotentiallyBlockedVariables(data["model_config"]);
+            $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
             // TODO : Deal when failing to retrieve info
@@ -59,6 +60,10 @@ app.controller('retrainRecipeController', function($scope) {
             $scope.config[varName] = initValue;
         }
     };
+
+    var getStylesheetUrl = function(pluginId) {
+        return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
+    }
 
     var initPotentiallyBlockedVariables = function(modelConfig) {
         $scope.retrained = modelConfig.retrained || false;
