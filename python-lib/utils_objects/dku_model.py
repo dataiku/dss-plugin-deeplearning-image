@@ -17,11 +17,18 @@ import base64
 
 import copy as cp
 
+
 class DkuModel(object):
-    def __init__(self, folder):
+    def __init__(self, folder, is_empty=False):
         self.folder = folder
-        if '/{}'.format(constants.CONFIG_FILE) in self.folder.list_paths_in_partition():
-            self.load_config()
+        if not is_empty:
+            files = self.folder.list_paths_in_partition()
+            if '/{}'.format(constants.CONFIG_FILE) in files:
+                self.load_config()
+            else:
+                raise IOError(
+                    f"Error when creating DkuModel. {constants.CONFIG_FILE} should exist in the following list: {files}"
+                )
 
     def jsonify_config(self):
         return {

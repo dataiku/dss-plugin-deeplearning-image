@@ -50,7 +50,7 @@ class MyRunnable(Runnable):
             output_folder_dss = project.get_managed_folder(output_managed_id)
 
         output_folder = dataiku.Folder(output_folder_dss.get_definition()['name'], project_key=self.project_key)
-        new_model = DkuModel(output_folder)
+        new_model = DkuModel(output_folder, is_empty=True)
 
         architecture, trained_on = model_choice.split('::')
         config = {
