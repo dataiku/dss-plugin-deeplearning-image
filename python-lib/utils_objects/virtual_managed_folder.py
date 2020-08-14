@@ -19,7 +19,8 @@ class VirtualManagedFolder:
         }
 
     def list_paths_in_partition(self):
-        return ['/{}'.format(path) for path in os.listdir(self.path)]
+        # We add a slash at the beginning if needed
+        return ['/{}'.format(path.split('/')[-1]) for path in os.listdir(self.path)]
 
     def upload_stream(self, path, f):
         raise IOError("VirtualManagedFolder do not have upload_stream property.")
