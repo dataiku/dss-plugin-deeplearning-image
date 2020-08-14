@@ -18,20 +18,27 @@ class MyRunnable(Runnable):
         return None
 
     def run(self, progress_callback):
-        config = ApiDeployerConfig(self.config, project=self.project)
+        config = ApiDeployerConfig(self.config, project=self.project, client=self.client)
         model_folder_id = config.get("model_folder_id")
         endpoint_id = config.get("endpoint_id")
         service_id = config.get("service_id")
         utils.copy_plugin_to_dss_folder(self.plugin, config.get("model_folder_id"), self.project_key)
-        api_service = utils.get_api_service(
+        api_service = utils.create_or_get_api_service(
             project=self.project,
             create_new_service=config.get("create_new_service"),
             service_id=service_id
         )
+        code_env = utils.create_or_get_code_env(
+            plugin=self.plugin,
+            client=self.client,
+            create_new_code_env=config.get("create_new_code_env"),
+            env_name=config.get("code_env_name"),
+            python_interpreter=config.get("python_interpreter"),
+            custom_interpreter=config.get("custom_interpreter"))
         endpoint_settings = utils.build_model_endpoint_settings(
             plugin=self.plugin,
             endpoint_id=endpoint_id,
-            code_env_name=config.get("code_env_name"),
+            code_env_name=code_env.env_name,
             model_folder_id=model_folder_id,
             max_nb_labels=config.get('max_nb_labels'),
             min_threshold=config.get('min_threshold'))

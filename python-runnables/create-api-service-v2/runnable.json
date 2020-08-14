@@ -54,6 +54,53 @@
             "mandatory": true
         },
         {
+            "name": "sep3",
+            "label": "Code environment",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "code_env_name",
+            "label": "Environment name",
+            "type": "SELECT",
+            "description":"Choose an existing or create a new one.",
+            "getChoicesFromPython": true
+        },
+        {
+            "name": "new_code_env_name",
+            "type": "STRING",
+            "label": "Code environment name",
+            "visibilityCondition" : "model.code_env_name == 'create_new_code_env'",
+            "mandatory": true
+        },
+        {
+            "name": "python_interpreter",
+            "type": "SELECT",
+            "label": "Python interpreter",
+            "selectChoices": [
+                {
+                    "value": "PYTHON35",
+                    "label": "Python 3.5 (from PATH)"
+                },
+                {
+                    "value": "PYTHON36",
+                    "label": "Python 3.6 (from PATH)"
+                },
+                {
+                    "value": "CUSTOM",
+                    "label": "Custom (lookup in PATH)"
+                }
+            ],
+            "defaultValue": "PYTHON36",
+            "visibilityCondition" : "model.code_env_name == 'create_new_code_env'"
+        },
+        {
+            "name": "custom_interpreter",
+            "type": "STRING",
+            "label": "Python executable",
+            "mandatory": true,
+            "visibilityCondition": "model.code_env_name == 'create_new_code_env' && model.python_interpreter == 'CUSTOM'"
+        },
+        {
             "name": "sep4",
             "label": "Params model results",
             "type": "SEPARATOR"

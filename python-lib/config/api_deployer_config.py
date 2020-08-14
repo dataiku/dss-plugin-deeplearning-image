@@ -1,27 +1,29 @@
 from .dku_config import DkuConfig
-import dku_deeplearning_image.constants as constants
 
 
 class ApiDeployerConfig(DkuConfig):
-    def __init__(self, config, project):
+    def __init__(self, config, project, client):
         self.name = 'api_deployer'
         self.output_role = 'create_api_service'
         self.project = project
+        self.client = client
         super(ApiDeployerConfig, self).__init__(config)
 
     def _load_recipe_param(self, config):
         super(ApiDeployerConfig, self)._load_recipe_param(config)
         self.add_param(
             name='model_folder_id',
-            value= self.config.get("model_folder_id"),
-            checks=[
-                {'type': 'exists', 'err_msg': 'Folder ID is empty.'},
-                {
-                    'type': 'in',
-                    'op': [folder.get("id") for folder in self.project.list_managed_folders()],
-                    'err_msg': "Folder ID {value} must be the id of a managed folder containing a model trained with the deeplearning-image plugin. The folder must belong to the project in which is executed the macro"
-                }
-            ])
+            value=self.config.get("model_folder_id"),
+            checks=[{
+                'type': 'in',
+                'op': [folder.get("id") for folder in self.project.list_managed_folders()],
+                'err_msg': "Folder ID {value} must be the id of a managed folder containing a model trained with the deeplearning-image plugin. The folder must belong to the project in which is executed the macro"
+            }],
+            required=True)
+
+        ##########################################
+        # API Service handling
+        ##########################################
         service_id = config.get("service_id")
 
         self.add_param(
@@ -40,12 +42,51 @@ class ApiDeployerConfig(DkuConfig):
         self.add_param(
             name='service_id',
             value=service_id,
-            checks=[{'type': 'exists', 'err_msg': "Service ID is empty"}, check])
+            required=True,
+            checks=[check])
 
         self.add_param(
             name='endpoint_id',
             value=config.get("endpoint_id"),
-            checks=[{'type': 'exists', 'err_msg': "Endpoint ID is empty"}])
+            required=True)
+
+        ##########################################
+        # Code env handling
+        ##########################################
+        code_env_name = config.get("code_env_name")
+        self.add_param(
+            name='create_new_code_env',
+            value=(code_env_name == "create_new_code_env"),
+            checks=[
+                {'type': 'is_type', 'op': bool, 'err_msg': "create_new_code_env is not bool: {value}"}
+            ])
+
+        list_code_envs = [code_env.get("envName") for code_env in self.client.list_code_envs()]
+        if self.create_new_code_env:
+            code_env_name = config.get("new_code_env_name")
+            check = {'type': 'not_in', 'op': list_code_envs, 'err_msg': "Code env name {value} already in use."}
+        else:
+            check = {'type': 'in', 'op': list_code_envs, 'err_msg': "Code env name : {value} not found."}
+
+        self.add_param(
+            name='code_env_name',
+            value=code_env_name,
+            required=True,
+            checks=[check])
+
+        self.add_param(
+            name='python_interpreter',
+            value=self.config.get("python_interpreter"),
+            required=self.create_new_code_env)
+
+        self.add_param(
+            name='custom_interpreter',
+            value=self.config.get("custom_interpreter"),
+            required=self.create_new_code_env and self.python_interpreter == 'CUSTOM')
+
+        ##########################################
+        # Classification parameters
+        ##########################################
 
         self.add_param(
             name='max_nb_labels',

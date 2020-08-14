@@ -40,16 +40,16 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
-def get_api_service(project, create_new_service, service_id=None):
+def create_or_get_api_service(project, create_new_service, service_id=None):
     """
     Create or get an api service dss object and return it
     """
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
 
 
-def create_api_code_env(plugin, client, env_name, python_interpreter, custom_interpreter):
-    already_exist = len([env.get('envName') for env in client.list_code_envs() if env == env_name])
-    if not already_exist:
+def create_or_get_code_env(plugin, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
+    raise ValueError(f'Ready to create {env_name} with confs : {python_interpreter} and {custom_interpreter}')
+    if create_new_code_env:
         try:
             _ = client.create_code_env(
                 env_lang='PYTHON',
@@ -68,9 +68,9 @@ def create_api_code_env(plugin, client, env_name, python_interpreter, custom_int
     libraries_to_install = plugin.get_file(constants.SPEC_PATH).read()
     env_def['specPackageList'] = libraries_to_install.decode('utf-8')
     env_def['desc']['installCorePackages'] = True
-    print('env_def', env_def)
     my_env.set_definition(env_def)
     my_env.update_packages()
+    return my_env
 
 
 def get_test_queries(plugin):
