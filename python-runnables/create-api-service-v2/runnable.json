@@ -2,7 +2,7 @@
     "meta": {
         "label": "Image classification endpoint (v2)",
         "description": "Add an api endpoint for an image classification model trained with the deeplearning-image plugin",
-        "icon": "icon-puzzle-piece"
+        "icon": "icon-trophy"
     },
     "impersonate": false,
     "permissions": ["WRITE_CONF"],
