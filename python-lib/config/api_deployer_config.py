@@ -22,22 +22,24 @@ class ApiDeployerConfig(DkuConfig):
                     'err_msg': "Folder ID {value} must be the id of a managed folder containing a model trained with the deeplearning-image plugin. The folder must belong to the project in which is executed the macro"
                 }
             ])
+        service_id = config.get("service_id")
 
         self.add_param(
             name='create_new_service',
-            value=self.config.get("create_new_service"),
+            value=(service_id == "create_new_service"),
             checks=[
                 {'type': 'is_type', 'op': bool, 'err_msg': "create_new_service is not bool: {value}"}
             ])
 
         list_service = [service.get("id") for service in self.project.list_api_services()]
         if self.create_new_service:
-            check = {'type': 'not_in', 'op': list_service, 'err_msg': "Service ID {value} already in use, find a new id or uncheck the create new service option to use an existing service"}
+            service_id = config.get("new_service_id")
+            check = {'type': 'not_in', 'op': list_service, 'err_msg': "Service ID {value} already in use."}
         else:
             check = {'type': 'in', 'op': list_service, 'err_msg': "Service ID : {value} not found."}
         self.add_param(
             name='service_id',
-            value=config.get("service_id_new" if self.create_new_service else "service_id_existing"),
+            value=service_id,
             checks=[{'type': 'exists', 'err_msg': "Service ID is empty"}, check])
 
         self.add_param(

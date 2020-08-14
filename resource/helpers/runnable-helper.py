@@ -18,6 +18,14 @@ def do(payload, config, plugin_config, inputs):
             'label': '{app[label]} trained on {ds}'.format(app=app, ds=ds.capitalize()),
             'value': '{}::{}'.format(app['name'], ds)
         } for app in APPLICATIONS for ds in list(app['weights'].keys())]
+    elif payload.get('parameterName') == 'service_id':
+        project_key = dataiku.default_project_key()
+        api_services = api_client.get_project(project_key).list_api_services()
+        choices = [{
+            'label': '{api_service[id]}'.format(api_service=api_service),
+            'value': '{api_service[id]}'.format(api_service=api_service)
+        } for api_service in api_services]
+        choices.append({'label': 'Create new service...', 'value': 'create_new_service'})
     else:
         choices = []
     return {"choices": choices}

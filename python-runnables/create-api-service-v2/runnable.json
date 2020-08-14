@@ -8,6 +8,7 @@
     "permissions": ["WRITE_CONF"],
     "resultType": "HTML",
     "resultLabel": "API service",
+    "paramsPythonSetup": "helpers/runnable-helper.py",
     "macroRoles": [
         {
             "type": "MANAGED_FOLDER",
@@ -32,30 +33,24 @@
             "type": "SEPARATOR"
         },
         {
-            "name": "create_new_service",
-            "type": "BOOLEAN",
-            "label": "Create new API service",
-            "mandatory": true,
-            "defaultValue": false
+            "name": "service_id",
+            "label": "API Service",
+            "type": "SELECT",
+            "description":"Choose an existing or create a new one.",
+            "getChoicesFromPython": true
         },
         {
-            "name": "service_id_new",
+            "name": "new_service_id",
             "type": "STRING",
             "label": "API service ID",
-            "visibilityCondition" : "model.create_new_service",
-            "mandatory": true
-        },
-        {
-            "name": "service_id_existing",
-            "type": "API_SERVICE",
-            "label": "API service ID",
-            "visibilityCondition" : "!model.create_new_service",
+            "visibilityCondition" : "model.service_id == 'create_new_service'",
             "mandatory": true
         },
         {
             "name": "endpoint_id",
             "type": "STRING",
             "label": "Endpoint unique ID",
+            "description":"Will override if already existing.",
             "mandatory": true
         },
         {
