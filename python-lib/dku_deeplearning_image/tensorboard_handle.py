@@ -1,70 +1,50 @@
 import dataiku
-import constants
+import dku_deeplearning_image.constants as constants
 from dataikuapi.utils import DataikuException
 import os
-from threading import Thread
 from werkzeug.serving import make_server
-from tensorflow import logging
-from tensorboard.backend import application
-import tensorboard.default as tb_default
+import tensorboard as tb
 import logging
 
 logger = logging.getLogger(__name__)
 
-class TensorboardThread(Thread):
 
-    def __init__(self, folder_name, host="127.0.0.1", verbosity=logging.WARN):
-        Thread.__init__(self)
-        self.project_key = os.environ["DKU_CURRENT_PROJECT_KEY"]
-        self.folder_name = folder_name
-        self.client = dataiku.api_client()
-
-        logging.set_verbosity(verbosity)
-
-        # Getting app
-        logs_path = self.__get_logs_path()
-        app = self.__get_tb_app(logs_path)
-
-        # Setting server
-        self.srv = make_server(host, 0, app)
+class TensorboardCustomServer(tb.program.TensorBoardServer):
+    """
+        Start a Tensorboard in a different server. Hack inspired by this GitHub post :
+        https://stackoverflow.com/questions/61942505/add-tensorboard-server-to-flask-endpoint
+    """
+    def __init__(self, tensorboard_app, flags):
+        self.app = tensorboard_app
+        self.host = flags.host
+        self.srv = make_server(self.host, 0, self.app)
 
     def get_port(self):
         return self.srv.server_port
 
-    def __get_logs_path(self):
-        # Retrieve model managed-folder path
-        folder_found = False
-        project = self.client.get_project(self.project_key)
-        for folder in project.list_managed_folders():
-            if self.folder_name == folder['name']:
-                folder_path = dataiku.Folder(folder['id'], project_key=self.project_key).get_path()
-                folder_found = True
-                break
-
-        if not folder_found:
-            raise DataikuException("The folder '{}' (in project '{}' cannot be found".format(self.folder_name, self.project_key))
-
-        log_path = os.path.join(folder_path, constants.TENSORBOARD_LOGS)
-        return log_path
-
-    def __get_tb_app(self, tensorboard_logs):
-        return application.standard_tensorboard_wsgi(
-              logdir=tensorboard_logs,
-              assets_zip_provider=tb_default.get_assets_zip_provider(),
-              purge_orphaned_data=True,
-              reload_interval=5,
-              plugins=tb_default.get_plugins())
-
-    def run(self):
-        logger.info("Launching tensorboard :")
-        logger.info("Your tensorboard dashboard will be accessible on http://<SERVER ADDRESS>:{}".format(self.get_port()))
+    def serve_forever(self):
         self.srv.serve_forever()
 
-    def stop(self):
-        logger.info("Stopping tensorboard process")
-        self.srv.shutdown()
+    def get_url(self):
+        return "http://%s:%s" % (self.host, self.get_port())
+
+    def print_serving_message(self):
+        pass  # Werkzeug's `serving.run_simple` handles this
 
 
+def get_logdir(folder_id):
+    folder = dataiku.Folder(folder_id)
+    try:
+        folder_path = folder.get_path()
+        return os.path.join(folder_path, constants.TENSORBOARD_LOGS)
+    except Exception as err:
+        raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
 
 
-
+def start_server_and_return_url(folder_id, host="127.0.0.1"):
+    program = tb.program.TensorBoard(server_class=TensorboardCustomServer)
+    program.configure(
+        logdir=get_logdir(folder_id),
+        host=host
+    )
+    return program.launch()

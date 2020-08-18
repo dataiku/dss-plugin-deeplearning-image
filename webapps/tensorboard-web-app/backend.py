@@ -1,9 +1,10 @@
-import requests
-from flask import request, Response
 import dataiku
+from dataiku.customwebapp import get_webapp_config
+
 dataiku.use_plugin_libs("deeplearning-image")
-from tensorboard_handle import TensorboardThread
-import time
+from dku_deeplearning_image.tensorboard_handle import start_server_and_return_url
+from six.moves import urllib
+import json
 import os
 
 ###################################################################################################################
@@ -11,20 +12,20 @@ import os
 ###################################################################################################################
 
 # To work, your web-app requires to run on a code-env with the following libraries installed:
-# tensorflow==1.4.0
-# flask==0.12.2
+# tensorflow==2.2
+# flask>=1.0,<1.1
 
-# The 'model_folder' must be the name of the managed folder where tensorboard logs are found.
-# They are generated through the Retrain recipe, when checking the 'tensorboard' option
-model_folder = "retrained_model"
+model_folder_id = get_webapp_config().get('retrained_model_folder')
 
 ###################################################################################################################
 ## DEFINING AND LAUNCHING TENSORBOARD
 ###################################################################################################################
 
-tt = TensorboardThread(model_folder)
-port = tt.get_port()
-tt.start()
+host = os.getenv('HOSTNAME')
+server_url = start_server_and_return_url(model_folder_id, host)
+server_url_parsed = urllib.parse.urlparse(server_url)
+port = server_url_parsed.port
+
 
 ###################################################################################################################
 ## ROUTING
@@ -32,15 +33,11 @@ tt.start()
 
 @app.route('/tensorboard-endpoint')
 def tensorboard_endpoint():
-    url = "http://localhost:{}/".format(port)
-    return resp_from_url(url)
+    url = "http://{}:{}/".format(host, port)
+    return json.dumps({"tb_url": url})
+
 
 @app.route('/data/<path:url>')
 def proxy(url):
-    redirect_url = "http://localhost:{}/data/{}".format(port, url)
-    response = requests.get(redirect_url, stream=True, params=request.args)
-    return resp_from_url(redirect_url)
-
-def resp_from_url(url):
-    response = requests.get(url, stream=True, params=request.args)
-    return response.content
+    redirect_url = "http://{}:{}/data/{}".format(host, port, url)
+    return json.dumps({"tb_url": redirect_url})
