@@ -70,9 +70,6 @@ def is_keras_application(architecture):
 ## GPU HANDLING
 ###############################################################
 
-def log_device_placement():
-    tf.debugging.set_log_device_placement(True)
-
 def can_use_gpu():
     return len(tf.config.experimental.list_physical_devices('GPU')) > 0
 
