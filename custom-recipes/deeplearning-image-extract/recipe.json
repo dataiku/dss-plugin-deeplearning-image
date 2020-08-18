@@ -41,7 +41,7 @@
             "acceptsDataset": true
         }
     ],
-    "paramsTemplate" : "templates/extract-recipe-template.html",
+    "paramsTemplate" : "extract-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.extract",
-    "paramsPythonSetup": "helpers/recipes-helper.py"
+    "paramsPythonSetup": "recipes-helper.py"
 }

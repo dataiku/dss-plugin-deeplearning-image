@@ -48,8 +48,8 @@
         }
     ],
     
-    "paramsTemplate" : "templates/retrain-recipe-template.html",
+    "paramsTemplate" : "retrain-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.retrain",
-    "paramsPythonSetup": "helpers/recipes-helper.py"
+    "paramsPythonSetup": "recipes-helper.py"
 
 }
