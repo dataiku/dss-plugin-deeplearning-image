@@ -8,7 +8,7 @@
     "permissions" : ["WRITE_CONF"],
     "resultType" : "HTML",
     "resultLabel" : "model download output",
-    "paramsPythonSetup": "helpers/runnable-helper.py",
+    "paramsPythonSetup": "runnable-helper.py",
     "params": [
         {
             "name": "output_managed_folder",

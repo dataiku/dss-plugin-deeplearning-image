@@ -40,7 +40,7 @@
             "acceptsDataset": true
         }
     ],
-    "paramsTemplate" : "templates/scoring-recipe-template.html",
+    "paramsTemplate" : "scoring-recipe-template.html",
     "paramsModule" : "deepLearningImageTools.scoring",
-    "paramsPythonSetup": "helpers/recipes-helper.py"
+    "paramsPythonSetup": "recipes-helper.py"
 }

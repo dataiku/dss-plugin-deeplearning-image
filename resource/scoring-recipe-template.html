@@ -1,14 +1,16 @@
-<link href="../stylesheets/dl-image-toolbox.css" rel="stylesheet" type="text/css">
-<div ng-controller="extractRecipeController" ng-show="finishedLoading">
+<div ng-controller="scoringRecipeController" ng-show="finishedLoading">
    <form class="dku-form-horizontal">
       <div class="control-group">
-         <label class="control-label">Select extracted layer</label>
+         <label class="control-label">Max number of class labels</label>
          <div class="controls">
-            <select dku-bs-select
-               name="extract_layer_index" 
-               ng-model="config.extract_layer_index"
-               ng-options="l.index as l.name for l in layers">
-            </select>
+            <input name=max_nb_labels type="number" min="0" step="1" ng-model="config.max_nb_labels"/>
+         </div>
+      </div>
+      <div class="control-group">
+         <label class="control-label">Min probability threshold</label>
+         <div class="controls">
+            <input name=min_threshold type="number" min="0" max="1" step="0.1" ng-model="config.min_threshold"/>
+            <span class="help-inline">Class labels less probable than this threshold (between 0 and 1) will not be output.</span>
          </div>
       </div>
       <div ng-if="canUseGPU">
@@ -63,16 +65,6 @@
                   </div>
                </div>
             </div>
-         </div>
-      </div>
-      <div class="control-group">
-         <div class="link-like" ng-click="showHideAdvancedParams()">
-            {{getShowHideAdvancedParamsMessage()}}
-         </div>
-      </div>
-      <div ng-show="showAdvancedParams">
-         <div class="model-summary-container">
-            {{modelSummary}}
          </div>
       </div>
    </form>
