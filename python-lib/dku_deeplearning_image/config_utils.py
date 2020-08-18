@@ -1,24 +1,15 @@
 #To move some utils function that does not needs Keras and so can be called from the backend without GPU installed and configured
 import json
 import os
-import constants
+import dku_deeplearning_image.constants as constants
 
 def get_config(model_folder):
     return json.loads(model_folder.get_download_stream(constants.CONFIG_FILE).read())
 
-
 def deactivate_gpu():
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
-
-def can_use_gpu():
-    # Check that 'tensorflow-gpu' is installed on the current code-env
-    import pkg_resources
-
-    dists = [d.project_name for d in pkg_resources.working_set]
-    return True
     
 def get_model_info(model_folder, goal):
-    
     #1st check that the files exist at the root of the model_folder
     if '/'+constants.MODEL_INFO_FILE  in model_folder.list_paths_in_partition() : 
         model_info = json.loads(model_folder.get_download_stream( constants.MODEL_INFO_FILE).read())

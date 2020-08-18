@@ -1,15 +1,15 @@
-# -*- coding: utf-8 -*-
-
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.constants as constants
+from dku_deeplearning_image import APPLICATIONS
+
+from io import StringIO
 from utils_objects import DkuFileManager
-import StringIO
+from utils_objects import DkuApplication
+
 import json
 import pandas as pd
 import numpy as np
 import tables
-import tensorflow as tf
-from keras.utils.training_utils import multi_gpu_model
 from keras.layers import Dense
 from keras.models import Model
 
@@ -18,7 +18,7 @@ import copy as cp
 class DkuModel(object):
     def __init__(self, folder):
         self.folder = folder
-        if constants.CONFIG_FILE in self.folder.list_paths_in_partition():
+        if '/{}'.format(constants.CONFIG_FILE) in self.folder.list_paths_in_partition():
             self.load_config()
 
     def jsonify_config(self):
@@ -30,22 +30,19 @@ class DkuModel(object):
             'architecture': self.application.jsonify()
         }
 
-    def load_model(self, config, goal, use_gpu=False, n_gpu=None):
-        with tf.device('/cpu:0'):
-            include_top = goal == constants.SCORING and not self.retrained
-            input_shape = config.get('input_shape', self.get_input_shape())
-            self.model = self.application.model_func(
-                weights=None,
-                include_top=include_top,
-                input_shape=input_shape
-            )
+    def load_model(self, config, goal):
+        strategy = utils.get_tf_strategy()
+        include_top = goal == constants.SCORING and not self.retrained
+        input_shape = config.get('input_shape', self.get_input_shape())
+        self.base_model = self.application.model_func(
+            weights=None,
+            include_top=include_top,
+            input_shape=input_shape
+        )
+        self.model = cp.deepcopy(self.base_model)
+        with strategy.scope():
             self._load_weights_and_enrich(config, goal, include_top)
-
             self.top_params['input_shape'] = input_shape
-
-        if use_gpu and n_gpu:
-            self.base_model = cp.deepcopy(self.model)
-            self.model = multi_gpu_model(self.model, n_gpu)
 
     def _load_weights_and_enrich(self, config, goal, include_top):
         # Order of execution of load_weights() and enrich() has to change according to a condition.
@@ -88,7 +85,7 @@ class DkuModel(object):
     def save_weights(self):
         # This copies a local file to the managed folder
         model_weights_path = self.get_weights_path()
-        with open(model_weights_path) as f:
+        with open(model_weights_path, 'rb') as f:
             self.folder.upload_stream(model_weights_path, f)
 
     def get_base_model(self):
@@ -115,7 +112,7 @@ class DkuModel(object):
 
     def get_model_summary(self, base=False):
         model = self.get_base_model() if base else self.get_model()
-        summary_io = StringIO.StringIO()
+        summary_io = StringIO()
         model.summary(print_fn=lambda line: summary_io.write(line + "\n"))
         return summary_io.getvalue()
 
@@ -131,7 +128,7 @@ class DkuModel(object):
         self.extract_layer_default_index = config.get('extract_layer_default_index', -1)
 
         self.check_mandatory_attrs(['trained_on', 'architecture'])
-        self.application = utils.get_application(self.architecture)
+        self.application = self.get_application()
 
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
@@ -148,6 +145,32 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
+    def save_info(self):
+        model_info = {
+            constants.SCORING: self.get_info(),
+            constants.BEFORE_TRAIN: self.get_info(base=True)
+        }
+        DkuFileManager.write_to_folder(
+            folder=self.folder,
+            file_path=constants.MODEL_INFO_FILE,
+            content=json.dumps(model_info))
+
+
+    def save_to_folder(self):
+        utils.log_info("Starting model saving...")
+        self.save_config()
+        self.save_label_df()
+        self.save_weights()
+        self.save_info()
+        utils.log_info("Model has been successfully saved.")
+
+    def get_application(self):
+        dku_application_params = list(filter(lambda x: x['name'] == self.architecture, APPLICATIONS))
+        if not dku_application_params:
+            available_apps = [x['name'] for x in APPLICATIONS]
+            raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+        return DkuApplication(**dku_application_params[0])
+
     def get_or_load(self, attr, default):
         if not self.hasattr(attr):
             self.setattr(attr, default)
@@ -155,7 +178,6 @@ class DkuModel(object):
 
     def get_distinct_labels(self):
         label_df = self.get_label_df()
-        utils.dbg_msg(label_df, 'label_df')
         return self.get_or_load('distinct_labels', list(np.unique(label_df[constants.LABEL])))
 
     def get_label_df(self):
@@ -175,8 +197,9 @@ class DkuModel(object):
         # Init params if not done before
         self.top_params['pooling'] = pooling or self.top_params.get('pooling')
         self.top_params['n_classes'] = n_classes or len(self.get_distinct_labels())
-        x = self.get_base_model().layers[-1].output
+        base_model = self.get_base_model()
 
+        x = base_model.layers[-1].output
         x = utils.add_pooling(x, self.top_params['pooling'])
         x = utils.add_dropout(x, dropout)
 
@@ -184,7 +207,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=self.model.input, output=predictions)
+        self.model = Model(input=base_model.input, output=predictions)
 
     def score(self, images_folder, limit=constants.DEFAULT_PRED_LIMIT,
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):

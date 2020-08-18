@@ -5,7 +5,7 @@ import json
 import pandas as pd
 import dku_deeplearning_image.constants as constants
 from utils_objects import DkuModel
-import dku_deeplearning_image.utils as utils
+from utils_objects import DkuFileManager
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
@@ -58,7 +58,6 @@ class MyRunnable(Runnable):
             "trained_on": trained_on,
             "extract_layer_default_index": -2
         }
-        utils.dbg_msg(config, 'config')
 
         new_model.set_config(config)
 
@@ -112,9 +111,11 @@ class MyRunnable(Runnable):
         if class_mapping_url:
             mapping_df = pd.read_json(output_folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
             mapping_df = mapping_df.reset_index()
-            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]         
-            with output_folder.get_writer(constants.MODEL_LABELS_FILE) as w:
-                w.write((mapping_df.to_csv(index=False, sep=",")))
+            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
+            DkuFileManager.write_to_folder(
+                folder=output_folder,
+                file_path=constants.MODEL_LABELS_FILE,
+                content=mapping_df.to_csv(index=False, sep=","))
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
         
         return "<span>DONE</span>"

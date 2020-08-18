@@ -8,6 +8,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
+import tensorflow as tf
 import shutil
 
 
@@ -18,8 +19,7 @@ class RetrainRecipe(DkuRecipe):
     def load_dku_model(self, model_folder, label_df):
         self.dku_model = DkuModel(model_folder)
         self.dku_model.label_df = label_df
-        self.dku_model.load_model(self.config, constants.RETRAINING,
-                                  use_gpu=self.config.use_gpu, n_gpu=self.config.n_gpu)
+        self.dku_model.load_model(self.config, constants.RETRAINING)
         self._set_trainable_layers()
         self.dku_model.print_summary()
 

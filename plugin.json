@@ -1,8 +1,8 @@
 {
-    "id": "deeplearning-image-cpu",
+    "id": "deeplearning-image",
     "version": "0.1.6",
     "meta": {
-        "label": "Deep learning on images (CPU)",
+        "label": "Deep learning on images",
         "description": "Use a pre-trained model to score images or extract features. You can retrain generic models to specialize them on a particular set of images.",
         "author": "Dataiku (Nicolas Servel)",
         "icon": "icon-picture",

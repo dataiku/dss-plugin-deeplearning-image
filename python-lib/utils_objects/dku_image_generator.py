@@ -4,6 +4,15 @@ import dku_deeplearning_image.constants as constants
 import math
 
 
+def threadsafe_generator(f):
+    """A decorator that takes a generator function and makes it thread-safe.
+    Edit: Do not try to externalize, decorator is called before function is defined, there will be an error.
+    """
+    def g(*a, **kw):
+        return utils.threadsafe_iter(f(*a, **kw))
+    return g
+
+
 class DkuImageGenerator(object):
     def __init__(self, images_folder, labels, input_shape, batch_size, preprocessing,
                  use_augmentation, extra_images_gen=None, n_augm=None):
@@ -61,7 +70,7 @@ class DkuImageGenerator(object):
 
         return X_batch, y_batch
 
-    @utils.threadsafe_generator
+    @threadsafe_generator
     def load(self, image_df):
         n_images = image_df.shape[0]
         batch_size_adapted = self._get_batch_size_adapted()

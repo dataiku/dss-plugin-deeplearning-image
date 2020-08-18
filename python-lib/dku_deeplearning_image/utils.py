@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import os
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
@@ -12,13 +10,10 @@ import threading
 import json
 from collections import OrderedDict
 import numpy as np
-from tensorflow.python.client import device_lib
 from datetime import datetime
-from utils_objects import DkuFileManager
 
 import sys
 import dku_deeplearning_image.config_utils as config_utils
-from utils_objects import DkuApplication
 import pandas as pd
 import logging
 
@@ -28,12 +23,6 @@ logger = logging.getLogger(__name__)
 from PIL import ImageFile
 
 ImageFile.LOAD_TRUNCATED_IMAGES = True
-
-###################################################################################################################
-###################################################################################################################
-## NEW FILE
-###################################################################################################################
-###################################################################################################################
 
 
 ###################################################################################################################
@@ -64,13 +53,6 @@ def get_regularizer(reg):
             return regularizers.l1(reg["l1"])
     return None
 
-def get_application(architecture):
-    dku_application_params = list(filter(lambda x: x['name'] == architecture, APPLICATIONS))
-    if not dku_application_params:
-        available_apps = [x['name'] for x in APPLICATIONS]
-        raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
-    return DkuApplication(**dku_application_params[0])
-
 ###################################################################################################################
 ## MODELS LIST
 ###################################################################################################################
@@ -81,48 +63,34 @@ def get_application(architecture):
 
 
 def is_keras_application(architecture):
-    return architecture in build_keras_application().keys()
+    return architecture in [app.name for app in APPLICATIONS]
 
 
 ###############################################################
-## EXTRACT INFO FROM MODEL (SUMMARY AND LAYERS)
+## GPU HANDLING
 ###############################################################
 
+def can_use_gpu():
+    return len(tf.config.experimental.list_physical_devices('GPU')) > 0
 
-
-def save_model_info(mf_path, dku_model):
-    model_info = {
-        constants.SCORING: dku_model.get_info(),
-        constants.BEFORE_TRAIN: dku_model.get_info(base=True)
-    }
-    DkuFileManager.write_to_folder(
-        folder=mf_path,
-        file_path=constants.MODEL_INFO_FILE,
-        content=json.dumps(model_info))
-
-# TODO: Rename this function as it has a lot of border effects
-def load_gpu_options(should_use_gpu, list_gpu_str, gpu_allocation):
-    gpu_options = {}
+def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     log_info("load_gpu_options")
-    if should_use_gpu:
+    if should_use_gpu and can_use_gpu():
         log_info("should use GPU")
-        list_gpu = list(map(int, list_gpu_str.replace(" ", "").split(",")))
-        gpu_options["list_gpu"] = list_gpu
-        gpu_options["n_gpu"] = len(list_gpu)
-
-        config_tf = tf.ConfigProto()
-        # os.environ['CUDA_VISIBLE_DEVICES'] = list_gpu_str
-        # print  os.environ['CUDA_VISIBLE_DEVICES']
-        config_tf.gpu_options.per_process_gpu_memory_fraction = gpu_allocation
-        # config_tf.log_device_placement=True
-        session = tf.Session(config=config_tf)
-        from keras.backend.tensorflow_backend import set_session
-        set_session(session)
+        gpus = tf.config.experimental.list_physical_devices('GPU')
+        gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
+        if memory_limit:
+            for gpu in gpus_to_use:
+                tf.config.experimental.set_virtual_device_configuration(
+                    gpu,
+                    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
+                )
+        tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
         config_utils.deactivate_gpu()
 
-    return gpu_options
-
+def get_tf_strategy():
+    return tf.distribute.MirroredStrategy()
 
 ###################################################################################################################
 ## FILES LOGIC
@@ -204,6 +172,7 @@ def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_L
     predictions = model.predict(batch)
     return format_predictions_output(predictions, classify, labels_df, limit, min_threshold)
 
+
 def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
@@ -246,14 +215,6 @@ def dbg_msg(msg, title=''):
     logger.debug(msg)
     logger.debug(''.center(100, '-'))
 
-
-def display_gpu_device():
-    log_info(device_lib.list_local_devices())
-    if tf.test.gpu_device_name():
-        log_info('Default GPU Device: {}'.format(tf.test.gpu_device_name()))
-    else:
-        log_info("Please install GPU version of TF")
-
 def log_info(*args):
     logger.info(*args)
 
@@ -264,10 +225,11 @@ def log_info(*args):
 ##    http://anandology.com/blog/using-iterators-and-generators/
 ###############################################################
 
-class ThreadsafeIterator(object):
-    """Takes an iterator/generator and makes it thread-safe
+''' Make the generators threadsafe in case of multiple threads '''
+class threadsafe_iter:
+    """Takes an iterator/generator and makes it thread-safe by
+    serializing call to the `next` method of given iterator/generator.
     """
-
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
@@ -275,20 +237,9 @@ class ThreadsafeIterator(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         with self.lock:
-            return self.it.next()
-
-
-def threadsafe_generator(f):
-    """A decorator that takes a generator function and makes it thread-safe.
-    """
-
-    def g(*a, **kw):
-        return ThreadsafeIterator(f(*a, **kw))
-
-    return g
-
+            return self.it.__next__()
 
 
 ###############################################################

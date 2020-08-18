@@ -22,4 +22,4 @@ class DkuFileManager(object):
     @staticmethod
     def write_to_folder(folder, file_path, content):
         with folder.get_writer(file_path) as w:
-            w.write(content)
+            w.write(content.encode())

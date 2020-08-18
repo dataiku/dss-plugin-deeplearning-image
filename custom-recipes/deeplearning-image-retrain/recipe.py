@@ -11,7 +11,7 @@ def format_label_df(label_dataset, col_filename, col_label):
         col_filename: constants.FILENAME,
         col_label: constants.LABEL
     }
-    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[renaming_mapping.values()]
+    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[list(renaming_mapping.values())]
     return label_df
 
 
@@ -26,10 +26,7 @@ def get_input_output():
 
 def save_output_model(output_folder, model):
     output_model = model.deepcopy(folder=output_folder)
-    output_model.save_config()
-    output_model.save_label_df()
-    output_model.save_weights()
-    utils.save_model_info(output_folder, model)
+    output_model.save_to_folder()
 
 
 @utils.log_func(txt='recipe')

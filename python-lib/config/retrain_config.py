@@ -9,11 +9,8 @@ class RetrainConfig(DkuConfig):
 
     def _load_recipe_param(self):
         super(RetrainConfig, self)._load_recipe_param()
-
         self.col_filename = self.recipe_config.get("col_filename")
         self.col_label = self.recipe_config.get("col_label")
-        self.list_gpu = self.recipe_config.get("list_gpu")
-        self.gpu_allocation = self.recipe_config.get("gpu_allocation")
         self.train_ratio = float(self.recipe_config.get("train_ratio"))
         self.input_shape = (int(self.recipe_config.get("image_width")), int(self.recipe_config.get("image_height")), 3)
         self.batch_size = int(self.recipe_config.get("batch_size"))
