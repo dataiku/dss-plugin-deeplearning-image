@@ -10,7 +10,6 @@ import json
 import pandas as pd
 import numpy as np
 import tables
-import tensorflow as tf
 from keras.layers import Dense
 from keras.models import Model
 
@@ -32,7 +31,7 @@ class DkuModel(object):
         }
 
     def load_model(self, config, goal):
-        strategy = tf.distribute.MirroredStrategy()
+        strategy = utils.get_tf_strategy()
         include_top = goal == constants.SCORING and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
         self.base_model = self.application.model_func(

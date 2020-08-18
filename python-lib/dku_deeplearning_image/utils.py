@@ -89,6 +89,9 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     else:
         config_utils.deactivate_gpu()
 
+def get_tf_strategy():
+    return tf.distribute.MirroredStrategy()
+
 ###################################################################################################################
 ## FILES LOGIC
 ###################################################################################################################
