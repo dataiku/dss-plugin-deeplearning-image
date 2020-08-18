@@ -20,7 +20,7 @@ class DkuConfig(object):
         self.should_use_gpu = self.recipe_config.get('should_use_gpu', False)
         gpu_usage = self.recipe_config.get('gpu_usage')
         self.gpu_list = self.recipe_config.get('gpu_list') if gpu_usage == 'custom' else []
-        if gpu_usage == 'custom' and not gpu_list:
+        if gpu_usage == 'custom' and not self.gpu_list:
             raise ValueError('You have to select at least one GPU, or uncheck "Use GPU" checkbox.')
         gpu_memory = self.recipe_config.get('gpu_memory')
         self.gpu_memory_limit = self.recipe_config.get('memory_limit') if gpu_memory == 'custom' else 0
