@@ -31,7 +31,7 @@ class DkuModel(object):
             'architecture': self.application.jsonify()
         }
 
-    def load_model(self, config, goal, use_gpu=False, n_gpu=None):
+    def load_model(self, config, goal):
         strategy = tf.distribute.MirroredStrategy()
         include_top = goal == constants.SCORING and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())

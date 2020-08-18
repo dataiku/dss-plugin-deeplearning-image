@@ -38,4 +38,3 @@ class MyRunnable(Runnable):
         create_api_code_env(client, code_env_name, use_gpu)
         
         return "code env build is OK"
-        
