@@ -21,9 +21,9 @@ import copy as cp
 class DkuModel(object):
     def __init__(self, folder, is_empty=False):
         self.folder = folder
+        files = self.folder.list_paths_in_partition()
         if not is_empty:
-            files = self.folder.list_paths_in_partition()
-            if '/{}'.format(constants.CONFIG_FILE) in files:
+            if utils.is_path_in_folder(constants.CONFIG_FILE, self.folder):
                 self.load_config()
             else:
                 raise IOError(

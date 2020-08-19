@@ -1,5 +1,6 @@
 import dataiku
 import dku_deeplearning_image.constants as constants
+import dku_deeplearning_image.utils as utils
 import GPUtil
 import json
 
@@ -43,7 +44,7 @@ def get_model_config(model_folder):
 
 
 def get_model_info(model_folder, goal):
-    if '/{}'.format(constants.MODEL_INFO_FILE) in model_folder.list_paths_in_partition():
+    if utils.is_path_in_folder(constants.MODEL_INFO_FILE, model_folder):
         return download_json(model_folder, constants.MODEL_INFO_FILE)[goal]
     else:
         return {"summary": "Not Available before 1st run", "layers": "Not Available before 1st run"}

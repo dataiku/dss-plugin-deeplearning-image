@@ -117,6 +117,7 @@ class MyRunnable(Runnable):
                 file_path=constants.MODEL_LABELS_FILE,
                 content=mapping_df.to_csv(index=False, sep=","))
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
-        
+
+        new_model.save_info()
         return "<span>DONE</span>"
 
