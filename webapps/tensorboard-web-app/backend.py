@@ -1,7 +1,8 @@
 import dataiku
 from dataiku.customwebapp import get_webapp_config
 
-dataiku.use_plugin_libs("deeplearning-image")
+from dku_deeplearning_image.constants import PLUGIN_ID
+dataiku.use_plugin_libs(PLUGIN_ID)
 from dku_deeplearning_image.tensorboard_handle import start_server_and_return_url
 from six.moves import urllib
 import json
