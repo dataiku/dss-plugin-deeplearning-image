@@ -68,10 +68,6 @@ def is_keras_application(architecture):
 ## GPU HANDLING
 ###############################################################
 
-def log_device_placement():
-    tf.debugging.set_log_device_placement(True)
-
-
 def deactivate_gpu():
     os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
 
@@ -81,9 +77,9 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
-    print("load_gpu_options")
+    log_info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        print("should use GPU")
+        log_info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         if memory_limit:
@@ -95,6 +91,9 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
         tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
         deactivate_gpu()
+
+def get_tf_strategy():
+    return tf.distribute.MirroredStrategy()
 
 ###################################################################################################################
 ## FILES LOGIC

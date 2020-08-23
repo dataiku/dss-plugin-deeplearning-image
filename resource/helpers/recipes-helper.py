@@ -27,7 +27,7 @@ def do(payload, config, plugin_config, inputs):
 def get_gpu_list():
     return [{
         'label': 'GPU:{} - {}'.format(gpu.id, gpu.name, gpu.memoryTotal),
-        'value': gpu.id
+        'value': str(gpu.id)
     } for gpu in GPUtil.getGPUs()]
 
 

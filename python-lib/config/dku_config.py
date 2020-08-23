@@ -2,9 +2,11 @@ import dku_deeplearning_image.utils as utils
 from .dss_parameter import DSSParameter
 
 
+
 class DkuConfig(object):
     def __init__(self, config):
         self.load(config)
+        self.set_gpu_options()
 
     @utils.log_func(txt='config loading')
     def load(self, config):
@@ -12,9 +14,16 @@ class DkuConfig(object):
 
     def _load_recipe_param(self, config):
         self.config = config
+
+    def add_param(self, name, **dss_param_kwargs):
+        setattr(self, name, DSSParameter(name=name, **dss_param_kwargs))
+
+    def set_gpu_options(self):
         should_use_gpu = self.config.get('should_use_gpu', False)
         gpu_usage = self.config.get('gpu_usage')
         gpu_list = self.config.get('gpu_list') if gpu_usage == 'custom' else []
+        if gpu_usage == 'custom' and not gpu_list:
+            raise ValueError('You have to select at least one GPU, or uncheck "Use GPU" checkbox.')
         gpu_memory = self.config.get('gpu_memory')
         gpu_memory_limit = self.config.get('memory_limit') if gpu_memory == 'custom' else 0
         utils.set_gpu_options(
@@ -22,9 +31,6 @@ class DkuConfig(object):
             gpu_list=gpu_list,
             memory_limit=gpu_memory_limit)
         self.add_param(name='use_gpu', value=self.config.get('should_use_gpu', False))
-
-    def add_param(self, name, **dss_param_kwargs):
-        setattr(self, name, DSSParameter(name=name, **dss_param_kwargs))
 
     def get(self, key, default=None):
         return getattr(self, key, default)
