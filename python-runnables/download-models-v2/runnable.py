@@ -118,6 +118,7 @@ class MyRunnable(Runnable):
                 content=mapping_df.to_csv(index=False, sep=","))
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
 
+        new_model.load_model({}, constants.SCORING)
         new_model.save_info()
         return "<span>DONE</span>"
 

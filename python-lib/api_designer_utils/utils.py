@@ -48,7 +48,6 @@ def create_or_get_api_service(project, create_new_service, service_id=None):
 
 
 def create_or_get_code_env(plugin, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
-    raise ValueError(f'Ready to create {env_name} with confs : {python_interpreter} and {custom_interpreter}')
     if create_new_code_env:
         try:
             _ = client.create_code_env(

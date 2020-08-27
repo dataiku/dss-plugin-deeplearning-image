@@ -1,12 +1,13 @@
 import dataiku
 from dku_deeplearning_image.constants import TENSORBOARD_LOGS
+import dku_deeplearning_image.utils as utils
 
 api_client = dataiku.api_client()
 
 
 def has_path(folder, path):
     folder_paths = folder.list_paths_in_partition()
-    return len([p for p in folder_paths if p.startswith(path)]) > 0
+    return len([p for p in folder_paths if utils.sanitize_path(p).startswith(path)]) > 0
 
 
 def do(payload, config, plugin_config, inputs):
@@ -17,7 +18,8 @@ def do(payload, config, plugin_config, inputs):
         choices = [{
             'label': '{} ({})'.format(mf['name'], mf['type']),
             'value': mf['id']
-        } for mf in project_managed_folders if has_path(dataiku.Folder(mf['id']), '/%s' % TENSORBOARD_LOGS)]
+        } for mf in project_managed_folders if has_path(dataiku.Folder(mf['id']), TENSORBOARD_LOGS)]
+        assert choices, "No folders have a model with Tensorboard logs."
     else:
         choices = []
     return {"choices": choices}
