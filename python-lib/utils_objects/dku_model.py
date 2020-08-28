@@ -163,7 +163,6 @@ class DkuModel(object):
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
-
     def save_to_folder(self):
         utils.log_info("Starting model saving...")
         self.save_config()
