@@ -46,7 +46,7 @@ class CustomCheck:
 
     def format_err_mesg(self, parameter):
         formatted_err_msg = self.err_msg.format(name=parameter.name, value=parameter.value, op=self.op)
-        return f'Error for parameter "{parameter.name}" - {formatted_err_msg}'
+        return 'Error for parameter "{parameter.name}" - {formatted_err_msg}'
 
     def _exists(self, value):
         return not value is None

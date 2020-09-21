@@ -23,7 +23,7 @@ def list_all_paths(folder):
     return paths
 
 
-def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
+def copy_plugin_to_dss_folder_old(plugin, folder_id, project_key):
     """
     Copy python-lib from a plugin to a managed folder
     """
@@ -40,6 +40,36 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key):
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
+def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
+    """
+    Copy python-lib from a plugin to a managed folder
+    """
+
+    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+    plugin_lib_path = os.path.join(root_path, constants.PLUGIN_LIB_PATH)
+
+    full_files = []
+    for root, dirs, files in os.walk(plugin_lib_path):
+        for f in files:
+            full_files.append(os.path.join(root, f))
+
+    start_index = full_files[0].split('/').index('python-lib') + 1
+
+    required_files = []
+    for f in full_files:
+        required_files.append('/'.join(f.split('/')[start_index:]))
+
+    dest_dir = os.path.join('api_deployer', 'python-lib') + '.zip'
+    zip_file = BytesIO()
+    folder = dataiku.Folder(folder_id, project_key=project_key)
+    with zipfile.ZipFile(zip_file, 'w', zipfile.ZIP_DEFLATED) as zipper:
+        for path, short_path in zip(full_files, required_files):
+            with open(path, "rb") as f:
+                file_content = f.read()
+                zipper.writestr(short_path, data=file_content)
+
+    folder.upload_stream(dest_dir, zip_file.getvalue())
+
 def create_or_get_api_service(project, create_new_service, service_id=None):
     """
     Create or get an api service dss object and return it
@@ -47,7 +77,7 @@ def create_or_get_api_service(project, create_new_service, service_id=None):
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
 
 
-def create_or_get_code_env(plugin, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
+def create_or_get_code_env(project_key, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
     if create_new_code_env:
         try:
             _ = client.create_code_env(
@@ -64,19 +94,24 @@ def create_or_get_code_env(plugin, client, create_new_code_env, env_name, python
                             'It is often due to the fact that the selected interpreter does not exist.')
     my_env = client.get_code_env('PYTHON', env_name)
     env_def = my_env.get_definition()
-    libraries_to_install = plugin.get_file(constants.SPEC_PATH).read()
-    env_def['specPackageList'] = libraries_to_install.decode('utf-8')
+
+    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+    spec_path = os.path.join(root_path, constants.SPEC_PATH)
+
+    libraries_to_install = open(spec_path,  encoding="utf-8").read()
+    env_def['specPackageList'] = libraries_to_install
     env_def['desc']['installCorePackages'] = True
     my_env.set_definition(env_def)
     my_env.update_packages()
     return my_env
 
 
-def get_test_queries(plugin):
+def get_test_queries(project_key):
     formatted_queries = []
     for query in constants.TEST_QUERIES:
-        test_img_path = os.path.join(constants.TEST_IMG_DIR, query['img_filename'])
-        test_img = plugin.get_file(test_img_path).read()
+        root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+        test_img_path = os.path.join(root_path, constants.TEST_IMG_DIR, query['img_filename'])
+        test_img = open(test_img_path, "rb").read()
         test_img_64 = base64.encodebytes(test_img).decode('utf-8')
         formatted_queries.append({
             "name": query["name"],
@@ -85,7 +120,7 @@ def get_test_queries(plugin):
     return formatted_queries
 
 
-def build_model_endpoint_settings(plugin, endpoint_id, code_env_name, model_folder_id, max_nb_labels, min_threshold):
+def build_model_endpoint_settings(plugin, project_key, endpoint_id, code_env_name, model_folder_id, max_nb_labels, min_threshold):
     """
     Create a endpoints dict that will be added to a list of endpoints of an api service
     """
@@ -93,17 +128,19 @@ def build_model_endpoint_settings(plugin, endpoint_id, code_env_name, model_fold
     endpoint_settings["id"] = endpoint_id
     endpoint_settings['envSelection']['envName'] = code_env_name
     endpoint_settings["inputFolderRefs"] = [{"ref": model_folder_id}]
-    endpoint_settings["testQueries"] = get_test_queries(plugin)
+    endpoint_settings["testQueries"] = get_test_queries(project_key)
     endpoint_settings["code"] = format_code_template(
-        plugin=plugin,
+        project_key=project_key,
         max_nb_labels=max_nb_labels,
         min_threshold=min_threshold,
         python_lib_dir=constants.PY_FILES_DEST_DIR)
     return endpoint_settings
 
 
-def format_code_template(plugin, **kwargs):
-    template_content = plugin.get_file(constants.TEMPLATE_PATH).read().decode('utf-8')
+def format_code_template(project_key, **kwargs):
+    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+    template_path = os.path.join(root_path, constants.TEMPLATE_PATH)
+    template_content = open(template_path, encoding='utf-8').read()
     return template_content.format(**kwargs)
 
 

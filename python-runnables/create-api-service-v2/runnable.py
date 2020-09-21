@@ -29,7 +29,7 @@ class MyRunnable(Runnable):
             service_id=service_id
         )
         code_env = utils.create_or_get_code_env(
-            plugin=self.plugin,
+            project_key=self.project_key,
             client=self.client,
             create_new_code_env=config.get("create_new_code_env"),
             env_name=config.get("code_env_name"),
@@ -37,6 +37,7 @@ class MyRunnable(Runnable):
             custom_interpreter=config.get("custom_interpreter"))
         endpoint_settings = utils.build_model_endpoint_settings(
             plugin=self.plugin,
+            project_key=self.project_key,
             endpoint_id=endpoint_id,
             code_env_name=code_env.env_name,
             model_folder_id=model_folder_id,
