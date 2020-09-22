@@ -28,18 +28,12 @@ class MyRunnable(Runnable):
             create_new_service=config.get("create_new_service"),
             service_id=service_id
         )
-        code_env = utils.create_or_get_code_env(
-            project_key=self.project_key,
-            client=self.client,
-            create_new_code_env=config.get("create_new_code_env"),
-            env_name=config.get("code_env_name"),
-            python_interpreter=config.get("python_interpreter"),
-            custom_interpreter=config.get("custom_interpreter"))
+
         endpoint_settings = utils.build_model_endpoint_settings(
             plugin=self.plugin,
             project_key=self.project_key,
             endpoint_id=endpoint_id,
-            code_env_name=code_env.env_name,
+            code_env_name=config.get("code_env_name"),
             model_folder_id=model_folder_id,
             max_nb_labels=config.get('max_nb_labels'),
             min_threshold=config.get('min_threshold'))
