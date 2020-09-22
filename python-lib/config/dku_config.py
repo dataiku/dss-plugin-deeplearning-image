@@ -30,7 +30,12 @@ class DkuConfig(object):
             should_use_gpu=should_use_gpu,
             gpu_list=gpu_list,
             memory_limit=gpu_memory_limit)
-        self.add_param(name='use_gpu', value=self.config.get('should_use_gpu', False))
+        self.add_param(name='should_use_gpu', value=should_use_gpu)
+        self.add_param(name='gpu_list', value=gpu_list)
+        self.add_param(name='gpu_usage', value=gpu_usage)
+        self.add_param(name='gpu_memory', value=gpu_memory)
+        self.add_param(name='gpu_memory_limit', value=gpu_memory_limit)
+
 
     def get(self, key, default=None):
         return getattr(self, key, default)
