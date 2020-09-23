@@ -1,6 +1,7 @@
 {
     "meta": {
-        "label" : "Tensorboard: monitor they re-training of deep learning models",
+        "label" : "Tensorboard (v2)",
+        "description": "Monitor the re-training of deep learning models",
         "icon": "icon-bar-chart"
     },
     "libraries" : [],

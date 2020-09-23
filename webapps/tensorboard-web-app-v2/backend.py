@@ -22,7 +22,7 @@ model_folder_id = get_webapp_config().get('retrained_model_folder')
 ## DEFINING AND LAUNCHING TENSORBOARD
 ###################################################################################################################
 
-host = os.getenv('HOSTNAME')
+host = os.getenv('HOSTNAME', 'localhost')
 server_url = start_server_and_return_url(model_folder_id, host)
 server_url_parsed = urllib.parse.urlparse(server_url)
 port = server_url_parsed.port
