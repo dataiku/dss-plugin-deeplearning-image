@@ -1,7 +1,6 @@
 import os
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras.callbacks import ModelCheckpoint
 from keras import regularizers
 import tensorflow as tf
 import dku_deeplearning_image.constants as constants
@@ -13,7 +12,6 @@ import numpy as np
 from datetime import datetime
 
 import sys
-import dku_deeplearning_image.config_utils as config_utils
 import pandas as pd
 import logging
 
@@ -70,8 +68,13 @@ def is_keras_application(architecture):
 ## GPU HANDLING
 ###############################################################
 
+def deactivate_gpu():
+    os.environ["CUDA_VISIBLE_DEVICES"] = "-1"
+
+
 def can_use_gpu():
     return len(tf.config.experimental.list_physical_devices('GPU')) > 0
+
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     log_info("load_gpu_options")
@@ -87,7 +90,7 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
                 )
         tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
     else:
-        config_utils.deactivate_gpu()
+        deactivate_gpu()
 
 def get_tf_strategy():
     return tf.distribute.MirroredStrategy()
@@ -97,7 +100,7 @@ def get_tf_strategy():
 ###################################################################################################################
 
 def get_weights_filename(with_top=False):
-    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else '_notop')
+    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else constants.NOTOP_SUFFIX)
 
 
 def get_file_path(folder_path, file_name):
@@ -210,10 +213,19 @@ def clean_custom_params(custom_params, params_type=""):
     return cleaned_params
 
 
+def sanitize_path(path):
+    return path[1:] if path.startswith('/') else path
+
+
+def is_path_in_folder(path, folder):
+    return sanitize_path(path) in [sanitize_path(p) for p in folder.list_paths_in_partition()]
+
+
 def dbg_msg(msg, title=''):
     logger.debug('DEBUG : {}'.format(title).center(100, '-'))
     logger.debug(msg)
     logger.debug(''.center(100, '-'))
+
 
 def log_info(*args):
     logger.info(*args)
@@ -240,45 +252,3 @@ class threadsafe_iter:
     def __next__(self):
         with self.lock:
             return self.it.__next__()
-
-
-###############################################################
-## MODEL CHECKPOINT FOR MULTI GPU
-## When using multiple GPUs, we need to save the base recipe,
-## not the one defined by multi_gpu_model
-## see example: https://keras.io/utils/#multi_gpu_model
-## Therefore, to save the recipe after each epoch by leveraging
-## ModelCheckpoint callback, we need to adapt it to save the
-## base recipe. To do so, we pass the base recipe to the callback.
-## Inspired by:
-##   https://github.com/keras-team/keras/issues/8463#issuecomment-345914612
-###############################################################
-
-class MultiGPUModelCheckpoint(ModelCheckpoint):
-
-    def __init__(self, filepath, base_model, monitor='val_loss', verbose=0,
-                 save_best_only=False, save_weights_only=False,
-                 mode='auto', period=1):
-        super(MultiGPUModelCheckpoint, self).__init__(filepath,
-                                                      monitor=monitor,
-                                                      verbose=verbose,
-                                                      save_best_only=save_best_only,
-                                                      save_weights_only=save_weights_only,
-                                                      mode=mode,
-                                                      period=period)
-        self.base_model = base_model
-
-    def on_epoch_end(self, epoch, logs=None):
-        # Must behave like ModelCheckpoint on_epoch_end but save base_model instead
-
-        # First retrieve recipe
-        model = self.model
-
-        # Then switching recipe to base recipe
-        self.model = self.base_model
-
-        # Calling super on_epoch_end
-        super(MultiGPUModelCheckpoint, self).on_epoch_end(epoch, logs)
-
-        # Resetting recipe afterwards
-        self.model = model

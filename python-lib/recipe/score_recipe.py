@@ -13,7 +13,7 @@ class ScoreRecipe(DkuRecipe):
 
     def compute(self, images_folder, model_folder):
         self.load_dku_model(model_folder)
-        return self.dku_model.score(
+        return self.dku_model.score_image_folder(
             images_folder=images_folder,
             min_threshold=self.config.min_threshold,
             limit=self.config.max_nb_labels,

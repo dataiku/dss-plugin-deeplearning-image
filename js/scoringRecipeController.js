@@ -7,18 +7,20 @@ app.controller('scoringRecipeController', function($scope) {
 
         $scope.callPythonDo({method: "get-info-scoring"}).then(function(data) {
             handleGPU(data);
+            $scope.styleSheetUrl = getStylesheetUrl(data.pluginId);
             $scope.finishedLoading = true;
         }, function(data) {
-            $scope.canUseGPU = false;
             $scope.finishedLoading = true;
         });
     };
 
     var initVariable = function(varName, initValue) {
-        if ($scope.config[varName] == undefined) {
-            $scope.config[varName] = initValue;
-        }
+        $scope.config[varName] = $scope.config[varName] || initValue;
     };
+
+    var getStylesheetUrl = function(pluginId) {
+        return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
+    }
 
     var initVariables = function() {
         initVariable("max_nb_labels", 5);

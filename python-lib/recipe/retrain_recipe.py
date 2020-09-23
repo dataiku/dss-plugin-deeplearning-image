@@ -8,7 +8,6 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras import optimizers
 from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
-import tensorflow as tf
 import shutil
 
 
@@ -68,21 +67,12 @@ class RetrainRecipe(DkuRecipe):
         return model_opti_class
 
     def _get_model_checkpoint(self, model_weights_path):
-        if self.config.use_gpu:
-            return utils.MultiGPUModelCheckpoint(
-                filepath=model_weights_path,
-                base_model=self.dku_model.get_base_model(),
-                monitor="val_loss",
-                save_best_only=True,
-                save_weights_only=True
-            )
-        else:
-            return ModelCheckpoint(
-                filepath=model_weights_path,
-                monitor="val_loss",
-                save_best_only=True,
-                save_weights_only=True
-            )
+        return ModelCheckpoint(
+            filepath=model_weights_path,
+            monitor="val_loss",
+            save_best_only=True,
+            save_weights_only=True
+        )
 
     def _get_tensorboard(self, output_model_folder):
         log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
@@ -157,5 +147,4 @@ class RetrainRecipe(DkuRecipe):
         )
 
         self.dku_model.retrained = True
-
         return self.dku_model

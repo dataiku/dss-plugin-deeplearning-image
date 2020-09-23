@@ -1,0 +1,88 @@
+{
+    "meta": {
+        "label": "Image classification endpoint (v2)",
+        "description": "Add an api endpoint for an image classification model trained with the deeplearning-image plugin",
+        "icon": "icon-trophy"
+    },
+    "impersonate": false,
+    "permissions": ["WRITE_CONF"],
+    "resultType": "HTML",
+    "resultLabel": "API service",
+    "paramsPythonSetup": "helpers/runnable-helper.py",
+    "macroRoles": [
+        {
+            "type": "MANAGED_FOLDER",
+            "targetParamsKey": "model_folder_id"
+        }
+    ],
+    "params": [
+        {
+            "name": "sep1",
+            "label": "Model folder",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "model_folder_id",
+            "type": "FOLDER",
+            "label": "Folder name",
+            "description": "Name of the image classification model folder"
+        },
+        {
+            "name": "sep2",
+            "label": "API service",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "service_id",
+            "label": "API Service",
+            "type": "SELECT",
+            "description":"Choose an existing or create a new one.",
+            "getChoicesFromPython": true
+        },
+        {
+            "name": "new_service_id",
+            "type": "STRING",
+            "label": "API service ID",
+            "visibilityCondition" : "model.service_id == 'create_new_service'",
+            "mandatory": true
+        },
+        {
+            "name": "endpoint_id",
+            "type": "STRING",
+            "label": "Endpoint unique ID",
+            "description":"Will override if already existing.",
+            "mandatory": true
+        },
+        {
+            "name": "sep3",
+            "label": "Code environment",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "code_env_name",
+            "label": "Environment name",
+            "type": "CODE_ENV",
+            "description":"Choose a code env that has all the required packages."
+        },
+        {
+            "name": "sep4",
+            "label": "Params model results",
+            "type": "SEPARATOR"
+        },
+        {
+            "name": "max_nb_labels",
+            "type": "INT",
+            "label": "Max number of class labels",
+            "defaultValue": 5,
+            "mandatory": true
+        },
+        {
+            "name": "min_threshold",
+            "type": "DOUBLE",
+            "label": "Min probability threshold",
+            "description": "Class labels less probable than this threshold (between 0 and 1) will not be output",
+            "defaultValue": 0.1,
+            "mandatory": true
+        }
+    ]
+}

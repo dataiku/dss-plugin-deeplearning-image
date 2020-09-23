@@ -1,10 +1,10 @@
 {
-    "id": "deeplearning-image",
-    "version": "0.1.6",
+    "id": "deeplearning-image-v2",
+    "version": "2.0.0",
     "meta": {
-        "label": "Deep learning on images",
+        "label": "Deep learning on images (v2)",
         "description": "Use a pre-trained model to score images or extract features. You can retrain generic models to specialize them on a particular set of images.",
-        "author": "Dataiku (Nicolas Servel)",
+        "author": "Dataiku (Henri Chabert)",
         "icon": "icon-picture",
         "licenseInfo": "Apache Software License",
         "url": "https://www.dataiku.com/dss/plugins/info/deeplearning-image.html",
