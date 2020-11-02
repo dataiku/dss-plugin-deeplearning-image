@@ -23,6 +23,7 @@ from PIL import ImageFile
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
+
 ###################################################################################################################
 ## MODEL UTILS
 ###################################################################################################################
@@ -153,9 +154,7 @@ def log_func(txt):
             res = f(*args, **kwargs)
             logger.info('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
             return res
-
         return wrapper
-
     return inner
 
 
