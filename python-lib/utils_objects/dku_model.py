@@ -204,9 +204,8 @@ class DkuModel(object):
         # Init params if not done before
         self.top_params['pooling'] = pooling or self.top_params.get('pooling')
         self.top_params['n_classes'] = n_classes or len(self.get_distinct_labels())
-        base_model = self.get_base_model()
 
-        x = base_model.layers[-1].output
+        x = self.model.layers[-1].output
         x = utils.add_pooling(x, self.top_params['pooling'])
         x = utils.add_dropout(x, dropout)
 
@@ -214,7 +213,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=base_model.input, output=predictions)
+        self.model = Model(input=self.model.input, output=predictions)
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
