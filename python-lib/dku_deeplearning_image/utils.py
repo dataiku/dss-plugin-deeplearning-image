@@ -14,6 +14,7 @@ from datetime import datetime
 import sys
 import pandas as pd
 import logging
+from PIL import UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,11 @@ def get_ordered_dict(predictions):
 
 
 def preprocess_img(img_path, img_shape, preprocessing):
-    img = load_img(img_path, target_size=img_shape)
+    try:
+        img = load_img(img_path, target_size=img_shape)
+    except UnidentifiedImageError as err:
+        logger.warning('The file {} is not an image. Skipping...'.format(img_path))
+        return
     array = img_to_array(img)
     array = preprocessing(array)
     return array

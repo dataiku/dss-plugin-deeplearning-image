@@ -13,6 +13,7 @@ import tables
 from keras.layers import Dense
 from keras.models import Model
 import base64
+import PIL
 
 import copy as cp
 
@@ -242,15 +243,16 @@ class DkuModel(object):
             next_batch_list, error_indices = [], []
             for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
                 image = images[i]
-                if image:
-                    preprocessed_img = utils.preprocess_img(
-                        img_path=image,
-                        img_shape=self.get_input_shape(),
-                        preprocessing=self.application.preprocessing
-                    )
-                    next_batch_list.append(preprocessed_img)
-                else:
+                preprocessed_img = utils.preprocess_img(
+                    img_path=image,
+                    img_shape=self.get_input_shape(),
+                    preprocessing=self.application.preprocessing
+                ) if image else None
+                if not preprocessed_img:
                     error_indices.append(index_in_batch)
+                else:
+                    next_batch_list.append(preprocessed_img)
+
             next_batch = np.array(next_batch_list)
 
             prediction_batch = self.get_predictions_for_batch(next_batch, classify, limit, min_threshold)
