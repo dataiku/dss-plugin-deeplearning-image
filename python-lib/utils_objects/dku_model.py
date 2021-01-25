@@ -248,7 +248,7 @@ class DkuModel(object):
                     img_shape=self.get_input_shape(),
                     preprocessing=self.application.preprocessing
                 ) if image else None
-                if not preprocessed_img:
+                if preprocessed_img is None:
                     error_indices.append(index_in_batch)
                 else:
                     next_batch_list.append(preprocessed_img)
@@ -269,6 +269,8 @@ class DkuModel(object):
         return results
 
     def get_predictions_for_batch(self, batch, classify, limit, min_threshold):
+        if not batch.size:
+            return []
         return utils.get_predictions(
                 model=self.get_model(),
                 batch=batch,
