@@ -14,6 +14,7 @@ from datetime import datetime
 import sys
 import pandas as pd
 import logging
+from PIL import UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +182,11 @@ def get_ordered_dict(predictions):
 
 
 def preprocess_img(img_path, img_shape, preprocessing):
-    img = load_img(img_path, target_size=img_shape)
+    try:
+        img = load_img(img_path, target_size=img_shape)
+    except UnidentifiedImageError as err:
+        log_warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        return
     array = img_to_array(img)
     array = preprocessing(array)
     return array
@@ -229,6 +234,10 @@ def dbg_msg(msg, title=''):
 
 def log_info(*args):
     logger.info(*args)
+
+
+def log_warning(*args):
+    logger.warning(*args)
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR
