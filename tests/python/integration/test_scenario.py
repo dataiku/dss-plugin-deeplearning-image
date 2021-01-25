@@ -32,3 +32,8 @@ def test_score_recipe(user_clients):
 def test_retrain_recipe(user_clients):
     test_kwargs["client"] = user_clients[test_kwargs["user"]]
     dss_scenario.run(scenario_id="Recipe_-_Retrain_model", **test_kwargs)
+
+
+def test_model_download(user_clients):
+    test_kwargs["client"] = user_clients[test_kwargs["user"]]
+    dss_scenario.run(scenario_id="Macro_-_Model_Download", **test_kwargs)
