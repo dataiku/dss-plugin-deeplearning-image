@@ -23,7 +23,7 @@
       <div class="control-group">
          <label class="control-label">Train ratio</label>
          <div class="controls">
-            <input type="number" min="0" max="1" step="0.1" ng-model="config.train_ratio" required />
+            <input type="number" min="0" max="1" step="0.001" ng-model="config.train_ratio" required />
             <span class="help-inline">Proportion of the sample that goes to the train set. The rest goes to the test set</span>
          </div>
       </div>
@@ -66,19 +66,19 @@
       <div class="control-group">
          <label class="control-label">Dropout</label>
          <div class="controls">
-            <input type="number" min="0" max="1" step="0.1" ng-model="config.model_dropout" required />
+            <input type="number" min="0" max="1" step="0.001" ng-model="config.model_dropout" required />
          </div>
       </div>
       <div class="control-group">
          <label class="control-label">L1 regularization</label>
          <div class="controls">
-            <input type="number" min="0" step="0.1" ng-model="config.model_reg.l1" required />
+            <input type="number" min="0" step="0.001" ng-model="config.model_reg.l1" required />
          </div>
       </div>
       <div class="control-group">
          <label class="control-label">L2 regularization</label>
          <div class="controls">
-            <input type="number" min="0" step="0.1" ng-model="config.model_reg.l2" required />
+            <input type="number" min="0" step="0.001" ng-model="config.model_reg.l2" required />
          </div>
       </div>
       <div class="control-group">
