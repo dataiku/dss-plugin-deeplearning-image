@@ -94,7 +94,7 @@ class RetrainRecipe(DkuRecipe):
 
         # Cleaning custom parameters
         params_opti = utils.clean_custom_params(self.config.custom_params_opti)
-        params_opti["lr"] = self.config.learning_rate
+        params_opti["learning_rate"] = self.config.learning_rate
 
         model_opti = model_opti_class(**params_opti)
         self.dku_model.compile(
