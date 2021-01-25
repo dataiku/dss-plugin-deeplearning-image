@@ -22,3 +22,8 @@ def test_run_tensorboard_start(user_clients):
 def test_extract_recipe(user_clients):
     test_kwargs["client"] = user_clients[test_kwargs["user"]]
     dss_scenario.run(scenario_id="Recipe_-_Extract_features", **test_kwargs)
+
+
+def test_score_recipe(user_clients):
+    test_kwargs["client"] = user_clients[test_kwargs["user"]]
+    dss_scenario.run(scenario_id="Recipe_-_Classify_images", **test_kwargs)
