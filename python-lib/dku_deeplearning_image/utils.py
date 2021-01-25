@@ -212,9 +212,7 @@ def clean_custom_params(custom_params, params_type=""):
             raise IOError("The{} custom param #{} must have a 'name'".format(params_type, i))
         if not p.get("value", False):
             raise IOError("The{} custom param #{} must have a 'value'".format(params_type, i))
-        name = p["name"]
-        value = string_to_arg(p["value"])
-        cleaned_params[name] = value
+        cleaned_params[p["name"]] = string_to_arg(p["value"])
     return cleaned_params
 
 
