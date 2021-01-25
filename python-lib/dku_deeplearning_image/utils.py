@@ -185,7 +185,7 @@ def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = load_img(img_path, target_size=img_shape)
     except UnidentifiedImageError as err:
-        logger.warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        log_warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
         return
     array = img_to_array(img)
     array = preprocessing(array)
@@ -234,6 +234,10 @@ def dbg_msg(msg, title=''):
 
 def log_info(*args):
     logger.info(*args)
+
+
+def log_warning(*args):
+    logger.warning(*args)
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR

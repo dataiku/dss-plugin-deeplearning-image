@@ -228,7 +228,7 @@ class DkuModel(object):
             try:
                 images.append(images_folder.get_download_stream(path))
             except IOError as e:
-                utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
+                utils.log_warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
                 images.append(None)
         return self.score(images, **kwargs)
 
