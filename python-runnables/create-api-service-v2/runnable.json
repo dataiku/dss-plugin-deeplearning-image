@@ -107,7 +107,7 @@
             "type": "STRING",
             "label": "Python executable",
             "mandatory": true,
-            "visibilityCondition": "model.code_env_options == 'existing' && model.python_interpreter == 'CUSTOM'"
+            "visibilityCondition": "model.code_env_options == 'new' && model.python_interpreter == 'CUSTOM'"
         },
         {
             "name": "sep4",
