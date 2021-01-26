@@ -5,6 +5,7 @@ import logging
 import base64
 import zipfile
 from io import BytesIO
+from dataikuapi.utils import DataikuException
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
@@ -172,3 +173,11 @@ def get_codeenv_output_msg(plugin, env_name):
     libraries_to_install = plugin.get_file(constants.SPEC_PATH).read().decode('utf-8')
     return "The code env {} has been successfully created with following packages : \n {}.".format(
         env_name, libraries_to_install)
+
+
+def is_user_admin():
+    try:
+        _ = dataiku.api_client.list_code_envs()
+        return True
+    except DataikuException:
+        return False

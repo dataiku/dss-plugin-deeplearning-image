@@ -1,16 +1,8 @@
 import dataiku
 from dku_deeplearning_image.applications import APPLICATIONS
-from dataikuapi.utils import DataikuException
+import api_designer_utils.utils as utils
 
 api_client = dataiku.api_client()
-
-
-def is_user_admin():
-    try:
-        _ = api_client.list_code_envs()
-        return True
-    except DataikuException:
-        return False
 
 
 def get_code_options():
@@ -18,7 +10,7 @@ def get_code_options():
         "label": "Use an existing...",
         "value": "existing"
     }]
-    if is_user_admin():
+    if utils.is_user_admin():
         choices.append({
             "label": "Create a new one...",
             "value": "new"
