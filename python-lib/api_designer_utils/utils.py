@@ -177,7 +177,7 @@ def get_codeenv_output_msg(plugin, env_name):
 
 def is_user_admin():
     try:
-        _ = dataiku.api_client.list_code_envs()
+        _ = dataiku.api_client().list_code_envs()
         return True
     except DataikuException:
         return False
