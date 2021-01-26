@@ -99,7 +99,7 @@
                 }
             ],
             "defaultValue": "PYTHON36",
-            "visibilityCondition" : "model.code_env_options == 'existing'",
+            "visibilityCondition" : "model.code_env_options == 'new'",
             "mandatory": true
         },
         {
