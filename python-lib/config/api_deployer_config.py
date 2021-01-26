@@ -65,7 +65,7 @@ class ApiDeployerConfig(DkuConfig):
         self.add_param(
             name='code_env_name',
             value=config.get("code_env_name"),
-            required=True)
+            required=not self.create_new_code_env)
 
         self.add_param(
             name='python_interpreter',
