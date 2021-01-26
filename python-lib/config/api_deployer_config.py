@@ -54,12 +54,36 @@ class ApiDeployerConfig(DkuConfig):
         # Code env handling
         ##########################################
         code_env_name = config.get("code_env_name")
+        self.add_param(
+            name='create_new_code_env',
+            value=(code_env_name == "create_new_code_env"),
+            checks=[
+                {'type': 'is_type', 'op': bool, 'err_msg': "create_new_code_env is not bool: {value}"}
+            ])
+
+        list_code_envs = [code_env.get("envName") for code_env in self.client.list_code_envs()]
+        if self.create_new_code_env:
+            code_env_name = config.get("new_code_env_name")
+            check = {'type': 'not_in', 'op': list_code_envs, 'err_msg': "Code env name {value} already in use."}
+        else:
+            check = {'type': 'in', 'op': list_code_envs, 'err_msg': "Code env name : {value} not found."}
 
         self.add_param(
             name='code_env_name',
             value=code_env_name,
             required=True,
             checks=[check])
+
+        self.add_param(
+            name='python_interpreter',
+            value=self.config.get("python_interpreter"),
+            required=self.create_new_code_env)
+
+        self.add_param(
+            name='custom_interpreter',
+            value=self.config.get("custom_interpreter"),
+            required=self.create_new_code_env and self.python_interpreter == 'CUSTOM')
+
         ##########################################
         # Classification parameters
         ##########################################
