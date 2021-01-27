@@ -7,12 +7,12 @@ api_client = dataiku.api_client()
 
 def get_code_options():
     choices = [{
-        "label": "Use an existing...",
+        "label": "Select an environment",
         "value": "existing"
     }]
     if utils.is_user_admin():
         choices.append({
-            "label": "Create a new one...",
+            "label": "Create new environment",
             "value": "new"
         })
     return choices
