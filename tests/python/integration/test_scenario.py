@@ -49,3 +49,7 @@ def test_cloud_integration(user_clients):
 
 def test_edge_cases(user_clients):
     add_integration_test(user_clients, "Recipe_-_Edge_cases")
+
+
+def test_api_endpoint_deployment(user_clients):
+    add_integration_test(user_clients, "Macro_-_Deploy_API_Service")
