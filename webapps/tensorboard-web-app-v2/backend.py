@@ -7,6 +7,7 @@ from dku_deeplearning_image.tensorboard_handle import start_server_and_return_ur
 from six.moves import urllib
 import json
 import os
+import socket
 
 ###################################################################################################################
 ## VARIABLES THAT NEED TO BE SET
@@ -22,6 +23,7 @@ model_folder_id = get_webapp_config().get('retrained_model_folder')
 ## DEFINING AND LAUNCHING TENSORBOARD
 ###################################################################################################################
 
+host = socket.getfqdn()
 host = os.getenv('HOSTNAME', 'localhost')
 server_url = start_server_and_return_url(model_folder_id, host)
 server_url_parsed = urllib.parse.urlparse(server_url)
