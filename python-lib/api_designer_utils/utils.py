@@ -89,6 +89,18 @@ def create_or_get_api_service(project, create_new_service, service_id=None):
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
 
 
+def update_code_env_packages(code_env):
+    env_def = code_env.get_definition()
+
+    spec_path = os.path.join(get_plugin_root_path(project_key), constants.SPEC_PATH)
+
+    libraries_to_install = open(spec_path, encoding="utf-8").read()
+    env_def['specPackageList'] = libraries_to_install
+    env_def['desc']['installCorePackages'] = True
+    code_env.set_definition(env_def)
+    code_env.update_packages()
+
+
 def create_or_get_code_env(project_key, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
     if create_new_code_env:
         try:
@@ -106,15 +118,8 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
                             'It is often due to the fact that the selected interpreter does not exist.\n'
                             'Original error : {}'.format(err))
     my_env = client.get_code_env('PYTHON', env_name)
-    env_def = my_env.get_definition()
-
-    spec_path = os.path.join(get_plugin_root_path(project_key), constants.SPEC_PATH)
-
-    libraries_to_install = open(spec_path,  encoding="utf-8").read()
-    env_def['specPackageList'] = libraries_to_install
-    env_def['desc']['installCorePackages'] = True
-    my_env.set_definition(env_def)
-    my_env.update_packages()
+    if create_new_code_env:
+        update_code_env_packages(my_env)
     return my_env
 
 
