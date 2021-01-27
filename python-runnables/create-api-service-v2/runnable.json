@@ -87,10 +87,6 @@
             "label": "Python interpreter",
             "selectChoices": [
                 {
-                    "value": "PYTHON35",
-                    "label": "Python 3.5 (from PATH)"
-                },
-                {
                     "value": "PYTHON36",
                     "label": "Python 3.6 (from PATH)"
                 },
