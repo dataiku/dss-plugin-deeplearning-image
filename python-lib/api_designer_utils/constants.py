@@ -1,7 +1,11 @@
 import os
+from dku_deeplearning_image.constants import PLUGIN_ID
 
 PYTHON_LIB_DIR = 'python-lib'
-PLUGIN_LIB_PATH = os.path.join('plugins', 'installed', 'deeplearning-image-v2', 'python-lib')
+PLUGIN_INSTALLED_PATH = os.path.join('plugins', 'installed')
+PLUGIN_DEV_PATH = os.path.join('plugins', 'dev')
+PLUGIN_LIB_PATH = os.path.join(PLUGIN_INSTALLED_PATH, PLUGIN_ID, PYTHON_LIB_DIR)
+PLUGIN_DEV_LIB_PATH = os.path.join(PLUGIN_DEV_PATH, PLUGIN_ID, PYTHON_LIB_DIR)
 API_DESIGNER_UTILS_DIR = os.path.join(PLUGIN_LIB_PATH, 'api_designer_utils')
 SPEC_PATH = os.path.join(PLUGIN_LIB_PATH, 'api_designer_utils', 'requirements.txt')
 TEST_IMG_DIR = os.path.join(PLUGIN_LIB_PATH, 'api_designer_utils', 'test_images')

@@ -41,13 +41,23 @@ def copy_plugin_to_dss_folder_old(plugin, folder_id, project_key):
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
+def get_plugin_lib_path(project_key):
+    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+    installed_path = os.path.join(root_path, constants.PLUGIN_LIB_PATH)
+    dev_path = os.path.join(root_path, constants.PLUGIN_DEV_LIB_PATH)
+
+    if os.path.exists(installed_path):
+        return installed_path
+    elif os.path.exists(dev_path):
+        return dev_path
+    else:
+        raise IOError('The plugin is not installed.')
+
 def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
     """
     Copy python-lib from a plugin to a managed folder
     """
-
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    plugin_lib_path = os.path.join(root_path, constants.PLUGIN_LIB_PATH)
+    plugin_lib_path = get_plugin_lib_path(project_key)
 
     full_files = []
     for root, dirs, files in os.walk(plugin_lib_path):
