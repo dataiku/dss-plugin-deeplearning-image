@@ -41,10 +41,10 @@ def copy_plugin_to_dss_folder_old(plugin, folder_id, project_key):
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
-def get_plugin_lib_path(project_key):
+def get_plugin_root_path(project_key):
     root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    installed_path = os.path.join(root_path, constants.PLUGIN_LIB_PATH)
-    dev_path = os.path.join(root_path, constants.PLUGIN_DEV_LIB_PATH)
+    installed_path = os.path.join(root_path, constants.PLUGIN_INSTALLED_PATH)
+    dev_path = os.path.join(root_path, constants.PLUGIN_DEV_PATH)
 
     if os.path.exists(installed_path):
         return installed_path
@@ -53,11 +53,12 @@ def get_plugin_lib_path(project_key):
     else:
         raise IOError('The plugin is not installed.')
 
+
 def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
     """
     Copy python-lib from a plugin to a managed folder
     """
-    plugin_lib_path = get_plugin_lib_path(project_key)
+    plugin_lib_path = os.path.join(get_plugin_root_path(project_key), constants.PYTHON_LIB_DIR)
 
     full_files = []
     for root, dirs, files in os.walk(plugin_lib_path):
@@ -106,8 +107,7 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
     my_env = client.get_code_env('PYTHON', env_name)
     env_def = my_env.get_definition()
 
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    spec_path = os.path.join(root_path, constants.SPEC_PATH)
+    spec_path = os.path.join(get_plugin_root_path(project_key), constants.SPEC_PATH)
 
     libraries_to_install = open(spec_path,  encoding="utf-8").read()
     env_def['specPackageList'] = libraries_to_install
@@ -120,8 +120,7 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
 def get_test_queries(project_key):
     formatted_queries = []
     for query in constants.TEST_QUERIES:
-        root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-        test_img_path = os.path.join(root_path, constants.TEST_IMG_DIR, query['img_filename'])
+        test_img_path = os.path.join(get_plugin_root_path(project_key), constants.TEST_IMG_PATH)
         test_img = open(test_img_path, "rb").read()
         test_img_64 = base64.encodebytes(test_img).decode('utf-8')
         formatted_queries.append({
@@ -149,8 +148,7 @@ def build_model_endpoint_settings(plugin, project_key, endpoint_id, code_env_nam
 
 
 def format_code_template(project_key, **kwargs):
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    template_path = os.path.join(root_path, constants.TEMPLATE_PATH)
+    template_path = os.path.join(get_plugin_root_path(project_key), constants.TEMPLATE_PATH)
     template_content = open(template_path, encoding='utf-8').read()
     return template_content.format(**kwargs)
 
