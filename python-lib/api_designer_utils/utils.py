@@ -82,6 +82,7 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
 
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
+
 def create_or_get_api_service(project, create_new_service, service_id=None):
     """
     Create or get an api service dss object and return it
@@ -89,7 +90,7 @@ def create_or_get_api_service(project, create_new_service, service_id=None):
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
 
 
-def update_code_env_packages(code_env):
+def update_code_env_packages(project_key, code_env):
     env_def = code_env.get_definition()
 
     spec_path = os.path.join(get_plugin_root_path(project_key), constants.SPEC_PATH)
@@ -119,7 +120,7 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
                             'Original error : {}'.format(err))
     my_env = client.get_code_env('PYTHON', env_name)
     if create_new_code_env:
-        update_code_env_packages(my_env)
+        update_code_env_packages(project_key, my_env)
     return my_env
 
 
