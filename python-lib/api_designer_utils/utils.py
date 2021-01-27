@@ -103,7 +103,8 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
             )
         except Exception as err:
             raise Exception('Error when creating the code env.'
-                            'It is often due to the fact that the selected interpreter does not exist.')
+                            'It is often due to the fact that the selected interpreter does not exist.\n'
+                            'Original error : {}'.format(err))
     my_env = client.get_code_env('PYTHON', env_name)
     env_def = my_env.get_definition()
 
@@ -120,7 +121,7 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
 def get_test_queries(project_key):
     formatted_queries = []
     for query in constants.TEST_QUERIES:
-        test_img_path = os.path.join(get_plugin_root_path(project_key), constants.TEST_IMG_PATH)
+        test_img_path = os.path.join(get_plugin_root_path(project_key), constants.TEST_IMG_PATH, query['img_filename'])
         test_img = open(test_img_path, "rb").read()
         test_img_64 = base64.encodebytes(test_img).decode('utf-8')
         formatted_queries.append({
