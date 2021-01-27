@@ -62,6 +62,7 @@
             "name": "code_env_options",
             "label": "Code environment options",
             "type": "SELECT",
+            "description":"Code environment creation is only displayed for admin",
             "getChoicesFromPython": true,
             "defaultValue": "existing"
         },
