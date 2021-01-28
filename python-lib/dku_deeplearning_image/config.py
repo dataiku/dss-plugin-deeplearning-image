@@ -9,12 +9,13 @@ def add_gpu_config(dku_config, config):
     dku_config.add_param(
         name='gpu_usage',
         value=config.get('gpu_usage'))
+    gpu_list = config.get('gpu_list') if dku_config.gpu_usage == 'custom' else []
     dku_config.add_param(
         name='gpu_list',
-        value=config.get('gpu_list') if dku_config.gpu_usage == 'custom' else [],
+        value=gpu_list,
         checks=[{
             "type": "custom",
-            "cond": (dku_config.gpu_list or dku_config.gpu_usage != "custom"),
+            "cond": (gpu_list or dku_config.gpu_usage != "custom"),
             "err_msg": 'You have to select at least one GPU, or uncheck "Use GPU" checkbox.'
         }])
     dku_config.add_param(
@@ -25,16 +26,16 @@ def add_gpu_config(dku_config, config):
         value=config.get('memory_limit') if dku_config.gpu_memory == 'custom' else 0)
 
 
-def add_score_recipe_config(config, dku_config):
+def add_score_recipe_config(dku_config, config):
     dku_config.add_param(name='max_nb_labels', value=int(config['max_nb_labels']))
     dku_config.add_param(name='min_threshold', value=float(config['min_threshold']))
 
 
-def add_extract_recipe_config(config, dku_config):
+def add_extract_recipe_config(dku_config, config):
     dku_config.add_param(name='extract_layer_index', value=int(config.get('extract_layer_index', -2)))
 
 
-def add_retrain_recipe_config(config, dku_config):
+def add_retrain_recipe_config(dku_config, config):
     dku_config.add_param(name='col_filename', value=config.get("col_filename"), required=True)
     dku_config.add_param(name='col_label', value=config.get("col_label"), required=True)
     dku_config.add_param(name='train_ratio', value=float(config.get("train_ratio")))
@@ -61,7 +62,7 @@ def add_retrain_recipe_config(config, dku_config):
         checks=[
             {
                 'type': 'custom',
-                'cond': not dku_config.n_augmentation or (dku_config.n_augmentation <= dku_config.dku_config.batch_size),
+                'cond': not n_augmentation or (n_augmentation <= dku_config.dku_config.batch_size),
                 'err_msg': "The number of augmentations must be lower than the batch size. Aborting."
             }
         ]
@@ -73,7 +74,7 @@ def add_retrain_recipe_config(config, dku_config):
     dku_config.add_param(name='random_seed', value=int(config.get("random_seed")))
 
 
-def add_api_deployer_config(config, dku_config, project):
+def add_api_deployer_config(dku_config, config, project):
 
     dku_config.add_param(
         name='model_folder_id',
