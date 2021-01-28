@@ -1,4 +1,5 @@
 from .dku_config import DkuConfig
+import api_designer_utils.utils as utils
 
 
 class ApiDeployerConfig(DkuConfig):
@@ -39,6 +40,7 @@ class ApiDeployerConfig(DkuConfig):
             check = {'type': 'not_in', 'op': list_service, 'err_msg': "Service ID {value} already in use."}
         else:
             check = {'type': 'in', 'op': list_service, 'err_msg': "Service ID : {value} not found."}
+
         self.add_param(
             name='service_id',
             value=service_id,
@@ -53,13 +55,28 @@ class ApiDeployerConfig(DkuConfig):
         ##########################################
         # Code env handling
         ##########################################
-        code_env_name = config.get("code_env_name")
+        self.add_param(
+            name='create_new_code_env',
+            value=(config.get("code_env_options") == "new"),
+            checks=[
+                {'type': 'is_type', 'op': bool, 'err_msg': "create_new_code_env is not bool: {value}"}
+            ])
 
         self.add_param(
             name='code_env_name',
-            value=code_env_name,
-            required=True,
-            checks=[check])
+            value=config.get("code_env_name" if not self.create_new_code_env else "new_code_env_name"),
+            required=True)
+
+        self.add_param(
+            name='python_interpreter',
+            value=self.config.get("python_interpreter"),
+            required=self.create_new_code_env)
+
+        self.add_param(
+            name='custom_interpreter',
+            value=self.config.get("custom_interpreter"),
+            required=self.create_new_code_env and self.python_interpreter == 'CUSTOM')
+
         ##########################################
         # Classification parameters
         ##########################################
