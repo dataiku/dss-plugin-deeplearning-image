@@ -17,7 +17,7 @@ def get_logdir(folder_id):
     try:
         folder_path = folder.get_path()
         return os.path.join(folder_path, TENSORBOARD_LOGS)
-    except Exception as err:
+    except Exception:
         raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
 
 
@@ -35,8 +35,7 @@ def __get_custom_assets_zip_provider():
 
 def init_flags(loader_list):
     parser = ArgumentParser()
-    for loader in loader_list:
-        loader.define_flags(parser)
+    map(lambda x: x.define_flags(parser), loader_list)
     flags = parser.parse_args([])
     return flags
 
@@ -48,16 +47,10 @@ def make_plugin_loader(plugin_spec):
     Returns:
       A TBLoader for the given plugin.
     """
-    if isinstance(plugin_spec, base_plugin.TBLoader):
-        print("case1")
-        return plugin_spec
-    if isinstance(plugin_spec, type):
-        if issubclass(plugin_spec, base_plugin.TBLoader):
-            print("case2")
-            return plugin_spec()
-        if issubclass(plugin_spec, base_plugin.TBPlugin):
-            print("case3")
-            return base_plugin.BasicLoader(plugin_spec)
+    if issubclass(plugin_spec, base_plugin.TBLoader):
+        return plugin_spec()
+    if issubclass(plugin_spec, base_plugin.TBPlugin):
+        return base_plugin.BasicLoader(plugin_spec)
     raise TypeError("Not a TBLoader or TBPlugin subclass: %r" % (plugin_spec,))
 
 
