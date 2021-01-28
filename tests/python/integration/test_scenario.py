@@ -10,7 +10,6 @@ pytestmark = pytest.mark.usefixtures("plugin", "dss_target")
 test_kwargs = {
     "user": "user1",
     "project_key": "PLUGINTESTDEEPLEARNINGIMAGE",
-    "logger": logging.getLogger("dss-plugin-test.deeplearning-image.test_scenario"),
 }
 
 
