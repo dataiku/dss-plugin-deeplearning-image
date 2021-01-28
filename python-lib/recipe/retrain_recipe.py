@@ -18,7 +18,7 @@ class RetrainRecipe(DkuRecipe):
     def load_dku_model(self, model_folder, label_df):
         self.dku_model = DkuModel(model_folder)
         self.dku_model.label_df = label_df
-        self.dku_model.load_model(self.config, constants.RETRAINING)
+        self.dku_model.load_model(self.config, constants.RETRAIN)
         self._set_trainable_layers()
         self.dku_model.print_summary()
 
