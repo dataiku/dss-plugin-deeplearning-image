@@ -68,12 +68,14 @@ def __get_tb_app(tensorboard_logs):
     )
 
 
+# This is the hack found to serve the Tensorboard app in Flask. We will replace the Flask app
+# by the WSGI app function beneath that are the same objects.
 def tensorboard_wsgi_app(environ, start_response):
     if environ['PATH_INFO'] == '/__ping':
+        # We need to define a new endpoint, used by DSS to check whether the backend has started successfully.
         status = '200 OK'
         headers = [('Content-type', 'text/plain; charset=utf-8')]
         start_response(status, headers)
         return [b"200"]
     else:
         return __get_tb_app(__get_logs_path())(environ, start_response)
-
