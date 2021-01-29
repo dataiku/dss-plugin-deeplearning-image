@@ -24,6 +24,3 @@ class VirtualManagedFolder:
 
     def upload_stream(self, path, f):
         raise IOError("VirtualManagedFolder do not have upload_stream property.")
-
-    def get_writer(self):
-        return open(self.path, 'wb+')

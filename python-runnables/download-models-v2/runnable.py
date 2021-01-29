@@ -61,8 +61,6 @@ class MyRunnable(Runnable):
 
         new_model.set_config(config)
 
-        new_model.load_from_web()
-
         # Downloading weights
         url_to_weights = new_model.get_weights_url()
 

@@ -13,8 +13,6 @@ import tables
 from keras.layers import Dense
 from keras.models import Model
 import base64
-import requests
-from datetime import time
 import PIL
 
 import copy as cp
@@ -23,6 +21,7 @@ import copy as cp
 class DkuModel(object):
     def __init__(self, folder, is_empty=False):
         self.folder = folder
+        files = self.folder.list_paths_in_partition()
         if not is_empty:
             if utils.is_path_in_folder(constants.CONFIG_FILE, self.folder):
                 self.load_config()
@@ -44,16 +43,14 @@ class DkuModel(object):
         strategy = utils.get_tf_strategy()
         include_top = goal == constants.SCORING and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
-        weights = "imagenet" if goal == constants.DOWNLOAD else None
         self.base_model = self.application.model_func(
-            weights=weights,
+            weights=None,
             include_top=include_top,
             input_shape=input_shape
         )
         self.model = cp.deepcopy(self.base_model)
         with strategy.scope():
-            if goal != constants.DOWNLOAD:
-                self._load_weights_and_enrich(config, goal, include_top)
+            self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape
 
     def _load_weights_and_enrich(self, config, goal, include_top):
@@ -295,49 +292,6 @@ class DkuModel(object):
                                   driver_core_image=model_weights_path.read(),
                                   driver_core_backing_store=0)
         h5file.copy_file(weights_path, overwrite=True)
-
-    def download_files_to_managed_folder(self, files_info, chunk_size=8192):
-        total_size = 0
-        bytes_so_far = 0
-        for file_info in files_info:
-            response = requests.get(file_info["url"], stream=True)
-            total_size += int(response.headers.get('content-length'))
-            file_info["response"] = response
-        update_time = time()
-        for file_info in files_info:
-            with self.folder.get_writer(file_info["filename"]) as f:
-                for content in file_info["response"].iter_content(chunk_size=chunk_size):
-                    bytes_so_far += len(content)
-                    # Only scale to 80% because needs to compute model summary after download
-                    percent = int(float(bytes_so_far) / total_size * 80)
-                    update_time = update_percent(percent, update_time)
-                    f.write(content)
-
-    def load_from_web(self, include_top=False, only_weights=False):
-        # Downloading weights
-
-        if self.trained_on == constants.IMAGENET:
-            # Downloading mapping id <-> name for imagenet classes
-            # File used by Keras in all its 'decode_predictions' methods
-            # Found here : https://github.com/keras-team/keras/blob/2.1.1/keras/applications/imagenet_utils.py
-            class_mapping_url = constants.IMAGENET_CLASS_INDEX_URL
-        else:
-            class_mapping_url = ''
-
-        if class_mapping_url:
-            files_to_dl.append({"url": class_mapping_url, "filename": constants.CLASSES_MAPPING_FILE})
-
-        self.download_files_to_managed_folder(files_to_dl)
-
-        if class_mapping_url:
-            mapping_df = pd.read_json(output_folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
-            mapping_df = mapping_df.reset_index()
-            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
-            self.label_df = mapping_df
-            output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
-
-        new_model.load_model({}, constants.SCORING)
-        new_model.save_info()
 
     def get_layers(self):
         return self.get_model().layers
