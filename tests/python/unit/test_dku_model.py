@@ -18,7 +18,7 @@ def create_base_model(output_folder, model_choice):
 
 class TestDkuModel:
     def setup_class(self):
-        PATH = 'model_resnet_unit_test'
+        PATH = './model_resnet_unit_test'
         INFO_FILENAME = 'model_info.json'
         MODEL_CHOICE = 'resnet::imagenet'
         if not os.path.exists(PATH):
