@@ -14,6 +14,8 @@ from keras.layers import Dense
 from keras.models import Model
 import base64
 import PIL
+import time
+import requests
 
 import copy as cp
 
@@ -146,7 +148,7 @@ class DkuModel(object):
         DkuFileManager.write_to_folder(
             folder=self.folder,
             file_path=constants.CONFIG_FILE,
-            content=json.dumps(self.jsonify_config()))
+                content=json.dumps(self.jsonify_config()))
 
     def get_info(self, base=False):
         return {
@@ -292,6 +294,67 @@ class DkuModel(object):
                                   driver_core_image=model_weights_path.read(),
                                   driver_core_backing_store=0)
         h5file.copy_file(weights_path, overwrite=True)
+
+    def download_from_web(self, cb):
+        # Downloading weights
+        url_to_weights = self.get_weights_url()
+
+        def update_percent(percent, last_update_time):
+            new_time = time.time()
+            if (new_time - last_update_time) > 3:
+                cb(percent)
+                return new_time
+            else:
+                return last_update_time
+
+        def download_files_to_managed_folder(output_f, files_info, chunk_size=8192):
+            total_size = 0
+            bytes_so_far = 0
+            for file_info in files_info:
+                response = requests.get(file_info["url"], stream=True)
+                total_size += int(response.headers.get('content-length'))
+                file_info["response"] = response
+            update_time = time.time()
+            for file_info in files_info:
+                with output_f.get_writer(file_info["filename"]) as f:
+                    for content in file_info["response"].iter_content(chunk_size=chunk_size):
+                        bytes_so_far += len(content)
+                        # Only scale to 80% because needs to compute model summary after download
+                        percent = int(float(bytes_so_far) / total_size * 80)
+                        update_time = update_percent(percent, update_time)
+                        f.write(content)
+
+        if self.trained_on == constants.IMAGENET:
+            # Downloading mapping id <-> name for imagenet classes
+            # File used by Keras in all its 'decode_predictions' methods
+            # Found here : https://github.com/keras-team/keras/blob/2.1.1/keras/applications/imagenet_utils.py
+            class_mapping_url = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
+        else:
+            class_mapping_url = ''
+
+        files_to_dl = [
+            {"url": url_to_weights["top"], "filename": self.get_weights_path(with_top=True)},
+            {"url": url_to_weights["no_top"], "filename": self.get_weights_path(with_top=False)}
+        ]
+
+        if class_mapping_url:
+            files_to_dl.append({"url": class_mapping_url, "filename": constants.CLASSES_MAPPING_FILE})
+
+        self.folder.upload_data(constants.CONFIG_FILE, json.dumps(self.jsonify_config()).encode('utf-8'))
+        download_files_to_managed_folder(self.folder, files_to_dl)
+
+        if class_mapping_url:
+            mapping_df = pd.read_json(self.folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
+            mapping_df = mapping_df.reset_index()
+            mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
+            DkuFileManager.write_to_folder(
+                folder=self.folder,
+                file_path=constants.MODEL_LABELS_FILE,
+                content=mapping_df.to_csv(index=False, sep=","))
+            self.folder.delete_path(constants.CLASSES_MAPPING_FILE)
+
+        self.load_model({}, constants.SCORING)
+        self.save_info()
 
     def get_layers(self):
         return self.get_model().layers
