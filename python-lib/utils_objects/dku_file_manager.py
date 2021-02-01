@@ -1,5 +1,10 @@
-from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
-import dataiku
+import logging
+logger = logging.getLogger(__name__)
+try:
+    from dataiku.customrecipe import get_input_names_for_role, get_output_names_for_role
+    import dataiku
+except ModuleNotFoundError as err:
+    logger.warning("The dataiku package could not be imported. You won't be able to use this class.")
 
 class DkuFileManager(object):
     def get_file(self, side, type_, role):

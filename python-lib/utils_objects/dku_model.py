@@ -295,7 +295,7 @@ class DkuModel(object):
                                   driver_core_backing_store=0)
         h5file.copy_file(weights_path, overwrite=True)
 
-    def download_from_web(self, cb):
+    def download_from_web(self, cb=None):
         # Downloading weights
         url_to_weights = self.get_weights_url()
 
@@ -320,8 +320,9 @@ class DkuModel(object):
                     for content in file_info["response"].iter_content(chunk_size=chunk_size):
                         bytes_so_far += len(content)
                         # Only scale to 80% because needs to compute model summary after download
-                        percent = int(float(bytes_so_far) / total_size * 80)
-                        update_time = update_percent(percent, update_time)
+                        if cb:
+                            percent = int(float(bytes_so_far) / total_size * 80)
+                            update_time = update_percent(percent, update_time)
                         f.write(content)
 
         if self.trained_on == constants.IMAGENET:
