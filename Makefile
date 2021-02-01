@@ -25,10 +25,15 @@ unit-tests:
 		if [ ! $$PYTHON_VERSION_IS_CORRECT ]; then echo "Python version $$PYTHON_VERSION is not in acceptedPythonInterpreters"; exit 1; fi; \
 	)
 	@( \
-		source ~/dev/plugins/.env/deeplearning-image-v2/bin/activate; \
+		rm -rf tests/python/unit/env/; \
+		python3 -m venv tests/python/unit/env/; \
+		source tests/python/unit/env/bin/activate; \
+		pip3 install --upgrade pip; \
+		pip3 install --no-cache-dir -r tests/python/unit/requirements.txt; \
+		pip3 install --no-cache-dir -r code-env/python/spec/requirements.txt; \
 		export PYTHONPATH="$(PYTHONPATH):$(PWD)/python-lib"; \
 		export RESOURCE_FOLDER_PATH="$(PWD)/resource"; \
-		pytest tests/python/unit; \
+		pytest tests/python/unit --alluredir=tests/allure_report; \
 		deactivate; \
 	)
 	@echo "[SUCCESS] Running unit tests: Done!"
