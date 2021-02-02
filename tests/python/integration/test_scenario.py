@@ -1,54 +1,44 @@
-import pytest
-import logging
-
+# -*- coding: utf-8 -*-
 from dku_plugin_test_utils import dss_scenario
 
-
-pytestmark = pytest.mark.usefixtures("plugin", "dss_target")
-
-
-test_kwargs = {
-    "user": "user1",
-    "project_key": "PLUGINTESTDEEPLEARNINGIMAGE",
-}
+TEST_PROJECT_KEY = "PLUGINTESTDEEPLEARNINGIMAGE"
 
 
-def add_integration_test(user_clients, scenario_id):
-    test_kwargs["client"] = user_clients[test_kwargs["user"]]
-    dss_scenario.run(scenario_id=scenario_id, **test_kwargs)
+def add_integration_test(user_dss_clients, scenario_id):
+    dss_scenario.run(user_dss_clients, project_key=TEST_PROJECT_KEY, scenario_id=scenario_id)
 
 
-def test_run_tensorboard_start(user_clients):
-    add_integration_test(user_clients, "Webapp_-_Tensorboard")
+def test_run_tensorboard_start(user_dss_clients):
+    add_integration_test(user_dss_clients, "Webapp_-_Tensorboard")
 
 
-def test_extract_recipe(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Extract_features")
+def test_extract_recipe(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Extract_features")
 
 
-def test_score_recipe(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Classify_images")
+def test_score_recipe(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Classify_images")
 
 
-def test_retrain_recipe(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Retrain_model")
+def test_retrain_recipe(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Retrain_model")
 
 
-def test_advanced_retrain(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Advanced_Retrain")
+def test_advanced_retrain(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Advanced_Retrain")
 
 
-def test_model_download(user_clients):
-    add_integration_test(user_clients, "Macro_-_Model_Download")
+def test_model_download(user_dss_clients):
+    add_integration_test(user_dss_clients, "Macro_-_Model_Download")
 
 
-def test_cloud_integration(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Cloud_Integration")
+def test_cloud_integration(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Cloud_Integration")
 
 
-def test_edge_cases(user_clients):
-    add_integration_test(user_clients, "Recipe_-_Edge_cases")
+def test_edge_cases(user_dss_clients):
+    add_integration_test(user_dss_clients, "Recipe_-_Edge_cases")
 
 
-def test_api_endpoint_deployment(user_clients):
-    add_integration_test(user_clients, "Macro_-_Deploy_API_Service")
+def test_api_endpoint_deployment(user_dss_clients):
+    add_integration_test(user_dss_clients, "Macro_-_Deploy_API_Service")
