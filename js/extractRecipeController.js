@@ -10,9 +10,9 @@ app.controller('extractRecipeController', function($scope) {
         $scope.showAdvancedParams = !$scope.showAdvancedParams;
     };
 
-    var preprocessLayers = function(layers) {
+    let preprocessLayers = function(layers) {
         return layers.reverse().map(function(layer, i) {
-            var index = - ( i + 1);
+            let index = - ( i + 1);
             return {
                 name: layer + " (" + index + ")",
                 index: index
@@ -20,20 +20,20 @@ app.controller('extractRecipeController', function($scope) {
         });
     };
 
-    var initVariable = function(varName, initValue) {
+    let initVariable = function(varName, initValue) {
         $scope.config[varName] = $scope.config[varName] || initValue;
     };
 
-    var getStylesheetUrl = function(pluginId) {
+    let getStylesheetUrl = function(pluginId) {
         return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
     }
 
-    var initVariables = function() {
+    let initVariables = function() {
         initVariable("gpu_usage", 'all');
-        initVariable("gpu_memory", 'all');
+        initVariable("gpu_memory_allocation_mode", 'all');
     };
     
-    var retrieveInfoOnModel = function() {
+    let retrieveInfoOnModel = function() {
 
         $scope.callPythonDo({method: "get-info-about-model"}).then(function(data) {
             handleGPU(data);
@@ -48,15 +48,15 @@ app.controller('extractRecipeController', function($scope) {
         });
     };
     
-    var handleGPU = function(data) {
+    let handleGPU = function(data) {
         $scope.gpuList = data["gpu_list"];
         $scope.canUseGPU = data["can_use_gpu"];
         $scope.gpuUsage = data["gpu_usage_choices"];
-        $scope.gpuMemory = data["gpu_memory_choices"];
+        $scope.gpuMemoryAllocationMode = data["gpu_memory_allocation_mode"];
         initVariable("should_use_gpu", data["can_use_gpu"]);
     }
     
-    var init = function() {
+    let init = function() {
         $scope.finishedLoading = false;
         $scope.showAdvancedParams = false;
         initVariables();

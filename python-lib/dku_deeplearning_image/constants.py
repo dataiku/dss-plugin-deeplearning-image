@@ -28,3 +28,6 @@ DEFAULT_PRED_LIMIT = 5
 DEFAULT_PRED_MIN_THRESHOLD = 0
 COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
 COMPILE_METRICS = ["accuracy"]
+
+GPU_MEMORY_LIMIT = "memory_limit"
+GPU_MEMORY_GROWTH = "memory_growth"

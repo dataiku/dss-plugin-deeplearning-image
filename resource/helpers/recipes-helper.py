@@ -104,13 +104,17 @@ def add_gpu_options_to_resp(response):
             'value': 'custom'
         }
     ]
-    response["gpu_memory_choices"] = [
+    response["gpu_memory_allocation_mode"] = [
         {
             'label': 'No limitation',
             'value': 'all'
         },
         {
+            'label': 'Allocate only as much GPU memory as needed',
+            'value': constants.GPU_MEMORY_GROWTH
+        },
+        {
             'label': 'Set a custom memory limit...',
-            'value': 'custom'
+            'value': constants.GPU_MEMORY_LIMIT
         }
     ]

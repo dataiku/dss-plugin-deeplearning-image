@@ -3,7 +3,7 @@ var app = angular.module('deepLearningImageTools.scoring', []);
 app.controller('scoringRecipeController', function($scope) {
 
 
-    var retrieveCanUseGPU = function() {
+    let retrieveCanUseGPU = function() {
 
         $scope.callPythonDo({method: "get-info-scoring"}).then(function(data) {
             handleGPU(data);
@@ -14,30 +14,30 @@ app.controller('scoringRecipeController', function($scope) {
         });
     };
 
-    var initVariable = function(varName, initValue) {
+    let initVariable = function(varName, initValue) {
         $scope.config[varName] = $scope.config[varName] || initValue;
     };
 
-    var getStylesheetUrl = function(pluginId) {
+    let getStylesheetUrl = function(pluginId) {
         return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
     }
 
-    var initVariables = function() {
+    let initVariables = function() {
         initVariable("max_nb_labels", 5);
         initVariable("min_threshold", 0);
         initVariable("gpu_usage", 'all');
-        initVariable("gpu_memory", 'all');
+        initVariable("gpu_memory_allocation_mode", 'all');
     };
     
-    var handleGPU = function(data) {
+    let handleGPU = function(data) {
         $scope.gpuList = data["gpu_list"];
         $scope.canUseGPU = data["can_use_gpu"];
         $scope.gpuUsage = data["gpu_usage_choices"];
-        $scope.gpuMemory = data["gpu_memory_choices"];
+        $scope.gpuMemoryAllocationMode = data["gpu_memory_allocation_mode"];
         initVariable("should_use_gpu", data["can_use_gpu"]);
     }
 
-    var init = function() {
+    let init = function() {
         $scope.finishedLoading = false;
         initVariables();
         retrieveCanUseGPU();

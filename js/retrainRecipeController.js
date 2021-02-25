@@ -37,7 +37,7 @@ app.controller('retrainRecipeController', function($scope) {
     };
 
 
-    var retrieveInfoRetrain = function() {
+    let retrieveInfoRetrain = function() {
         $scope.callPythonDo({method: "get-info-retrain"}).then(function(data) {
             handleGPU(data);
             $scope.labelColumns = data["columns"];
@@ -50,15 +50,15 @@ app.controller('retrainRecipeController', function($scope) {
         });
     };
 
-    var initVariable = function(varName, initValue) {
+    let initVariable = function(varName, initValue) {
         $scope.config[varName] = $scope.config[varName] || initValue;
     };
 
-    var getStylesheetUrl = function(pluginId) {
+    let getStylesheetUrl = function(pluginId) {
         return `/plugins/${pluginId}/resource/stylesheets/dl-image-toolbox.css`
     }
 
-    var initPotentiallyBlockedVariables = function(modelConfig) {
+    let initPotentiallyBlockedVariables = function(modelConfig) {
         $scope.retrained = modelConfig.retrained || false;
         var poolingDefault = "avg";
         var imageWidthDefault = 197;
@@ -73,11 +73,11 @@ app.controller('retrainRecipeController', function($scope) {
         initVariable('image_height', imageHeightDefault);
     };
 
-    var initVariables = function() {
+    let initVariables = function() {
         initVariable("random_seed", 1337);
         initVariable("train_ratio", 0.8);
         initVariable("gpu_usage", 'all');
-        initVariable("gpu_memory", 'all');
+        initVariable("gpu_memory_allocation_mode", 'all');
         initVariable('layer_to_retrain', 'last');
         initVariable('layer_to_retrain_n', 2);
         initVariable('model_dropout', 0);
@@ -95,15 +95,15 @@ app.controller('retrainRecipeController', function($scope) {
         initVariable('tensorboard', false);
     };
     
-    var handleGPU = function(data) {
+    let handleGPU = function(data) {
         $scope.gpuList = data["gpu_list"];
         $scope.canUseGPU = data["can_use_gpu"];
         $scope.gpuUsage = data["gpu_usage_choices"];
-        $scope.gpuMemory = data["gpu_memory_choices"];
+        $scope.gpuMemoryAllocationMode = data["gpu_memory_allocation_mode"];
         initVariable("should_use_gpu", data["can_use_gpu"]);
     }
 
-    var init = function() {
+    let init = function() {
         $scope.finishedLoading = false;
         $scope.showAdvancedParams = false;
         initVariables();

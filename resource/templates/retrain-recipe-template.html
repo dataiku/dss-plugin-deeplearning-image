@@ -213,18 +213,18 @@
                <label class="control-label">GPU Memory</label>
                <div class="controls">
                   <select dku-bs-select
-                     name="gpu_memory"
-                     ng-model="config.gpu_memory"
-                     ng-options="gm.value as gm.label for gm in gpuMemory">
+                     name="gpu_memory_allocation_mode"
+                     ng-model="config.gpu_memory_allocation_mode"
+                     ng-options="gm.value as gm.label for gm in gpuMemoryAllocationMode">
                   </select>
                </div>
             </div>
-            <div ng-if="config.gpu_memory == 'custom'">
+            <div ng-if="config.gpu_memory_allocation_mode == 'memory_limit'">
                <div class="control-group">
-                  <label class="control-label">Memory limit per GPU</label>
+                  <label class="control-label">Memory allocation</label>
                   <div class="controls">
-                     <input name=memory_limit style="width: 50px" type="number" ng-model="config.memory_limit" required/>
-                     <span class="help-inline">in MB</span>
+                      <div dku-slider value="config.memory_limit" style="width: 205px; display: inline-block;" type="number" min="0" max="100"></div>
+                      <span class="help-inline" style="vertical-align: top;">in %</span>
                   </div>
                </div>
             </div>
