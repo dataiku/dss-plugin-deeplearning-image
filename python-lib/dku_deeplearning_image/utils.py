@@ -84,9 +84,12 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
         log_info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
+        log_info("GPUs on the machine: {}".format(str(GPUtil.getGPUs())))
+        log_info("Will use the following GPUs: {}".format(gpus_to_use))
         if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
                 memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
+                log_info("Restraining GPU {} with {} Mo".format(gpu, str(memory_limit)))
                 tf.config.experimental.set_virtual_device_configuration(
                     gpu,
                     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
