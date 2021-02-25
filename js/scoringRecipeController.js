@@ -27,6 +27,7 @@ app.controller('scoringRecipeController', function($scope) {
         initVariable("min_threshold", 0);
         initVariable("gpu_usage", 'all');
         initVariable("gpu_memory_allocation_mode", 'all');
+        initVariable("gpu_memory_limit", 100);
     };
     
     let handleGPU = function(data) {

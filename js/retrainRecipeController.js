@@ -78,6 +78,7 @@ app.controller('retrainRecipeController', function($scope) {
         initVariable("train_ratio", 0.8);
         initVariable("gpu_usage", 'all');
         initVariable("gpu_memory_allocation_mode", 'all');
+        initVariable("gpu_memory_limit", 100);
         initVariable('layer_to_retrain', 'last');
         initVariable('layer_to_retrain_n', 2);
         initVariable('model_dropout', 0);

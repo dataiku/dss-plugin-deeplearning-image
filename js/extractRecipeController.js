@@ -31,6 +31,7 @@ app.controller('extractRecipeController', function($scope) {
     let initVariables = function() {
         initVariable("gpu_usage", 'all');
         initVariable("gpu_memory_allocation_mode", 'all');
+        initVariable("gpu_memory_limit", 100);
     };
     
     let retrieveInfoOnModel = function() {

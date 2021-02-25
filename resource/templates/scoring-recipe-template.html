@@ -14,7 +14,7 @@
             <span class="help-inline">Class labels less probable than this threshold (between 0 and 1) will not be output.</span>
          </div>
       </div>
-      <div>{# ng-if="canUseGPU">  #}
+      <div ng-if="canUseGPU">
          <h2 class="settings-section-title">GPU</h2>
          <div class="control-group">
             <label class="control-label">Use GPU</label>
@@ -22,7 +22,7 @@
                <input name=should_use_gpu type="checkbox" ng-model="config.should_use_gpu"/>
             </div>
          </div>
-         <div ng-show="{# canUseGPU &&  #}config.should_use_gpu">
+         <div ng-show="canUseGPU && config.should_use_gpu">
             <div class="control-group">
                <label class="control-label">GPU Usage</label>
                <div class="controls">
@@ -61,7 +61,7 @@
                <div class="control-group">
                   <label class="control-label">Memory allocation</label>
                   <div class="controls">
-                      <div dku-slider value="config.memory_limit" style="width: 205px; display: inline-block;" type="number" min="0" max="100"></div>
+                      <div dku-slider value="config.gpu_memory_limit" style="width: 205px; display: inline-block;" type="number" min="0" max="100"></div>
                       <span class="help-inline" style="vertical-align: top;">in %</span>
                   </div>
                </div>
