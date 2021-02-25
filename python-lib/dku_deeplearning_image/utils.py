@@ -83,8 +83,10 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
     if should_use_gpu and can_use_gpu():
         log_info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
+        for i, g in enumerate(gpus):
+            g.id = i
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
-        log_info("GPUs on the machine: {}".format(str(GPUtil.getGPUs())))
+        log_info("GPUs on the machine: {}".format(str([g.id for g in GPUtil.getGPUs()])))
         log_info("Will use the following GPUs: {}".format(gpus_to_use))
         if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
@@ -105,8 +107,8 @@ def get_tf_strategy():
     return tf.distribute.MirroredStrategy()
 
 
-def calculate_gpu_memory_allocation(memory_limit_ratio, gpu_id):
-    gpu = [gpu for gpu in GPUtil.getGPUs() if gpu.id == gpu_id][0]
+def calculate_gpu_memory_allocation(memory_limit_ratio, gpu_to_use):
+    gpu = [gpu for gpu in GPUtil.getGPUs() if gpu.id == gpu_to_use.id][0]
     return int((memory_limit_ratio / 100) * gpu.memoryTotal)
 
 ###################################################################################################################
