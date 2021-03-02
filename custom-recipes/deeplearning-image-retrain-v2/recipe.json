@@ -1,17 +1,15 @@
 {
     "meta" : {
-        "label" : "Retraining image classification model (v2)",
-        "description" : "Retrain a keras model with a new set of images. You can finetune the optimization parameters.<br>It is possible to retrain a model that was previously retrained. In that case some parameters will not be modifiable as they were fixed by the first retraining (size, pooling).<br>The recipe takes as inputs:\n* A managed folder containing a keras model (for example downloaded with the 'Download pre-trained model' macro)\n* A managed folder containing images on which the model will be retrained\n* A dataset containing the labels of the images from the managed folder, along with the relative path of each image",
+        "label" : "Classification model retrain on images (v2)",
+        "description" : "Retrain a keras model with a new set of images. You can fine-tune the optimization parameters.<br>It is possible to retrain a model that was previously retrained. In that case some parameters will not be modifiable as they were fixed by the first retraining (size, pooling).<br>The recipe takes as inputs:\n* A managed folder containing a keras model (for example downloaded with the 'Download pre-trained model' macro)\n* A managed folder containing images on which the model will be retrained\n* A dataset containing the labels of the images from the managed folder, along with the relative path of each image",
         "icon" : "icon-retweet"
     },
-
     "kind" : "PYTHON",
-
     "inputRoles" : [
         {
             "name": "label_dataset",
             "label": "Label dataset",
-            "description": "Image filename column and label column",
+            "description": "Images with filename column and label column.",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -19,7 +17,7 @@
         {
             "name": "image_folder",
             "label": "Image folder",
-            "description": "what main output means",
+            "description": "Folder containing the images used for retraining.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
@@ -28,7 +26,7 @@
         {
             "name": "model_folder",
             "label": "Model folder",
-            "description": "The folder containing the previously trained model.",
+            "description": "Folder containing the previously trained model.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
@@ -40,7 +38,7 @@
         {
             "name": "model_output",
             "label": "Model folder",
-            "description": "what main output means",
+            "description": "New model retrained on input images",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
