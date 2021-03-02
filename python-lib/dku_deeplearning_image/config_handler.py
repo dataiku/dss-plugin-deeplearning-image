@@ -62,7 +62,7 @@ def add_retrain_recipe_config(dku_config, config):
         checks=[
             {
                 'type': 'custom',
-                'cond': not n_augmentation or (n_augmentation <= dku_config.dku_config.batch_size),
+                'cond': not n_augmentation or (n_augmentation <= dku_config.batch_size),
                 'err_msg': "The number of augmentations must be lower than the batch size. Aborting."
             }
         ]
