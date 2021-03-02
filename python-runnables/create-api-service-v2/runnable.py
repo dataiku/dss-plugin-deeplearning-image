@@ -1,7 +1,7 @@
 import dataiku
 from dataiku.runnables import Runnable
 from dku_deeplearning_image.config import create_dku_config
-import api_designer_utils.utils as utils
+from dku_deeplearning_image import api_designer as utils
 import dku_deeplearning_image.constants as constants
 
 

@@ -9,7 +9,7 @@ from argparse import ArgumentParser
 from tensorboard.plugins import base_plugin
 from dataikuapi.utils import DataikuException
 
-from dku_deeplearning_image.constants import TENSORBOARD_LOGS
+from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 
 
 def get_logdir(folder_id):

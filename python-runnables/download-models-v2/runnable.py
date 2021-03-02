@@ -4,8 +4,8 @@ import requests
 import json
 import pandas as pd
 import dku_deeplearning_image.constants as constants
-from utils_objects import DkuModel
-from utils_objects import DkuFileManager
+from dku_deeplearning_image.misc_objects import DkuModel
+from dku_deeplearning_image.misc_objects import DkuFileManager
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
