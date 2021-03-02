@@ -104,6 +104,7 @@ def update_code_env_packages(project_key, code_env):
 
 def create_or_get_code_env(project_key, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
     if create_new_code_env:
+        print(project_key, env_name, python_interpreter, custom_interpreter)
         try:
             _ = client.create_code_env(
                 env_lang='PYTHON',
