@@ -3,7 +3,7 @@ import dataiku
 import requests
 import json
 import pandas as pd
-import dku_deeplearning_image.constants as constants
+import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.misc_objects import DkuModel
 from dku_deeplearning_image.misc_objects import DkuFileManager
 import time
