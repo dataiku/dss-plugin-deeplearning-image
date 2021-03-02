@@ -1,5 +1,5 @@
 import dataiku
-import dku_deeplearning_image.constants as constants
+import dku_deeplearning_image.dku_constants as constants
 import dku_deeplearning_image.utils as utils
 import GPUtil
 import json

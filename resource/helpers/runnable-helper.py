@@ -1,6 +1,6 @@
 import dataiku
-from dku_deeplearning_image.applications import APPLICATIONS
-from dku_deeplearning_image import api_designer as utils
+from dku_deeplearning_image.keras_applications import APPLICATIONS
+import dku_deeplearning_image.api_designer.api_designer_utils as utils
 
 api_client = dataiku.api_client()
 
