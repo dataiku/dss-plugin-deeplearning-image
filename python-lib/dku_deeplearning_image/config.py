@@ -83,7 +83,7 @@ def add_api_deployer_config(dku_config, config, project):
             'type': 'in',
             'op': [folder.get("id") for folder in project.list_managed_folders()],
             'err_msg': "Folder ID {value} must be the id of a managed folder containing a model trained with the "
-                       "deeplearning-image plugin. The folder must belong to the project in which is executed the macro"
+                       "deeplearning-image-v2 plugin. The folder must belong to the project in which is executed the macro"
         }],
         required=True)
 
