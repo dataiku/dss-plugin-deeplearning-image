@@ -5,17 +5,20 @@ from dku_deeplearning_image.dku_constants import PLUGIN_ID
 
 ## Plugin paths
 PYTHON_LIB_DIR = 'python-lib'
+DKU_DL_IMAGE_DIR = 'dku_deeplearning_image'
 TEMPLATE_FILENAME = 'api_service_template.pyt'
+API_DESIGNER_DIR = 'api_designer'
 
 PLUGIN_INSTALLED_PATH = os.path.join('plugins', 'installed', PLUGIN_ID)
 PLUGIN_DEV_PATH = os.path.join('plugins', 'dev', PLUGIN_ID)
 PLUGIN_LIB_PATH = os.path.join(PLUGIN_INSTALLED_PATH, PYTHON_LIB_DIR)
 PLUGIN_DEV_LIB_PATH = os.path.join(PLUGIN_DEV_PATH, PYTHON_LIB_DIR)
-API_DESIGNER_UTILS_DIR = os.path.join('api_designer')
-SPEC_PATH = os.path.join(PYTHON_LIB_DIR, 'api_designer', 'requirements.txt')
-TEST_IMG_PATH = os.path.join(PYTHON_LIB_DIR, 'api_designer', 'test_images')
+API_DESIGNER_UTILS_DIR = os.path.join(DKU_DL_IMAGE_DIR, API_DESIGNER_DIR)
+
+SPEC_PATH = os.path.join(PYTHON_LIB_DIR, API_DESIGNER_DIR, 'requirements.txt')
+TEST_IMG_PATH = os.path.join(PYTHON_LIB_DIR, API_DESIGNER_DIR, 'test_images')
 TEMPLATE_PATH = os.path.join(PYTHON_LIB_DIR, API_DESIGNER_UTILS_DIR, TEMPLATE_FILENAME)
-PY_FILES_DEST_DIR = os.path.join('api_deployer', 'python-lib') + '.zip'
+PY_FILES_DEST_DIR = os.path.join('api_deployer', PYTHON_LIB_DIR) + '.zip'
 
 ## Templates
 TEST_QUERIES = [{
