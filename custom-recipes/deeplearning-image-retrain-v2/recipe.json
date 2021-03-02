@@ -9,7 +9,7 @@
         {
             "name": "label_dataset",
             "label": "Label dataset",
-            "description": "Images with filename column and label column.",
+            "description": "The dataset containing images filename column and label column.",
             "arity": "UNARY",
             "required": true,
             "acceptsDataset": true
@@ -17,7 +17,7 @@
         {
             "name": "image_folder",
             "label": "Image folder",
-            "description": "Folder containing the images used for retraining.",
+            "description": "The folder containing the images used for retraining.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
@@ -26,7 +26,7 @@
         {
             "name": "model_folder",
             "label": "Model folder",
-            "description": "Folder containing the previously trained model.",
+            "description": "The folder containing the previously trained model.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
