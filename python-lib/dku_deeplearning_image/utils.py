@@ -86,12 +86,12 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
         for i, g in enumerate(gpus):
             g.id = i
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
-        log_info("GPUs on the machine: {}".format(str([g.id for g in GPUtil.getGPUs()])))
-        log_info("Will use the following GPUs: {}".format(gpus_to_use))
+        log_info(f"GPUs on the machine: {[g.id for g in GPUtil.getGPUs()]}")
+        log_info(f"Will use the following GPUs: {gpus_to_use}")
         if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
                 memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
-                log_info("Restraining GPU(s) {} to {} Mo".format(gpu, str(memory_limit)))
+                log_info(f"Restraining GPU {gpu} to {memory_limit} Mo ({memory_limit_ratio}%)")
                 tf.config.experimental.set_virtual_device_configuration(
                     gpu,
                     [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
@@ -140,9 +140,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                log_info("cached file %s" % file_path)
+                log_info(f"cached file {file_path}")
     else:
-        log_info("read from cache %s" % file_path)
+        log_info(f"read from cache {file_path}")
     return filename
 
 
@@ -165,9 +165,9 @@ def build_prediction_output_df(images_paths, predictions):
 def log_func(txt):
     def inner(f):
         def wrapper(*args, **kwargs):
-            logger.info('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info(f"------ \n Info: Starting {txt} ({datetime.now().strftime('%H:%M:%S')}) \n ------")
             res = f(*args, **kwargs)
-            logger.info('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info(f"------ \n Info: Ending {txt} ({datetime.now().strftime('%H:%M:%S')}) \n ------")
             return res
 
         return wrapper
@@ -200,7 +200,7 @@ def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = load_img(img_path, target_size=img_shape)
     except UnidentifiedImageError as err:
-        log_warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        log_warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return
     array = img_to_array(img)
     array = preprocessing(array)
@@ -224,9 +224,9 @@ def clean_custom_params(custom_params, params_type=""):
     params_type = " '{}'".format(params_type) if params_type else ""
     for i, p in enumerate(custom_params):
         if not p.get("name", False):
-            raise IOError("The{} custom param #{} must have a 'name'".format(params_type, i))
+            raise IOError(f"The {params_type} custom param #{i} must have a 'name'")
         if not p.get("value", False):
-            raise IOError("The{} custom param #{} must have a 'value'".format(params_type, i))
+            raise IOError(f"The {params_type} custom param #{i} must have a 'value'")
         name = p["name"]
         value = string_to_arg(p["value"])
         cleaned_params[name] = value
