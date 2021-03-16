@@ -22,7 +22,7 @@
             </div>
             <div ng-if="config.gpu_usage == 'custom'">
                 <div class="control-group">
-                    <label class="control-label">Select GPU(s) to use</label>
+                    <label class="control-label">↳ Select GPU(s) to use</label>
                     <div class="controls">
                         <div name="gpu_list"
                             ng-model="config.gpu_list"
@@ -45,7 +45,7 @@
             </div>
             <div ng-if="config.gpu_memory_allocation_mode == 'memory_limit'">
                 <div class="control-group">
-                    <label class="control-label">Memory allocation</label>
+                    <label class="control-label">↳ Memory limit per GPU</label>
                     <div class="controls">
                         <div dku-slider value="config.gpu_memory_limit" style="width: 205px; display: inline-block;"
                              type="number" min="0" max="100"></div>
