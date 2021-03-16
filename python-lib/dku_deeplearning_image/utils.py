@@ -82,7 +82,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
     log_info("Loading GPU Options")
     if should_use_gpu and can_use_gpu():
         log_info("should use GPU")
-        gpus = tf.config.experimental.list_physical_devices('GPU')
+        gpus = tf.config.list_physical_devices('GPU')
         for i, g in enumerate(gpus):
             g.id = i
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
@@ -98,7 +98,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
                 )
         elif gpu_memory_allocation_mode == constants.GPU_MEMORY_GROWTH:
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
-        tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
+        tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:
         deactivate_gpu()
 
