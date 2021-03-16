@@ -1,10 +1,10 @@
 import dku_deeplearning_image.utils as utils
-import dku_deeplearning_image.constants as constants
-from dku_deeplearning_image import APPLICATIONS
+import dku_deeplearning_image.dku_constants as constants
+from dku_deeplearning_image.keras_applications import APPLICATIONS
 
 from io import StringIO, BytesIO
-from utils_objects import DkuFileManager
-from utils_objects import DkuApplication
+from dku_deeplearning_image.misc_objects import DkuFileManager
+from dku_deeplearning_image.misc_objects import DkuApplication
 
 import json
 import pandas as pd
@@ -13,7 +13,6 @@ import tables
 from keras.layers import Dense
 from keras.models import Model
 import base64
-import PIL
 
 import copy as cp
 
@@ -109,7 +108,7 @@ class DkuModel(object):
         self.model.load_weights(weights_path)
 
     def get_model(self):
-        assert self.model, "You must load the recipe before getting it. Killing process."
+        assert self.model, "You must load the recipes before getting it. Killing process."
         return self.model
 
     def get_input_shape(self):
@@ -197,7 +196,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            utils.log_info("------ \n Info: No csv file in the recipe folder, will not use class names. \n ------")
+            utils.log_info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None
         return label_df
 

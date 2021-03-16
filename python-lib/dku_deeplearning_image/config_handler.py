@@ -1,5 +1,5 @@
 from dku_config import DkuConfig
-from dku_deeplearning_image import constants
+import dku_deeplearning_image.dku_constants as constants
 
 
 def add_gpu_config(dku_config, config):

@@ -1,5 +1,5 @@
 import dataiku
-from dku_deeplearning_image.constants import TENSORBOARD_LOGS
+from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 import dku_deeplearning_image.utils as utils
 
 api_client = dataiku.api_client()

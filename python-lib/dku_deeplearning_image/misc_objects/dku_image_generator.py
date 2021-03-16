@@ -1,6 +1,6 @@
 import numpy as np
 import dku_deeplearning_image.utils as utils
-import dku_deeplearning_image.constants as constants
+import dku_deeplearning_image.dku_constants as constants
 import math
 
 
