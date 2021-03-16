@@ -1,18 +1,22 @@
 const app = angular.module('deepLearningImageTools.recipe');
 
-app.controller('scoringRecipeController', function($scope, utils) {
+app.controller('scoringRecipeController', function ($scope, utils) {
 
-    const updateScopeData = function(data) {
+    const updateCommonScopeData = function (data) {
         $scope.gpuInfo = data.gpu_info;
         $scope.styleSheetUrl = utils.getStylesheetUrl(data.pluginId);
+    }
+
+    const updateScopeData = function (data) {
+        updateCommonScopeData(data)
     };
 
-    const initVariables = function() {
+    const initVariables = function () {
         utils.initVariable($scope, "max_nb_labels", 5);
         utils.initVariable($scope, "min_threshold", 0);
     };
 
-    const init = function() {
+    const init = function () {
         $scope.finishedLoading = false;
         initVariables();
         utils.retrieveInfoBackend($scope, "get-info-scoring", updateScopeData);

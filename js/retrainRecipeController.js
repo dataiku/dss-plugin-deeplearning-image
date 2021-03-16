@@ -1,64 +1,48 @@
 const app = angular.module('deepLearningImageTools.recipe');
 
-app.controller('retrainRecipeController', function($scope, utils) {
-    $scope.getShowHideAdvancedParamsMessage = function() {
+app.controller('retrainRecipeController', function ($scope, utils) {
+    $scope.getShowHideAdvancedParamsMessage = function () {
         return utils.getShowHideAdvancedParamsMessage($scope.showAdvancedParams)
     };
 
-    $scope.toggleAdvancedParams = function() {
+    $scope.toggleAdvancedParams = function () {
         $scope.showAdvancedParams = !$scope.showAdvancedParams;
     };
 
-    $scope.addCustomParam = function(paramsName) {
+    $scope.addCustomParam = function (paramsName) {
         $scope.config[paramsName].push({});
     };
 
-    $scope.removeCustomParam = function(index, paramsName) {
+    $scope.removeCustomParam = function (index, paramsName) {
         $scope.config[paramsName].splice(index, 1);
     };
 
-    const updateScopeData = function(data) {
-        $scope.poolingOptions = [
-            ["No pooling", "None"],
-            ["Average", "avg"],
-            ["Maximum", "max"]
-        ];
-
-        $scope.layersOptions = [
-            ["Last layer", "last"],
-            ["All layers", "all"],
-            ["N last layers", "n_last"]
-        ];
-
-        $scope.optimizerOptions = [
-            ["Adam", "adam"],
-            ["Adagrad", "adagrad"],
-            ["SGD", "sgd"]
-        ];
+    const updateCommonScopeData = function (data) {
         $scope.gpuInfo = data.gpu_info;
         $scope.styleSheetUrl = utils.getStylesheetUrl(data.pluginId);
-        $scope.utils = utils;
+    }
+
+    const updateScopeData = function (data) {
+        updateCommonScopeData(data)
+        $scope.poolingOptions = data.pooling_options;
+        $scope.layersOptions = data.layers_options;
+        $scope.optimizerOptions = data.optimizer_options;
         $scope.labelColumns = data.columns;
-        $scope.modelSummary = data.summary;
+        $scope.modelSummary = data.model_summary;
         initPotentiallyBlockedVariables(data.model_config);
     };
 
-    const initPotentiallyBlockedVariables = function(modelConfig) {
-        $scope.retrained = modelConfig.retrained || false;
-        let poolingDefault = "avg";
-        let imageWidthDefault = 197;
-        let imageHeightDefault = 197;
-        if ($scope.retrained) {
-            poolingDefault = modelConfig.top_params.pooling;
-            imageWidthDefault = modelConfig.top_params.input_shape[0];
-            imageHeightDefault = modelConfig.top_params.input_shape[1];
-        }
+    const initPotentiallyBlockedVariables = function (modelConfig) {
+        $scope.retrained = modelConfig.retrained || false;
+        let poolingDefault = $scope.retrained ? modelConfig.top_params.pooling : "avg";
+        let imageWidthDefault = $scope.retrained ? modelConfig.top_params.input_shape[0] : 197;
+        let imageHeightDefault = $scope.retrained ? modelConfig.top_params.input_shape[1] : 197;
         utils.initVariable($scope, 'model_pooling', poolingDefault);
         utils.initVariable($scope, 'image_width', imageWidthDefault);
         utils.initVariable($scope, 'image_height', imageHeightDefault);
     };
 
-    const initVariables = function() {
+    const initVariables = function () {
         utils.initVariable($scope, "random_seed", 1337);
         utils.initVariable($scope, "train_ratio", 0.8);
         utils.initVariable($scope, "gpu_usage", 'all');
@@ -81,7 +65,7 @@ app.controller('retrainRecipeController', function($scope, utils) {
         utils.initVariable($scope, 'tensorboard', false);
     };
 
-    const init = function() {
+    const init = function () {
         $scope.finishedLoading = false;
         $scope.showAdvancedParams = false;
         initVariables();

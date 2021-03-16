@@ -31,3 +31,21 @@ COMPILE_METRICS = ["accuracy"]
 
 GPU_MEMORY_LIMIT = "memory_limit"
 GPU_MEMORY_GROWTH = "memory_growth"
+
+POOLING_OPTIONS = [
+    ["No pooling", "None"],
+    ["Average", "avg"],
+    ["Maximum", "max"]
+]
+
+LAYERS_OPTIONS = [
+    ["Last layer", "last"],
+    ["All layers", "all"],
+    ["N last layers", "n_last"]
+]
+
+OPTIMIZER_OPTIONS = [
+    ["Adam", "adam"],
+    ["Adagrad", "adagrad"],
+    ["SGD", "sgd"]
+]

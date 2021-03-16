@@ -9,11 +9,9 @@
                ng-model="config.extract_layer_index"
                ng-options="l.index as l.name for l in layers">
             </select>
-         </div>
-      </div>
-      <div class="control-group">
-         <div class="link-like" ng-click="toggleAdvancedParams()">
-            {{getShowHideAdvancedParamsMessage()}}
+             <button class="btn btn--secondary" ng-click="toggleAdvancedParams()">
+                 {{getShowHideAdvancedParamsMessage()}}
+             </button>
          </div>
       </div>
       <div ng-show="showAdvancedParams">

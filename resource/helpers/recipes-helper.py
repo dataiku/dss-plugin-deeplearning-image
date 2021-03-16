@@ -65,9 +65,15 @@ def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
     model_info = get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
     label_dataset = get_label_dataset(inputs)
-    columns = [c["name"] for c in label_dataset.read_schema()]
+    label_columns = [c["name"] for c in label_dataset.read_schema()]
     model_config = get_model_config(model_folder)
-    return {"summary": model_info["summary"], "columns": columns, "model_config": model_config}
+    return {
+        "model_summary": model_info["summary"],
+        "label_columns": label_columns,
+        "model_config": model_config,
+        "pooling_options": constants.POOLING_OPTIONS,
+        "layers_options": constants.LAYERS_OPTIONS,
+        "optimizer_options": constants.OPTIMIZER_OPTIONS}
 
 
 def get_model_folder_path(inputs):
@@ -87,8 +93,10 @@ def get_label_dataset(inputs):
 def get_input_name_from_role(inputs, role):
     return [inp for inp in inputs if inp["role"] == role][0]["fullName"]
 
+
 def add_plugin_id(response):
     response['pluginId'] = constants.PLUGIN_ID
+
 
 def get_info_gpu():
     response = {}
@@ -96,11 +104,11 @@ def get_info_gpu():
     response["can_use_gpu"] = len(response["gpu_list"]) > 0
     response["gpu_usage_choices"] = [
         {
-            'label': 'Use all GPUs',
+            'label': 'Use all GPU(s)',
             'value': 'all'
         },
         {
-            'label': 'Use a custom set of GPUs...',
+            'label': 'Use a custom set of GPU(s)...',
             'value': 'custom'
         }
     ]
