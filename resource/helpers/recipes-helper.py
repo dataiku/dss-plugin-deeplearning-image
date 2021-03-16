@@ -18,8 +18,7 @@ def do(payload, config, plugin_config, inputs):
 
     if payload["method"] == "get-info-retrain":
         response = get_info_retrain(inputs)
-
-    add_gpu_options_to_resp(response)
+    response["gpu_info"] = get_info_gpu()
     add_plugin_id(response)
     return response
 
@@ -91,7 +90,8 @@ def get_input_name_from_role(inputs, role):
 def add_plugin_id(response):
     response['pluginId'] = constants.PLUGIN_ID
 
-def add_gpu_options_to_resp(response):
+def get_info_gpu():
+    response = {}
     response["gpu_list"] = get_gpu_list()
     response["can_use_gpu"] = len(response["gpu_list"]) > 0
     response["gpu_usage_choices"] = [
@@ -118,3 +118,4 @@ def add_gpu_options_to_resp(response):
             'value': constants.GPU_MEMORY_LIMIT
         }
     ]
+    return response

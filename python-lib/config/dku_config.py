@@ -22,7 +22,7 @@ class DkuConfig(object):
         should_use_gpu = self.config.get('should_use_gpu', False)
         gpu_usage = self.config.get('gpu_usage')
         gpu_list = self.config.get('gpu_list') if gpu_usage == 'custom' else []
-        if gpu_usage == 'custom' and not gpu_list:
+        if should_use_gpu and gpu_usage == 'custom' and not gpu_list:
             raise ValueError('You have to select at least one GPU, or uncheck "Use GPU" checkbox.')
         gpu_memory_allocation_mode = self.config.get('gpu_memory_allocation_mode')
         gpu_memory_limit = self.config.get('gpu_memory_limit')

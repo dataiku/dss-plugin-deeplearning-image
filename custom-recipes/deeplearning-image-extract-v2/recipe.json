@@ -42,6 +42,6 @@
         }
     ],
     "paramsTemplate" : "templates/extract-recipe-template.html",
-    "paramsModule" : "deepLearningImageTools.extract",
+    "paramsModule" : "deepLearningImageTools.recipe",
     "paramsPythonSetup": "helpers/recipes-helper.py"
 }

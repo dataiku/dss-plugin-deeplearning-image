@@ -41,6 +41,6 @@
         }
     ],
     "paramsTemplate" : "templates/scoring-recipe-template.html",
-    "paramsModule" : "deepLearningImageTools.scoring",
+    "paramsModule" : "deepLearningImageTools.recipe",
     "paramsPythonSetup": "helpers/recipes-helper.py"
 }
