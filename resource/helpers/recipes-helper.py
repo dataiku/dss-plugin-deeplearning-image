@@ -118,7 +118,7 @@ def get_info_gpu():
             'value': 'all'
         },
         {
-            'label': 'Allocate only as much GPU memory as needed',
+            'label': 'Allocate memory automatically',
             'value': constants.GPU_MEMORY_GROWTH
         },
         {
