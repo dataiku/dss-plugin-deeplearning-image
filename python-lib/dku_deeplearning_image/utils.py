@@ -79,7 +79,7 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory_limit_ratio=None):
-    log_info("load_gpu_options")
+    log_info("Loading GPU Options")
     if should_use_gpu and can_use_gpu():
         log_info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
