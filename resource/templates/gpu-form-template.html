@@ -1,6 +1,5 @@
 <div ng-controller="gpuController">
-    <!-- <div ng-if="gpuInfo.can_use_gpu"> -->
-    <div>
+    <div ng-if="gpuInfo.can_use_gpu">
         <h2 class="settings-section-title">GPU</h2>
         <div class="control-group">
             <label class="control-label">Use GPU</label>
@@ -8,8 +7,7 @@
                 <input name="should_use_gpu" type="checkbox" ng-model="config.should_use_gpu"/>
             </div>
         </div>
-        <!-- <div ng-show="gpuInfo.can_use_gpu && config.should_use_gpu"> -->
-        <div ng-show="config.should_use_gpu">
+        <div ng-show="gpuInfo.can_use_gpu && config.should_use_gpu">
             <div class="control-group">
                 <label class="control-label">GPU Usage</label>
                 <div class="controls">
