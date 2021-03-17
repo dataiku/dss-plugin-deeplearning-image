@@ -1,8 +1,10 @@
 import os
-from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras import regularizers
 import tensorflow as tf
+
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tensorflow.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
+from tensorflow.keras import regularizers
+
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
 import threading
@@ -75,7 +77,7 @@ def deactivate_gpu():
 
 
 def can_use_gpu():
-    return len(tf.config.experimental.list_physical_devices('GPU')) > 0
+    return len(tf.config.list_physical_devices('GPU')) > 0
 
 
 def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory_limit_ratio=None):
@@ -92,9 +94,9 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
             for gpu in gpus_to_use:
                 memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
                 log_info(f"Restraining GPU {gpu} to {memory_limit} Mo ({memory_limit_ratio}%)")
-                tf.config.experimental.set_virtual_device_configuration(
+                tf.config.set_logical_device_configuration(
                     gpu,
-                    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
+                    [tf.config.LogicalDeviceConfiguration(memory_limit=int(memory_limit))]
                 )
         elif gpu_memory_allocation_mode == constants.GPU_MEMORY_GROWTH:
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
