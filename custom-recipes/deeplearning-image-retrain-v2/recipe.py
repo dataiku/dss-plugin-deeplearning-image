@@ -1,10 +1,12 @@
-import dku_deeplearning_image.utils as utils
-import dku_deeplearning_image.constants as constants
 from dataiku.customrecipe import get_recipe_config
 
-from recipe import RetrainRecipe
-from config import RetrainConfig
-from utils_objects import DkuFileManager
+import dku_deeplearning_image.utils as utils
+import dku_deeplearning_image.dku_constants as constants
+from dku_deeplearning_image.config_handler import create_dku_config
+
+
+from dku_deeplearning_image.recipes import RetrainRecipe
+from dku_deeplearning_image.misc_objects import DkuFileManager
 
 
 def format_label_df(label_dataset, col_filename, col_label):
@@ -30,10 +32,10 @@ def save_output_model(output_folder, model):
     output_model.save_to_folder()
 
 
-@utils.log_func(txt='recipe')
+@utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
-    config = RetrainConfig(recipe_config)
+    config = create_dku_config(recipe_config, constants.RETRAIN)
     image_folder, label_dataset, model_folder, output_folder = get_input_output()
     label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
     recipe = RetrainRecipe(config)

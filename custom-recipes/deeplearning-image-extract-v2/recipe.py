@@ -1,10 +1,12 @@
 import pandas as pd
-import dku_deeplearning_image.utils as utils
 from dataiku.customrecipe import get_recipe_config
 
-from recipe import ExtractRecipe
-from config import ExtractConfig
-from utils_objects import DkuFileManager
+import dku_deeplearning_image.utils as utils
+import dku_deeplearning_image.dku_constants as constants
+from dku_deeplearning_image.config_handler import create_dku_config
+
+from dku_deeplearning_image.recipes import ExtractRecipe
+from dku_deeplearning_image.misc_objects import DkuFileManager
 
 
 def get_input_output():
@@ -22,10 +24,10 @@ def write_output_dataset(output_dataset, image_folder, features):
     output_dataset.write_with_schema(pd.DataFrame(output_df))
 
 
-@utils.log_func(txt='recipe')
+@utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
-    config = ExtractConfig(recipe_config)
+    config = create_dku_config(recipe_config, constants.EXTRACT)
 
     image_folder, model_folder, output_dataset = get_input_output()
     recipe = ExtractRecipe(config)

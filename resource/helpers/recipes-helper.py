@@ -1,5 +1,5 @@
 import dataiku
-import dku_deeplearning_image.constants as constants
+import dku_deeplearning_image.dku_constants as constants
 import dku_deeplearning_image.utils as utils
 import GPUtil
 import json
@@ -51,7 +51,7 @@ def get_model_info(model_folder, goal):
 
 def get_info_about_model(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = get_model_info(model_folder, goal=constants.SCORING)
+    model_info = get_model_info(model_folder, goal=constants.SCORE)
     config = get_model_config(model_folder)
 
     return {

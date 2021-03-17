@@ -1,8 +1,8 @@
 import dataiku
 from dataiku.runnables import Runnable
-from config import ApiDeployerConfig
-import api_designer_utils.utils as utils
-import dku_deeplearning_image.constants as constants
+from dku_deeplearning_image.config_handler import create_dku_config
+import dku_deeplearning_image.api_designer.api_designer_utils as utils
+import dku_deeplearning_image.dku_constants as constants
 
 
 class MyRunnable(Runnable):
@@ -18,7 +18,7 @@ class MyRunnable(Runnable):
         return None
 
     def run(self, progress_callback):
-        config = ApiDeployerConfig(self.config, project=self.project, client=self.client)
+        config = create_dku_config(self.config, constants.API_DESIGNER, self.project)
         model_folder_id = config.get("model_folder_id")
         endpoint_id = config.get("endpoint_id")
         service_id = config.get("service_id")
