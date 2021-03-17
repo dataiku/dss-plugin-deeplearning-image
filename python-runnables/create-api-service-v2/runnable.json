@@ -59,10 +59,51 @@
             "type": "SEPARATOR"
         },
         {
+            "name": "code_env_options",
+            "label": "Code environment options",
+            "type": "SELECT",
+            "getChoicesFromPython": true,
+            "defaultValue": "existing"
+        },
+        {
             "name": "code_env_name",
             "label": "Environment name",
             "type": "CODE_ENV",
-            "description":"Choose a code env that has all the required packages."
+            "description":"Must be a PYTHON3 env containing the required packages: scikit-learn==0.23.1, tensorflow==2.2.0, keras==2.3.1, h5py>=2.10.0, Pillow==7.2.0, tables==3.6.1, keras-preprocessing==1.1.0",
+            "visibilityCondition" : "model.code_env_options == 'existing'",
+            "mandatory": true
+        },
+        {
+            "name": "new_code_env_name",
+            "type": "STRING",
+            "label": "Code environment name",
+            "visibilityCondition" : "model.code_env_options == 'new'",
+            "mandatory": true
+        },
+        {
+            "name": "python_interpreter",
+            "type": "SELECT",
+            "label": "Python interpreter",
+            "selectChoices": [
+                {
+                    "value": "PYTHON36",
+                    "label": "Python 3.6 (from PATH)"
+                },
+                {
+                    "value": "CUSTOM",
+                    "label": "Custom (lookup in PATH)"
+                }
+            ],
+            "defaultValue": "PYTHON36",
+            "visibilityCondition" : "model.code_env_options == 'new'",
+            "mandatory": true
+        },
+        {
+            "name": "custom_interpreter",
+            "type": "STRING",
+            "label": "Python executable",
+            "mandatory": true,
+            "visibilityCondition": "model.code_env_options == 'new' && model.python_interpreter == 'CUSTOM'"
         },
         {
             "name": "sep4",

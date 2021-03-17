@@ -9,7 +9,7 @@ class ExtractRecipe(DkuRecipe):
 
     def load_dku_model(self, model_folder):
         self.dku_model = DkuModel(model_folder)
-        self.dku_model.load_model(self.config, constants.SCORING)
+        self.dku_model.load_model(self.config, constants.SCORE)
         self.dku_model.truncate_output(self.config.extract_layer_index)
 
     def compute(self, images_folder, model_folder):

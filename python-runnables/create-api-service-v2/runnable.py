@@ -1,6 +1,6 @@
 import dataiku
 from dataiku.runnables import Runnable
-from config import ApiDeployerConfig
+from dku_deeplearning_image.config import create_dku_config
 import api_designer_utils.utils as utils
 import dku_deeplearning_image.constants as constants
 
@@ -18,7 +18,7 @@ class MyRunnable(Runnable):
         return None
 
     def run(self, progress_callback):
-        config = ApiDeployerConfig(self.config, project=self.project, client=self.client)
+        config = create_dku_config(self.config, constants.API_DESIGNER, self.project)
         model_folder_id = config.get("model_folder_id")
         endpoint_id = config.get("endpoint_id")
         service_id = config.get("service_id")
@@ -28,12 +28,18 @@ class MyRunnable(Runnable):
             create_new_service=config.get("create_new_service"),
             service_id=service_id
         )
-
+        code_env = utils.create_or_get_code_env(
+            project_key=self.project_key,
+            client=self.client,
+            create_new_code_env=config.get("create_new_code_env"),
+            env_name=config.get("code_env_name"),
+            python_interpreter=config.get("python_interpreter"),
+            custom_interpreter=config.get("custom_interpreter"))
         endpoint_settings = utils.build_model_endpoint_settings(
             plugin=self.plugin,
             project_key=self.project_key,
             endpoint_id=endpoint_id,
-            code_env_name=config.get("code_env_name"),
+            code_env_name=code_env.env_name,
             model_folder_id=model_folder_id,
             max_nb_labels=config.get('max_nb_labels'),
             min_threshold=config.get('min_threshold'))

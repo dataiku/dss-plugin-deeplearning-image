@@ -5,6 +5,7 @@ import logging
 import base64
 import zipfile
 from io import BytesIO
+from dataikuapi.utils import DataikuException
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO,  # avoid getting log from 3rd party module
@@ -40,13 +41,24 @@ def copy_plugin_to_dss_folder_old(plugin, folder_id, project_key):
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
 
+def get_plugin_root_path(project_key):
+    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
+    installed_path = os.path.join(root_path, constants.PLUGIN_INSTALLED_PATH)
+    dev_path = os.path.join(root_path, constants.PLUGIN_DEV_PATH)
+
+    if os.path.exists(installed_path):
+        return installed_path
+    elif os.path.exists(dev_path):
+        return dev_path
+    else:
+        raise IOError('The plugin is not installed.')
+
+
 def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
     """
     Copy python-lib from a plugin to a managed folder
     """
-
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    plugin_lib_path = os.path.join(root_path, constants.PLUGIN_LIB_PATH)
+    plugin_lib_path = os.path.join(get_plugin_root_path(project_key), constants.PYTHON_LIB_DIR)
 
     full_files = []
     for root, dirs, files in os.walk(plugin_lib_path):
@@ -70,11 +82,24 @@ def copy_plugin_to_dss_folder(plugin, folder_id, project_key, force_copy=False):
 
     folder.upload_stream(dest_dir, zip_file.getvalue())
 
+
 def create_or_get_api_service(project, create_new_service, service_id=None):
     """
     Create or get an api service dss object and return it
     """
     return (project.create_api_service if create_new_service else project.get_api_service)(service_id)
+
+
+def update_code_env_packages(project_key, code_env):
+    env_def = code_env.get_definition()
+
+    spec_path = os.path.join(get_plugin_root_path(project_key), constants.SPEC_PATH)
+
+    libraries_to_install = open(spec_path, encoding="utf-8").read()
+    env_def['specPackageList'] = libraries_to_install
+    env_def['desc']['installCorePackages'] = True
+    code_env.set_definition(env_def)
+    code_env.update_packages()
 
 
 def create_or_get_code_env(project_key, client, create_new_code_env, env_name, python_interpreter, custom_interpreter):
@@ -91,26 +116,18 @@ def create_or_get_code_env(project_key, client, create_new_code_env, env_name, p
             )
         except Exception as err:
             raise Exception('Error when creating the code env.'
-                            'It is often due to the fact that the selected interpreter does not exist.')
+                            'It is often due to the fact that the selected interpreter does not exist.\n'
+                            'Original error : {}'.format(err))
     my_env = client.get_code_env('PYTHON', env_name)
-    env_def = my_env.get_definition()
-
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    spec_path = os.path.join(root_path, constants.SPEC_PATH)
-
-    libraries_to_install = open(spec_path,  encoding="utf-8").read()
-    env_def['specPackageList'] = libraries_to_install
-    env_def['desc']['installCorePackages'] = True
-    my_env.set_definition(env_def)
-    my_env.update_packages()
+    if create_new_code_env:
+        update_code_env_packages(project_key, my_env)
     return my_env
 
 
 def get_test_queries(project_key):
     formatted_queries = []
     for query in constants.TEST_QUERIES:
-        root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-        test_img_path = os.path.join(root_path, constants.TEST_IMG_DIR, query['img_filename'])
+        test_img_path = os.path.join(get_plugin_root_path(project_key), constants.TEST_IMG_PATH, query['img_filename'])
         test_img = open(test_img_path, "rb").read()
         test_img_64 = base64.encodebytes(test_img).decode('utf-8')
         formatted_queries.append({
@@ -138,8 +155,7 @@ def build_model_endpoint_settings(plugin, project_key, endpoint_id, code_env_nam
 
 
 def format_code_template(project_key, **kwargs):
-    root_path = dataiku.get_custom_variables(project_key=project_key)['dip.home']
-    template_path = os.path.join(root_path, constants.TEMPLATE_PATH)
+    template_path = os.path.join(get_plugin_root_path(project_key), constants.TEMPLATE_PATH)
     template_content = open(template_path, encoding='utf-8').read()
     return template_content.format(**kwargs)
 
@@ -172,3 +188,13 @@ def get_codeenv_output_msg(plugin, env_name):
     libraries_to_install = plugin.get_file(constants.SPEC_PATH).read().decode('utf-8')
     return "The code env {} has been successfully created with following packages : \n {}.".format(
         env_name, libraries_to_install)
+
+
+def is_user_admin():
+    try:
+        _ = dataiku.api_client().list_code_envs()
+        return True
+    except DataikuException as err:
+        logger.info("Could not list code envs. This probably means the user is not an admin."
+                    "Original error: {}".format(err))
+        return False
