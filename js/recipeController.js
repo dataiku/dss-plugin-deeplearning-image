@@ -147,7 +147,7 @@ app.controller('extractRecipeController', function ($scope, utils) {
 app.controller('gpuController', function ($scope, utils) {
     const initVariables = function () {
         utils.initVariable($scope, "gpu_usage", 'all');
-        utils.initVariable($scope, "gpu_memory_allocation_mode", 'all');
+        utils.initVariable($scope, "gpu_memory_allocation_mode", 'memory_growth');
         utils.initVariable($scope, "gpu_memory_limit", 100);
         utils.initVariable($scope, "should_use_gpu", $scope.gpuInfo.can_use_gpu);
     };
