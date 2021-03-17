@@ -52,7 +52,7 @@ app.controller('retrainRecipeController', function ($scope, utils) {
         $scope.poolingOptions = data.pooling_options;
         $scope.layersOptions = data.layers_options;
         $scope.optimizerOptions = data.optimizer_options;
-        $scope.labelColumns = data.columns;
+        $scope.labelColumns = data.label_columns;
         $scope.modelSummary = data.model_summary;
         initPotentiallyBlockedVariables(data.model_config);
     };
