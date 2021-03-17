@@ -35,7 +35,8 @@ def __get_custom_assets_zip_provider():
 
 def init_flags(loader_list):
     parser = ArgumentParser()
-    map(lambda x: x.define_flags(parser), loader_list)
+    for loader in loader_list:
+        loader.define_flags(parser)
     flags = parser.parse_args([])
     return flags
 
