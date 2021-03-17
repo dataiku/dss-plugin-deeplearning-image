@@ -15,7 +15,7 @@ def add_gpu_config(dku_config, config):
         value=gpu_list,
         checks=[{
             "type": "custom",
-            "cond": dku_config.should_use_gpu and (gpu_list or dku_config.gpu_usage != "custom"),
+            "cond": (not dku_config.should_use_gpu) or gpu_list or dku_config.gpu_usage != "custom",
             "err_msg": 'You have to select at least one GPU, or uncheck "Use GPU" checkbox.'
         }])
     dku_config.add_param(
