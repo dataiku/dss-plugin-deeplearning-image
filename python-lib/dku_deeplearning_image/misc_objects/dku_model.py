@@ -80,7 +80,6 @@ class DkuModel(object):
 
     def update_attributes(self, **kwargs):
         for attr, value in kwargs.items():
-            utils.dbg_msg(kwargs, 'kwargs')
             if self.hasattr(attr):
                 self.setattr(attr, value)
 
