@@ -167,7 +167,7 @@ app.directive('gpuForm', function () {
 
 app.service("utils", function () {
     this.initVariable = function ($scope, varName, initValue) {
-        if ($scope.config[varName]) {
+        if ($scope.config[varName] !== undefined) {
             console.log(`Default value for ${varName}.`);
             $scope.config[varName] = $scope.config[varName]
         } else {
