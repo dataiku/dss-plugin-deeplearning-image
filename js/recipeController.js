@@ -167,14 +167,8 @@ app.directive('gpuForm', function () {
 
 app.service("utils", function () {
     this.initVariable = function ($scope, varName, initValue) {
-        if ($scope.config[varName] !== undefined) {
-            console.log(`Default value for ${varName}.`);
-            $scope.config[varName] = $scope.config[varName]
-        } else {
-            console.log(`No default value for ${varName} (setting ${initValue}}.`);
-            $scope.config[varName] = initValue;
-        }
-
+        const isVarDefined = $scope.config[varName] !== undefined;
+        $scope.config[varName] = isVarDefined ? $scope.config[varName] : initValue;
     };
 
     this.retrieveInfoBackend = function ($scope, method, updateScopeData) {
