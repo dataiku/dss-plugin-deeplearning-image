@@ -150,7 +150,7 @@
         <div class="control-group">
             <label class="control-label">Data Augmentation</label>
             <div class="controls">
-                <input name=should_use_gpu type="checkbox" ng-model="config.data_augmentation"/>
+                <input name="data_augmentation" type="checkbox" ng-model="config.data_augmentation"/>
             </div>
         </div>
         <div ng-show="config.data_augmentation">
@@ -180,7 +180,7 @@
         <div class="control-group">
             <label class="control-label">Tensorboard</label>
             <div class="controls">
-                <input name=should_use_gpu type="checkbox" ng-model="config.tensorboard"/>
+                <input name="tensorboard" type="checkbox" ng-model="config.tensorboard"/>
                 <span class="help-inline">You can access tensorboard via a DSS webapp</span>
             </div>
         </div>
