@@ -13,9 +13,9 @@ from datetime import datetime
 
 import sys
 import pandas as pd
-import logging
 from PIL import UnidentifiedImageError
 
+import logging
 logger = logging.getLogger(__name__)
 
 # Support Truncated Images with PIL
@@ -78,9 +78,9 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
-    log_info("load_gpu_options")
+    logger.info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        log_info("should use GPU")
+        logger.info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         if memory_limit:
@@ -106,17 +106,7 @@ def get_weights_filename(with_top=False):
 
 def get_file_path(folder_path, file_name):
     # Be careful to enforce that folder_path and file_name are actually strings
-    return os.path.join(safe_str(folder_path), safe_str(file_name))
-
-
-def safe_str(val):
-    if sys.version_info > (3, 0):
-        return str(val)
-    else:
-        if isinstance(val, unicode):
-            return val.encode("utf-8")
-        else:
-            return str(val)
+    return os.path.join(str(folder_path), str(file_name))
 
 
 def get_cached_file_from_folder(folder, file_path):
@@ -125,9 +115,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                log_info("cached file %s" % file_path)
+                logger.info("cached file %s" % file_path)
     else:
-        log_info("read from cache %s" % file_path)
+        logger.info("read from cache %s" % file_path)
     return filename
 
 
@@ -138,7 +128,7 @@ def get_model_config_from_file(model_folder):
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
     output["images"] = images_paths
-    log_info("------->" + str(output))
+    logger.info("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output
@@ -185,7 +175,7 @@ def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = load_img(img_path, target_size=img_shape)
     except UnidentifiedImageError as err:
-        log_warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        logger.warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
         return
     array = img_to_array(img)
     array = preprocessing(array)
@@ -228,14 +218,6 @@ def dbg_msg(msg, title=''):
     logger.debug('DEBUG : {}'.format(title).center(100, '-'))
     logger.debug(msg)
     logger.debug(''.center(100, '-'))
-
-
-def log_info(*args):
-    logger.info(*args)
-
-
-def log_warning(*args):
-    logger.warning(*args)
 
 ###############################################################
 ## THREADSAFE GENERATOR / ITERATOR
