@@ -1,3 +1,7 @@
+// Couldn't find a way to separate the controllers/services in their own file
+// as there are some problems of loading (The file that creates the module should be loaded before any other
+// and I could not find a way to do so)
+
 const app = angular.module('deepLearningImageTools.recipe', []);
 
 app.controller('scoringRecipeController', function ($scope, utils) {
