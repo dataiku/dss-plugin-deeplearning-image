@@ -10,4 +10,5 @@ class DkuRecipe(object):
         utils.set_gpu_options(
             should_use_gpu=self.config.should_use_gpu,
             gpu_list=self.config.gpu_list,
-            memory_limit=self.config.gpu_memory_limit)
+            gpu_memory_allocation_mode=self.config.gpu_memory_allocation_mode,
+            memory_limit_ratio=self.config.gpu_memory_limit)

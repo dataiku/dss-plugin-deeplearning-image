@@ -14,7 +14,7 @@
     height: 400px;
 }
 
-.several-controls .controls + .controls{
+.several-controls .controls + .controls {
     margin-top: 5px;
 }
 

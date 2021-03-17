@@ -18,8 +18,7 @@ def do(payload, config, plugin_config, inputs):
 
     if payload["method"] == "get-info-retrain":
         response = get_info_retrain(inputs)
-
-    add_gpu_options_to_resp(response)
+    response["gpu_info"] = get_info_gpu()
     add_plugin_id(response)
     return response
 
@@ -66,9 +65,15 @@ def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
     model_info = get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
     label_dataset = get_label_dataset(inputs)
-    columns = [c["name"] for c in label_dataset.read_schema()]
+    label_columns = [c["name"] for c in label_dataset.read_schema()]
     model_config = get_model_config(model_folder)
-    return {"summary": model_info["summary"], "columns": columns, "model_config": model_config}
+    return {
+        "model_summary": model_info["summary"],
+        "label_columns": label_columns,
+        "model_config": model_config,
+        "pooling_options": constants.POOLING_OPTIONS,
+        "layers_options": constants.LAYERS_OPTIONS,
+        "optimizer_options": constants.OPTIMIZER_OPTIONS}
 
 
 def get_model_folder_path(inputs):
@@ -88,29 +93,37 @@ def get_label_dataset(inputs):
 def get_input_name_from_role(inputs, role):
     return [inp for inp in inputs if inp["role"] == role][0]["fullName"]
 
+
 def add_plugin_id(response):
     response['pluginId'] = constants.PLUGIN_ID
 
-def add_gpu_options_to_resp(response):
+
+def get_info_gpu():
+    response = {}
     response["gpu_list"] = get_gpu_list()
     response["can_use_gpu"] = len(response["gpu_list"]) > 0
     response["gpu_usage_choices"] = [
         {
-            'label': 'Use all GPUs',
+            'label': 'Use all GPU(s)',
             'value': 'all'
         },
         {
-            'label': 'Use a custom set of GPUs...',
+            'label': 'Use a custom set of GPU(s)...',
             'value': 'custom'
         }
     ]
-    response["gpu_memory_choices"] = [
+    response["gpu_memory_allocation_mode"] = [
         {
             'label': 'No limitation',
             'value': 'all'
         },
         {
+            'label': 'Allocate memory automatically',
+            'value': constants.GPU_MEMORY_GROWTH
+        },
+        {
             'label': 'Set a custom memory limit...',
-            'value': 'custom'
+            'value': constants.GPU_MEMORY_LIMIT
         }
     ]
+    return response

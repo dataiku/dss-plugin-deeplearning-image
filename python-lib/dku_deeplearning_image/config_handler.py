@@ -19,11 +19,11 @@ def add_gpu_config(dku_config, config):
             "err_msg": 'You have to select at least one GPU, or uncheck "Use GPU" checkbox.'
         }])
     dku_config.add_param(
-        name='gpu_memory',
-        value=config.get('gpu_memory'))
+        name='gpu_memory_allocation_mode',
+        value=config.get('gpu_memory_allocation_mode'))
     dku_config.add_param(
         name='gpu_memory_limit',
-        value=config.get('memory_limit') if dku_config.gpu_memory == 'custom' else 0)
+        value=config.get('gpu_memory_limit') if dku_config.gpu_memory_allocation_mode == 'memory_limit' else 0)
 
 
 def add_score_recipe_config(dku_config, config):
