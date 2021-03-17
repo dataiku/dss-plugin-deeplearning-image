@@ -10,21 +10,16 @@ import json
 from collections import OrderedDict
 import numpy as np
 from datetime import datetime
-
 import pandas as pd
-from PIL import UnidentifiedImageError
-
+from PIL import UnidentifiedImageError, ImageFile
 import logging
+
 logger = logging.getLogger(__name__)
-
-# Support Truncated Images with PIL
-from PIL import ImageFile
-
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 ###################################################################################################################
-## MODEL UTILS
+# MODEL UTILS
 ###################################################################################################################
 
 def add_pooling(model_output, pooling):
@@ -51,13 +46,15 @@ def get_regularizer(reg):
             return regularizers.l1(reg["l1"])
     return None
 
+
 ###################################################################################################################
-## MODELS LIST
+# MODELS LIST
 ###################################################################################################################
 
 
-# INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
-#        with the label architecture_trainedon to make it available, along with new a constant in python-lib/constants.py
+# INFO : when adding a new architecture, you must add a select-option in
+# python-runnables/dl-toolbox-download-models/runnable.json with the label architecture_trainedon to make it available,
+# along with new a constant in python-lib/constants.py
 
 
 def is_keras_application(architecture):
@@ -65,7 +62,7 @@ def is_keras_application(architecture):
 
 
 ###############################################################
-## GPU HANDLING
+# GPU HANDLING
 ###############################################################
 
 def deactivate_gpu():
@@ -92,12 +89,15 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     else:
         deactivate_gpu()
 
+
 def get_tf_strategy():
     return tf.distribute.MirroredStrategy()
 
+
 ###################################################################################################################
-## FILES LOGIC
+# FILES LOGIC
 ###################################################################################################################
+
 
 def get_weights_filename(with_top=False):
     return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else constants.NOTOP_SUFFIX)
@@ -134,7 +134,7 @@ def build_prediction_output_df(images_paths, predictions):
 
 
 ###################################################################################################################
-## MISC.
+# MISC.
 ###################################################################################################################
 def log_func(txt):
     def inner(f):
@@ -218,18 +218,23 @@ def dbg_msg(msg, title=''):
     logger.debug(msg)
     logger.debug(''.center(100, '-'))
 
+
 ###############################################################
-## THREADSAFE GENERATOR / ITERATOR
-## Inspired by :
-##    https://github.com/fchollet/keras/issues/1638
-##    http://anandology.com/blog/using-iterators-and-generators/
+# THREADSAFE GENERATOR / ITERATOR
+# Inspired by :
+#    https://github.com/fchollet/keras/issues/1638
+#    http://anandology.com/blog/using-iterators-and-generators/
 ###############################################################
 
+
 ''' Make the generators threadsafe in case of multiple threads '''
+
+
 class threadsafe_iter:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
