@@ -8,19 +8,19 @@ def add_integration_test(user_dss_clients, scenario_id):
     dss_scenario.run(user_dss_clients, project_key=TEST_PROJECT_KEY, scenario_id=scenario_id)
 
 
-def test_run_tensorboard_start(user_dss_clients):
+def test_run_tensorboard(user_dss_clients):
     add_integration_test(user_dss_clients, "Webapp_-_Tensorboard")
 
 
-def test_extract_recipe(user_dss_clients):
+def test_extract_features(user_dss_clients):
     add_integration_test(user_dss_clients, "Recipe_-_Extract_features")
 
 
-def test_score_recipe(user_dss_clients):
+def test_classify_images(user_dss_clients):
     add_integration_test(user_dss_clients, "Recipe_-_Classify_images")
 
 
-def test_retrain_recipe(user_dss_clients):
+def test_retrain_model(user_dss_clients):
     add_integration_test(user_dss_clients, "Recipe_-_Retrain_model")
 
 
