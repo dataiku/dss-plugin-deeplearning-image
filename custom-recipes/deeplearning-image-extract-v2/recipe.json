@@ -1,4 +1,3 @@
-
 {
     "meta" : {
         "label" : "Images feature extraction (v2)",
@@ -7,14 +6,12 @@
         "tags" : ["transfer_learning", "deep_learning", "feature_extractor", "images"],
         "icon" : "icon-sitemap"
     },
-
     "kind" : "PYTHON",
-
     "inputRoles" : [
         {
             "name": "image_folder",
             "label": "Image folder",
-            "description": "The folder containing the images to be scored.",
+            "description": "The folder containing the images from which the features will be extracted.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,
@@ -23,7 +20,7 @@
         {
             "name": "model_folder",
             "label": "Model folder",
-            "description": "The folder containing the model.",
+            "description": "The folder containing the model downloaded with the plugin macro.",
             "arity": "UNARY",
             "required": true,
             "acceptsManagedFolder": true,

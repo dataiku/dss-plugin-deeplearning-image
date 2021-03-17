@@ -1,8 +1,8 @@
 import dataiku
 from dataiku.runnables import Runnable
-from dku_deeplearning_image.config import create_dku_config
-import api_designer_utils.utils as utils
-import dku_deeplearning_image.constants as constants
+from dku_deeplearning_image.config_handler import create_dku_config
+import dku_deeplearning_image.api_designer.api_designer_utils as utils
+import dku_deeplearning_image.dku_constants as constants
 
 
 class MyRunnable(Runnable):

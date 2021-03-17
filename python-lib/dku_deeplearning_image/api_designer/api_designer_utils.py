@@ -1,5 +1,5 @@
 import dataiku
-import api_designer_utils.constants as constants
+import dku_deeplearning_image.api_designer.api_designer_constants as constants
 import os
 import logging
 import base64
