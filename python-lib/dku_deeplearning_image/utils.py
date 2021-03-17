@@ -11,7 +11,6 @@ from collections import OrderedDict
 import numpy as np
 from datetime import datetime
 
-import sys
 import pandas as pd
 from PIL import UnidentifiedImageError
 
