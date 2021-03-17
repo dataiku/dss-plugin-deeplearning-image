@@ -4,9 +4,9 @@ import dku_deeplearning_image.utils as utils
 from dku_deeplearning_image.misc_objects import DkuImageGenerator
 import dku_deeplearning_image.dku_constants as constants
 from sklearn.model_selection import train_test_split
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras import optimizers
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from keras.preprocessing.image import ImageDataGenerator
+from keras import optimizers
+from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
 
