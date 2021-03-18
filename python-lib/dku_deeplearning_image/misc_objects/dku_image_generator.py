@@ -3,6 +3,9 @@ import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 import math
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 def threadsafe_generator(f):
     """A decorator that takes a generator function and makes it thread-safe.
@@ -49,7 +52,7 @@ class DkuImageGenerator(object):
                 X_batch = [image]
                 y_batch = [label_index]
         except IOError as e:
-            utils.log_info("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
+            logger.info("Cannot read the image '{}', skipping it. Error: {}".format(img_filename, e))
             X_batch, y_batch = [], []
         return X_batch, y_batch
 

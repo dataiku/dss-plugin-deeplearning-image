@@ -16,11 +16,13 @@ import base64
 
 import copy as cp
 
+import logging
+logger = logging.getLogger(__name__)
+
 
 class DkuModel(object):
     def __init__(self, folder, is_empty=False):
         self.folder = folder
-        files = self.folder.list_paths_in_partition()
         if not is_empty:
             if utils.is_path_in_folder(constants.CONFIG_FILE, self.folder):
                 self.load_config()
@@ -164,12 +166,12 @@ class DkuModel(object):
             content=json.dumps(model_info))
 
     def save_to_folder(self):
-        utils.log_info("Starting model saving...")
+        logger.info("Starting model saving...")
         self.save_config()
         self.save_label_df()
         self.save_weights()
         self.save_info()
-        utils.log_info("Model has been successfully saved.")
+        logger.info("Model has been successfully saved.")
 
     def get_application(self):
         dku_application_params = list(filter(lambda x: x['name'] == self.architecture, APPLICATIONS))
@@ -196,7 +198,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            utils.log_info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
+            logger.info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
@@ -227,7 +229,7 @@ class DkuModel(object):
             try:
                 images.append(images_folder.get_download_stream(path))
             except IOError as e:
-                utils.log_warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
+                logging.warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
                 images.append(None)
         return self.score(images, **kwargs)
 
@@ -264,7 +266,7 @@ class DkuModel(object):
             results["prediction"].extend(prediction_batch)
             results["error"].extend(error_batch)
             n += 1
-            utils.log_info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
+            logger.info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
         return results
 
     def get_predictions_for_batch(self, batch, classify, limit, min_threshold):

@@ -8,6 +8,4 @@
 .htmlcov
 .DS_Store
 .idea
-
-tests/python/unit/tmp
-tests/python/unit/env
+env
