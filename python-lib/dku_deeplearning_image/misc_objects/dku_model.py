@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import tables
 from keras.layers import Dense
-from keras.models import Model
+from keras.models import Model, clone_model
 import base64
 
 import copy as cp
@@ -49,7 +49,7 @@ class DkuModel(object):
             include_top=include_top,
             input_shape=input_shape
         )
-        self.model = cp.deepcopy(self.base_model)
+        self.model = clone_model(self.base_model)
         with strategy.scope():
             self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape

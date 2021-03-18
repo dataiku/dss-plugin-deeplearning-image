@@ -37,6 +37,28 @@ DEFAULT_PRED_MIN_THRESHOLD = 0
 COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
 COMPILE_METRICS = ["accuracy"]
 
+# Options for custom form
+GPU_MEMORY_LIMIT = "memory_limit"
+GPU_MEMORY_GROWTH = "memory_growth"
+
+POOLING_OPTIONS = [
+    ["No pooling", "None"],
+    ["Average", "avg"],
+    ["Maximum", "max"]
+]
+
+LAYERS_OPTIONS = [
+    ["Last layer", "last"],
+    ["All layers", "all"],
+    ["N last layers", "n_last"]
+]
+
+OPTIMIZER_OPTIONS = [
+    ["Adam", "adam"],
+    ["Adagrad", "adagrad"],
+    ["SGD", "sgd"]
+]
+
 # Other
 NOTOP_SUFFIX = "_notop"
 LABEL = "__dku__image_label"

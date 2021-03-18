@@ -1,8 +1,10 @@
 import os
+import tensorflow as tf
+
 from keras.preprocessing.image import img_to_array, load_img
 from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
 from keras import regularizers
-import tensorflow as tf
+
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
 import threading
@@ -10,6 +12,7 @@ import json
 from collections import OrderedDict
 import numpy as np
 from datetime import datetime
+import GPUtil
 import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile
 import logging
@@ -70,22 +73,30 @@ def deactivate_gpu():
 
 
 def can_use_gpu():
-    return len(tf.config.experimental.list_physical_devices('GPU')) > 0
+    return len(tf.config.list_physical_devices('GPU')) > 0
 
 
-def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
+def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory_limit_ratio=None):
     logger.info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
         logger.info("should use GPU")
-        gpus = tf.config.experimental.list_physical_devices('GPU')
+        gpus = tf.config.list_physical_devices('GPU')
+        for i, g in enumerate(gpus):
+            g.id = i
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
-        if memory_limit:
+        logger.info(f"GPUs on the machine: {[g.id for g in GPUtil.getGPUs()]}")
+        logger.info(f"Will use the following GPUs: {gpus_to_use}")
+        if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
-                tf.config.experimental.set_virtual_device_configuration(
+                memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
+                logger.info(f"Restraining GPU {gpu} to {memory_limit} Mo ({memory_limit_ratio}%)")
+                tf.config.set_logical_device_configuration(
                     gpu,
-                    [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=int(memory_limit))]
+                    [tf.config.LogicalDeviceConfiguration(memory_limit=int(memory_limit))]
                 )
-        tf.config.experimental.set_visible_devices(gpus_to_use, 'GPU')
+        elif gpu_memory_allocation_mode == constants.GPU_MEMORY_GROWTH:
+            map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
+        tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:
         deactivate_gpu()
 
@@ -93,6 +104,10 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
 def get_tf_strategy():
     return tf.distribute.MirroredStrategy()
 
+
+def calculate_gpu_memory_allocation(memory_limit_ratio, gpu_to_use):
+    gpu = [gpu for gpu in GPUtil.getGPUs() if gpu.id == gpu_to_use.id][0]
+    return int((memory_limit_ratio / 100) * gpu.memoryTotal)
 
 ###################################################################################################################
 # FILES LOGIC
@@ -114,9 +129,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                logger.info("cached file %s" % file_path)
+                logger.info(f"cached file {file_path}")
     else:
-        logger.info("read from cache %s" % file_path)
+        logger.info(f"read from cache {file_path}")
     return filename
 
 
@@ -139,9 +154,9 @@ def build_prediction_output_df(images_paths, predictions):
 def log_func(txt):
     def inner(f):
         def wrapper(*args, **kwargs):
-            logger.info('------ \n Info: Starting {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info(f"------ \n Info: Starting {txt} ({datetime.now().strftime('%H:%M:%S')}) \n ------")
             res = f(*args, **kwargs)
-            logger.info('------ \n Info: Ending {} ({}) \n ------'.format(txt, datetime.now().strftime('%H:%M:%S')))
+            logger.info(f"------ \n Info: Ending {txt} ({datetime.now().strftime('%H:%M:%S')}) \n ------")
             return res
 
         return wrapper
@@ -174,7 +189,7 @@ def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = load_img(img_path, target_size=img_shape)
     except UnidentifiedImageError as err:
-        logger.warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return
     array = img_to_array(img)
     array = preprocessing(array)
@@ -198,9 +213,9 @@ def clean_custom_params(custom_params, params_type=""):
     params_type = " '{}'".format(params_type) if params_type else ""
     for i, p in enumerate(custom_params):
         if not p.get("name", False):
-            raise IOError("The{} custom param #{} must have a 'name'".format(params_type, i))
+            raise IOError(f"The {params_type} custom param #{i} must have a 'name'")
         if not p.get("value", False):
-            raise IOError("The{} custom param #{} must have a 'value'".format(params_type, i))
+            raise IOError(f"The {params_type} custom param #{i} must have a 'value'")
         cleaned_params[p["name"]] = string_to_arg(p["value"])
     return cleaned_params
 
