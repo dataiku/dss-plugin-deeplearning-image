@@ -10,22 +10,16 @@ import json
 from collections import OrderedDict
 import numpy as np
 from datetime import datetime
-
-import sys
 import pandas as pd
+from PIL import UnidentifiedImageError, ImageFile
 import logging
-from PIL import UnidentifiedImageError
 
 logger = logging.getLogger(__name__)
-
-# Support Truncated Images with PIL
-from PIL import ImageFile
-
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
 ###################################################################################################################
-## MODEL UTILS
+# MODEL UTILS
 ###################################################################################################################
 
 def add_pooling(model_output, pooling):
@@ -52,13 +46,15 @@ def get_regularizer(reg):
             return regularizers.l1(reg["l1"])
     return None
 
+
 ###################################################################################################################
-## MODELS LIST
+# MODELS LIST
 ###################################################################################################################
 
 
-# INFO : when adding a new architecture, you must add a select-option in python-runnables/dl-toolbox-download-models/runnable.json
-#        with the label architecture_trainedon to make it available, along with new a constant in python-lib/constants.py
+# INFO : when adding a new architecture, you must add a select-option in
+# python-runnables/dl-toolbox-download-models/runnable.json with the label architecture_trainedon to make it available,
+# along with new a constant in python-lib/constants.py
 
 
 def is_keras_application(architecture):
@@ -66,7 +62,7 @@ def is_keras_application(architecture):
 
 
 ###############################################################
-## GPU HANDLING
+# GPU HANDLING
 ###############################################################
 
 def deactivate_gpu():
@@ -78,9 +74,9 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
-    log_info("load_gpu_options")
+    logger.info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        log_info("should use GPU")
+        logger.info("should use GPU")
         gpus = tf.config.experimental.list_physical_devices('GPU')
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         if memory_limit:
@@ -93,12 +89,15 @@ def set_gpu_options(should_use_gpu, gpu_list, memory_limit):
     else:
         deactivate_gpu()
 
+
 def get_tf_strategy():
     return tf.distribute.MirroredStrategy()
 
+
 ###################################################################################################################
-## FILES LOGIC
+# FILES LOGIC
 ###################################################################################################################
+
 
 def get_weights_filename(with_top=False):
     return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else constants.NOTOP_SUFFIX)
@@ -106,17 +105,7 @@ def get_weights_filename(with_top=False):
 
 def get_file_path(folder_path, file_name):
     # Be careful to enforce that folder_path and file_name are actually strings
-    return os.path.join(safe_str(folder_path), safe_str(file_name))
-
-
-def safe_str(val):
-    if sys.version_info > (3, 0):
-        return str(val)
-    else:
-        if isinstance(val, unicode):
-            return val.encode("utf-8")
-        else:
-            return str(val)
+    return os.path.join(str(folder_path), str(file_name))
 
 
 def get_cached_file_from_folder(folder, file_path):
@@ -125,9 +114,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                log_info("cached file %s" % file_path)
+                logger.info("cached file %s" % file_path)
     else:
-        log_info("read from cache %s" % file_path)
+        logger.info("read from cache %s" % file_path)
     return filename
 
 
@@ -138,14 +127,14 @@ def get_model_config_from_file(model_folder):
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
     output["images"] = images_paths
-    log_info("------->" + str(output))
+    logger.info("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output
 
 
 ###################################################################################################################
-## MISC.
+# MISC.
 ###################################################################################################################
 def log_func(txt):
     def inner(f):
@@ -185,7 +174,7 @@ def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = load_img(img_path, target_size=img_shape)
     except UnidentifiedImageError as err:
-        log_warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
+        logger.warning('The file {} is not a valid image. skipping it. Error: {}'.format(img_path, err))
         return
     array = img_to_array(img)
     array = preprocessing(array)
@@ -212,9 +201,7 @@ def clean_custom_params(custom_params, params_type=""):
             raise IOError("The{} custom param #{} must have a 'name'".format(params_type, i))
         if not p.get("value", False):
             raise IOError("The{} custom param #{} must have a 'value'".format(params_type, i))
-        name = p["name"]
-        value = string_to_arg(p["value"])
-        cleaned_params[name] = value
+        cleaned_params[p["name"]] = string_to_arg(p["value"])
     return cleaned_params
 
 
@@ -232,25 +219,22 @@ def dbg_msg(msg, title=''):
     logger.debug(''.center(100, '-'))
 
 
-def log_info(*args):
-    logger.info(*args)
-
-
-def log_warning(*args):
-    logger.warning(*args)
-
 ###############################################################
-## THREADSAFE GENERATOR / ITERATOR
-## Inspired by :
-##    https://github.com/fchollet/keras/issues/1638
-##    http://anandology.com/blog/using-iterators-and-generators/
+# THREADSAFE GENERATOR / ITERATOR
+# Inspired by :
+#    https://github.com/fchollet/keras/issues/1638
+#    http://anandology.com/blog/using-iterators-and-generators/
 ###############################################################
+
 
 ''' Make the generators threadsafe in case of multiple threads '''
+
+
 class threadsafe_iter:
     """Takes an iterator/generator and makes it thread-safe by
     serializing call to the `next` method of given iterator/generator.
     """
+
     def __init__(self, it):
         self.it = it
         self.lock = threading.Lock()
