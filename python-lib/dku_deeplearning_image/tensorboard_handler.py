@@ -12,17 +12,22 @@ from dataikuapi.utils import DataikuException
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 
 
-def get_logdir(folder_id):
+def load_logs_from_folder(folder_id):
     folder = dataiku.Folder(folder_id)
     try:
-        folder_path = folder.get_path()
-        return os.path.join(folder_path, TENSORBOARD_LOGS)
+        for path in folder.list_paths_in_partition():
+            relative_path = '.' + path
+            os.makedirs(os.path.dirname(relative_path), exist_ok=True)
+            file = folder.get_download_stream(path)
+            with open(relative_path, 'wb+') as nf:
+                nf.write(file.read())
+        return os.path.join('.', TENSORBOARD_LOGS)
     except Exception:
         raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
 
 
 def __get_logs_path():
-    return get_logdir(get_webapp_config().get('retrained_model_folder'))
+    return load_logs_from_folder(get_webapp_config().get('retrained_model_folder'))
 
 
 def __get_custom_assets_zip_provider():
