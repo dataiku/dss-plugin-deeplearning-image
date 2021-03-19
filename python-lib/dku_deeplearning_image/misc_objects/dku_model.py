@@ -157,8 +157,8 @@ class DkuModel(object):
 
     def save_info(self):
         model_info = {
-            constants.GOAL.SCORE: self.get_info(),
-            constants.GOAL.BEFORE_TRAIN: self.get_info(base=True)
+            constants.GOAL.SCORE.value: self.get_info(),
+            constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
             folder=self.folder,
