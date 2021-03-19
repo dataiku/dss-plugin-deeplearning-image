@@ -168,12 +168,16 @@ class DkuModel(object):
             content=json.dumps(model_info))
 
     def save_tensorboard_logs(self):
-        for file in Path(utils.get_file_path('.', constants.TENSORBOARD_LOGS)).rglob(r'*'):
-            with file.open('r') as f:
-                self.folder.upload_stream(
-                    path=os.path.join(constants.TENSORBOARD_LOGS, str(file)),
-                    f=f
-                )
+        logger.info("Saving tensorboard logs...")
+        tb_files = Path(utils.get_file_path('.', constants.TENSORBOARD_LOGS)).rglob(r'*')
+        for file in tb_files:
+            if file.is_file():
+                with file.open('rb') as f:
+                    self.folder.upload_stream(
+                        path=os.path.join(str(file)),
+                        f=f
+                    )
+        logger.info("Tensorboard logs have been successfully saved.")
 
     def save_to_folder(self):
         logger.info("Starting model saving...")
