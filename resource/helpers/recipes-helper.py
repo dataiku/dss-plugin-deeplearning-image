@@ -51,7 +51,7 @@ def get_model_info(model_folder, goal):
 
 def get_info_about_model(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = get_model_info(model_folder, goal=constants.SCORE)
+    model_info = get_model_info(model_folder, goal=constants.GOAL.SCORE)
     config = get_model_config(model_folder)
 
     return {
@@ -63,7 +63,7 @@ def get_info_about_model(inputs):
 
 def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
+    model_info = get_model_info(model_folder, goal=constants.GOAL.BEFORE_TRAIN)
     label_dataset = get_label_dataset(inputs)
     label_columns = [c["name"] for c in label_dataset.read_schema()]
     model_config = get_model_config(model_folder)

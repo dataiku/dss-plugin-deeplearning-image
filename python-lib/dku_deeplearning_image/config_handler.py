@@ -166,12 +166,12 @@ def add_api_deployer_config(dku_config, config, project):
 def create_dku_config(config, goal, project=None):
     dku_config = DkuConfig()
     add_gpu_config(dku_config, config)
-    if goal == constants.SCORE:
+    if goal == constants.GOAL.SCORE:
         add_score_recipe_config(dku_config, config)
-    elif goal == constants.RETRAIN:
+    elif goal == constants.GOAL.RETRAIN:
         add_retrain_recipe_config(dku_config, config)
-    elif goal == constants.EXTRACT:
+    elif goal == constants.GOAL.EXTRACT:
         add_extract_recipe_config(dku_config, config)
-    elif goal == constants.API_DESIGNER:
+    elif goal == constants.GOAL.API_DESIGNER:
         add_api_deployer_config(dku_config, config, project)
     return dku_config

@@ -1,45 +1,38 @@
+from enum import Enum
+
 # Plugin ID
 PLUGIN_ID = 'deeplearning-image-v2'
 
+
 # Integrated models
-RESNET = "resnet"
-RESNET_LABEL = "Resnet"
-XCEPTION = "xception"
-XCEPTION_LABEL = "Xception"
-INCEPTIONV3 = "inceptionv3"
-INCEPTIONV3_LABEL = "Inception V3"
-VGG16 = "vgg16"
-VGG16_LABEL = "VGG16"
+class MODEL(Enum):
+    RESNET = "Resnet"
+    XCEPTION = "Xception"
+    INCEPTIONV3 = "Inception V3"
+    VGG16 = "VGG16"
+
 
 # Images banks on which model are pre-trained
-IMAGENET = "imagenet"
-IMAGENET_LABEL = "ImageNet"
+class IMAGENET(Enum):
+    LABEL = "ImageNet"
+    URL = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
 
-# Filenames
-CONFIG_FILE = "config.json"
-MODEL_INFO_FILE = "model_info.json"
-CLASSES_MAPPING_FILE = "classes_mapping.json"
-MODEL_LABELS_FILE = "model_labels.csv"
-WEIGHT_FILENAME = 'model_weights'
-TENSORBOARD_LOGS = "tensorboard_logs"
 
 # Goals
-SCORE = "score"
-RETRAIN = "retrain"
-EXTRACT = "extract"
-API_DESIGNER = "api_designer"
-BEFORE_TRAIN = "before_train"
+class GOAL(Enum):
+    SCORE = "score"
+    RETRAIN = "retrain"
+    EXTRACT = "extract"
+    API_DESIGNER = "api_designer"
+    BEFORE_TRAIN = "before_train"
 
-# Default values
-PREDICTION_BATCH_SIZE = 100
-DEFAULT_PRED_LIMIT = 5
-DEFAULT_PRED_MIN_THRESHOLD = 0
-COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
-COMPILE_METRICS = ["accuracy"]
 
 # Options for custom form
-GPU_MEMORY_LIMIT = "memory_limit"
-GPU_MEMORY_GROWTH = "memory_growth"
+class GPU_MEMORY(Enum):
+    LIMIT = "memory_limit"
+    GROWTH = "memory_growth"
+    NO_LIMIT = "all"
+
 
 POOLING_OPTIONS = [
     ["No pooling", "None"],
@@ -58,6 +51,22 @@ OPTIMIZER_OPTIONS = [
     ["Adagrad", "adagrad"],
     ["SGD", "sgd"]
 ]
+
+
+# Filenames
+CONFIG_FILE = "config.json"
+MODEL_INFO_FILE = "model_info.json"
+CLASSES_MAPPING_FILE = "classes_mapping.json"
+MODEL_LABELS_FILE = "model_labels.csv"
+WEIGHT_FILENAME = 'model_weights'
+TENSORBOARD_LOGS = "tensorboard_logs"
+
+# Default values
+PREDICTION_BATCH_SIZE = 100
+DEFAULT_PRED_LIMIT = 5
+DEFAULT_PRED_MIN_THRESHOLD = 0
+COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
+COMPILE_METRICS = ["accuracy"]
 
 # Other
 NOTOP_SUFFIX = "_notop"

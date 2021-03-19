@@ -27,7 +27,7 @@ def write_output_dataset(output_dataset, image_folder, features):
 @utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
-    config = create_dku_config(recipe_config, constants.EXTRACT)
+    config = create_dku_config(recipe_config, constants.GOAL.EXTRACT)
 
     image_folder, model_folder, output_dataset = get_input_output()
     recipe = ExtractRecipe(config)

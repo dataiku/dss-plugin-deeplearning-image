@@ -42,7 +42,7 @@ class DkuModel(object):
 
     def load_model(self, config, goal):
         strategy = utils.get_tf_strategy()
-        include_top = goal == constants.SCORE and not self.retrained
+        include_top = goal == constants.GOAL.SCORE and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
         self.base_model = self.application.model_func(
             weights=None,
@@ -65,7 +65,7 @@ class DkuModel(object):
         load_weights_kwargs = {
             "with_top": include_top
         }
-        if goal == constants.RETRAIN:
+        if goal == constants.GOAL.RETRAIN:
             self.load_weights(**load_weights_kwargs)
             self.enrich(**enrich_kwargs)
         else:
@@ -157,8 +157,8 @@ class DkuModel(object):
 
     def save_info(self):
         model_info = {
-            constants.SCORE: self.get_info(),
-            constants.BEFORE_TRAIN: self.get_info(base=True)
+            constants.GOAL.SCORE: self.get_info(),
+            constants.GOAL.BEFORE_TRAIN: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
             folder=self.folder,
