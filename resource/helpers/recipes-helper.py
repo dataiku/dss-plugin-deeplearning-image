@@ -115,15 +115,15 @@ def get_info_gpu():
     response["gpu_memory_allocation_mode"] = [
         {
             'label': 'No limitation',
-            'value': 'all'
+            'value': constants.GPU_MEMORY.NO_LIMIT.value
         },
         {
             'label': 'Allocate memory automatically',
-            'value': constants.GPU_MEMORY_GROWTH
+            'value': constants.GPU_MEMORY.GROWTH.value
         },
         {
             'label': 'Set a custom memory limit...',
-            'value': constants.GPU_MEMORY_LIMIT
+            'value': constants.GPU_MEMORY.LIMIT.value
         }
     ]
     return response
