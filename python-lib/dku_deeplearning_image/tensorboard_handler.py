@@ -15,15 +15,24 @@ from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 def load_logs_from_folder(folder_id):
     folder = dataiku.Folder(folder_id)
     try:
-        for path in folder.list_paths_in_partition():
-            relative_path = '.' + path
-            os.makedirs(os.path.dirname(relative_path), exist_ok=True)
-            file = folder.get_download_stream(path)
-            with open(relative_path, 'wb+') as nf:
-                nf.write(file.read())
-        return os.path.join('.', TENSORBOARD_LOGS)
+        _ = folder.get_info()
     except Exception:
-        raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
+        raise DataikuException(f'Folder with ID {folder_id} does not exist.')
+
+    try:
+        folder_path = folder.get_path()
+        return os.path.join(folder_path, TENSORBOARD_LOGS)
+    except Exception as err:
+        if err.args[0].startswith('Folder is not on the local filesystem'):
+            for path in folder.list_paths_in_partition():
+                relative_path = '.' + path
+                os.makedirs(os.path.dirname(relative_path), exist_ok=True)
+                file = folder.get_download_stream(path)
+                with open(relative_path, 'wb+') as nf:
+                    nf.write(file.read())
+            return os.path.join('.', TENSORBOARD_LOGS)
+        else:
+            raise err
 
 
 def __get_logs_path():
