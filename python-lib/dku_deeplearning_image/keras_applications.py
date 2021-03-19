@@ -3,6 +3,7 @@ from tensorflow.keras.applications.xception import Xception, preprocess_input as
 from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
 from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
 from tensorflow.keras.applications.mobilenet import MobileNet, preprocess_input as mobilenet_preprocessing
+from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input as inception_resnet_preprocessing
 
 import dku_deeplearning_image.dku_constants as constants
 
@@ -74,6 +75,20 @@ APPLICATIONS = [{
             constants.IMAGENET: {
                 "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf.h5",
                 "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf_no_top.h5"
+            }
+        }
+    },
+    {
+        "name": constants.INCEPTION_RESNET,
+        "label": constants.INCEPTION_RESNET_LABEL,
+        "source": "keras",
+        "model_func": InceptionResNetV2,
+        "preprocessing": inception_resnet_preprocessing,
+        "input_shape": (299, 299, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     }
