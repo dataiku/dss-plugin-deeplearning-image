@@ -10,8 +10,8 @@ import json
 import pandas as pd
 import numpy as np
 import tables
-from keras.layers import Dense
-from keras.models import Model, clone_model
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model, clone_model
 import base64
 
 import copy as cp
