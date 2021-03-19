@@ -16,6 +16,12 @@ MOBILENET = "mobilenet"
 MOBILENET_LABEL = "MobileNet"
 MOBILENET_ALPHA = "1_0"
 MOBILENET_ROWS = "224"
+DENSENET = "densenet"
+DENSENET_LABEL = "DenseNet"
+NASNET_LARGE = "nasnet_large"
+NASNET_LARGE_LABEL = "NasNetLarge"
+NASNET_MOBILE = "nasnet_mobile"
+NASNET_MOBILE_LABEL = "NasNetMobile"
 
 # Images banks on which model are pre-trained
 IMAGENET = "imagenet"

@@ -2,8 +2,11 @@ from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as
 from tensorflow.keras.applications.xception import Xception, preprocess_input as xception_preprocessing
 from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
 from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
-from tensorflow.keras.applications.mobilenet import MobileNet, preprocess_input as mobilenet_preprocessing
+from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2 as MobileNet, preprocess_input as mobilenet_preprocessing
 from tensorflow.keras.applications.inception_resnet_v2 import InceptionResNetV2, preprocess_input as inception_resnet_preprocessing
+from tensorflow.keras.applications.densenet import DenseNet201 as DenseNet, preprocess_input as densenet_preprocessing
+from tensorflow.keras.applications.nasnet import NASNetLarge, preprocess_input as nasnet_large_preprocessing
+from tensorflow.keras.applications.nasnet import NASNetMobile, preprocess_input as nasnet_mobile_preprocessing
 
 import dku_deeplearning_image.dku_constants as constants
 
@@ -89,6 +92,48 @@ APPLICATIONS = [{
             constants.IMAGENET: {
                 "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5",
                 "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels_notop.h5"
+            }
+        }
+    },
+    {
+        "name": constants.DENSENET,
+        "label": constants.DENSENET_LABEL,
+        "source": "keras",
+        "model_func": DenseNet,
+        "preprocessing": densenet_preprocessing,
+        "input_shape": (224, 224, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/densenet201_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/densenet201_weights_tf_dim_ordering_tf_kernels_notop.h5"
+            }
+        }
+    },
+    {
+        "name": constants.NASNET_LARGE,
+        "label": constants.NASNET_LARGE_LABEL,
+        "source": "keras",
+        "model_func": NASNetLarge,
+        "preprocessing": nasnet_large_preprocessing,
+        "input_shape": (331, 331, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-large.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-large-no-top.h5"
+            }
+        }
+    },
+    {
+        "name": constants.NASNET_MOBILE,
+        "label": constants.NASNET_MOBILE_LABEL,
+        "source": "keras",
+        "model_func": NASNetMobile,
+        "preprocessing": nasnet_mobile_preprocessing,
+        "input_shape": (224, 224, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-mobile.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-mobile-no-top.h5"
             }
         }
     }
