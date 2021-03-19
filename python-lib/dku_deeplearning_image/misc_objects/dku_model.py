@@ -176,8 +176,12 @@ class DkuModel(object):
     def get_application(self):
         dku_application_params = [x for x in APPLICATIONS if x['name'].value == self.architecture]
         if not dku_application_params:
-            available_apps = [x['name'] for x in APPLICATIONS]
-            raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+            available_apps = [x['name'].value for x in APPLICATIONS]
+            print(self.architecture)
+            print(available_apps)
+            raise IOError("The application {} you asked for is not available. Available are : {}.".format(
+                self.architecture,
+                available_apps))
         return DkuApplication(**dku_application_params[0])
 
     def get_or_load(self, attr, default):
