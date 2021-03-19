@@ -21,7 +21,6 @@ def load_logs_from_folder(folder_id):
 
     try:
         folder_path = folder.get_path()
-        return os.path.join(folder_path, TENSORBOARD_LOGS)
     except Exception as err:
         if err.args[0].startswith('Folder is not on the local filesystem'):
             for path in folder.list_paths_in_partition():
@@ -30,9 +29,10 @@ def load_logs_from_folder(folder_id):
                 file = folder.get_download_stream(path)
                 with open(relative_path, 'wb+') as nf:
                     nf.write(file.read())
-            return os.path.join('.', TENSORBOARD_LOGS)
+            folder_path = '.'
         else:
             raise err
+    return os.path.join(folder_path, TENSORBOARD_LOGS)
 
 
 def __get_logs_path():
