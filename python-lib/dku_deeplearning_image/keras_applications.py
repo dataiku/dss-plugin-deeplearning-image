@@ -1,7 +1,8 @@
-from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
-from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
-from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
-from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
+from tensorflow.keras.applications.xception import Xception, preprocess_input as xception_preprocessing
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
+from tensorflow.keras.applications.mobilenet import MobileNet, preprocess_input as mobilenet_preprocessing
 
 import dku_deeplearning_image.dku_constants as constants
 
@@ -61,4 +62,33 @@ APPLICATIONS = [{
                 "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
-}]
+    },
+    {
+        "name": constants.MOBILENET,
+        "label": constants.MOBILENET_LABEL,
+        "source": "keras",
+        "model_func": MobileNet,
+        "preprocessing": mobilenet_preprocessing,
+        "input_shape": (224, 224, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf_no_top.h5"
+            }
+        }
+    },
+    {
+        "name": constants.MOBILENET,
+        "label": constants.MOBILENET_LABEL,
+        "source": "keras",
+        "model_func": MobileNet,
+        "preprocessing": mobilenet_preprocessing,
+        "input_shape": (224, 224, 3),
+        "weights": {
+            constants.IMAGENET: {
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf_no_top.h5"
+            }
+        }
+    }
+]

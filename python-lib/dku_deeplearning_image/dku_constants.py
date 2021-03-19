@@ -10,6 +10,10 @@ INCEPTIONV3 = "inceptionv3"
 INCEPTIONV3_LABEL = "Inception V3"
 VGG16 = "vgg16"
 VGG16_LABEL = "VGG16"
+MOBILENET = "mobilenet"
+MOBILENET_LABEL = "MobileNet"
+MOBILENET_ALPHA = "1_0"
+MOBILENET_ROWS = "224"
 
 # Images banks on which model are pre-trained
 IMAGENET = "imagenet"
