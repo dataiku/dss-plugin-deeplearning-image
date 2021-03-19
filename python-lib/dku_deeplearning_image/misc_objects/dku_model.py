@@ -9,7 +9,6 @@ from dku_deeplearning_image.misc_objects import DkuApplication
 import json
 import pandas as pd
 import numpy as np
-import os
 import tables
 from keras.layers import Dense
 from keras.models import Model, clone_model
@@ -174,7 +173,7 @@ class DkuModel(object):
             if file.is_file():
                 with file.open('rb') as f:
                     self.folder.upload_stream(
-                        path=os.path.join(str(file)),
+                        path=str(file),
                         f=f
                     )
         logger.info("Tensorboard logs have been successfully saved.")
