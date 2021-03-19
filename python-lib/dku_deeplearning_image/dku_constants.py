@@ -6,16 +6,10 @@ PLUGIN_ID = 'deeplearning-image-v2'
 
 # Integrated models
 class MODEL(Enum):
-    RESNET = "Resnet"
-    XCEPTION = "Xception"
-    INCEPTIONV3 = "Inception V3"
-    VGG16 = "VGG16"
-
-
-# Images banks on which model are pre-trained
-class IMAGENET(Enum):
-    LABEL = "ImageNet"
-    URL = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
+    RESNET = "resnet"
+    XCEPTION = "xception"
+    INCEPTIONV3 = "inception_v3"
+    VGG16 = "vgg16"
 
 
 # Goals
@@ -52,6 +46,11 @@ OPTIMIZER_OPTIONS = [
     ["SGD", "sgd"]
 ]
 
+
+# Images banks on which model are pre-trained
+IMAGENET = "imagenet"
+IMAGENET_LABEL = "ImageNet"
+IMAGENET_URL = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
 
 # Filenames
 CONFIG_FILE = "config.json"
