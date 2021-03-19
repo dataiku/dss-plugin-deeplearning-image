@@ -44,7 +44,7 @@ def get_model_config(model_folder):
 
 def get_model_info(model_folder, goal):
     if utils.is_path_in_folder(constants.MODEL_INFO_FILE, model_folder):
-        return download_json(model_folder, constants.MODEL_INFO_FILE)[goal]
+        return download_json(model_folder, constants.MODEL_INFO_FILE)[goal.value]
     else:
         return {"summary": "Not Available before 1st run", "layers": "Not Available before 1st run"}
 
