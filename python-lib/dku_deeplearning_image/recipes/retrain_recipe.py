@@ -79,7 +79,7 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _get_tensorboard(self, output_model_folder):
-        log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
+        log_path = utils.get_file_path('.', constants.TENSORBOARD_LOGS)
 
         if os.path.isdir(log_path):
             shutil.rmtree(log_path)

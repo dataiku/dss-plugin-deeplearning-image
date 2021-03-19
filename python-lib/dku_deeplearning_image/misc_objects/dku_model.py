@@ -9,10 +9,12 @@ from dku_deeplearning_image.misc_objects import DkuApplication
 import json
 import pandas as pd
 import numpy as np
+import os
 import tables
 from keras.layers import Dense
 from keras.models import Model, clone_model
 import base64
+from pathlib import Path
 
 import copy as cp
 
@@ -165,12 +167,21 @@ class DkuModel(object):
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
+    def save_tensorboard_logs(self):
+        for file in Path(utils.get_file_path('.', constants.TENSORBOARD_LOGS)).rglob(r'*'):
+            with file.open('r') as f:
+                self.folder.upload_stream(
+                    path=os.path.join(constants.TENSORBOARD_LOGS, str(file)),
+                    f=f
+                )
+
     def save_to_folder(self):
         logger.info("Starting model saving...")
         self.save_config()
         self.save_label_df()
         self.save_weights()
         self.save_info()
+        self.save_tensorboard_logs()
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
