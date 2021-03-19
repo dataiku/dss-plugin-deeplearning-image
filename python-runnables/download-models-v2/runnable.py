@@ -89,7 +89,7 @@ class MyRunnable(Runnable):
                         update_time = update_percent(percent, update_time)
                         f.write(content)
 
-        class_mapping_url = constants.IMAGENET.URL.value if trained_on == constants.IMAGENET else ""
+        class_mapping_url = constants.IMAGENET_URL if trained_on == constants.IMAGENET else ""
 
         files_to_dl = [
             {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},
