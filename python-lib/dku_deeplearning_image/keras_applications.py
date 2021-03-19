@@ -76,19 +76,5 @@ APPLICATIONS = [{
                 "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf_no_top.h5"
             }
         }
-    },
-    {
-        "name": constants.MOBILENET,
-        "label": constants.MOBILENET_LABEL,
-        "source": "keras",
-        "model_func": MobileNet,
-        "preprocessing": mobilenet_preprocessing,
-        "input_shape": (224, 224, 3),
-        "weights": {
-            constants.IMAGENET: {
-                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf.h5",
-                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{constants.MOBILENET_ALPHA}_{constants.MOBILENET_ROWS}_tf_no_top.h5"
-            }
-        }
     }
 ]
