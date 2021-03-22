@@ -1,9 +1,9 @@
 import os
 import tensorflow as tf
 
-from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras import regularizers
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from tensorflow.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
+from tensorflow.keras import regularizers
 
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
