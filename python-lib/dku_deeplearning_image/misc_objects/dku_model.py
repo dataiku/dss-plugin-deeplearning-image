@@ -300,7 +300,7 @@ class DkuModel(object):
         self.get_model().compile(**kwargs)
 
     def fit_generator(self, **kwargs):
-        self.model.fit_generator(**kwargs)
+        self.model.fit(**kwargs)
 
     def setattrs(self, d):
         for k, v in d.items():
