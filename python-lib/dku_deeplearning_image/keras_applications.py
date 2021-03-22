@@ -15,8 +15,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             constants.IMAGENET: {
-                "top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     },
