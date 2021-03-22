@@ -10,6 +10,8 @@ import json
 import pandas as pd
 import numpy as np
 import tables
+import warnings
+warnings.simplefilter('ignore', tables.NaturalNameWarning)
 from keras.layers import Dense
 from keras.models import Model, clone_model
 import base64

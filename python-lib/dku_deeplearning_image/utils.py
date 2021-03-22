@@ -16,6 +16,8 @@ import GPUtil
 import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile
 import logging
+import warnings
+
 
 logger = logging.getLogger(__name__)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -77,9 +79,8 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory_limit_ratio=None):
-    logger.info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        logger.info("should use GPU")
+        logger.info("Loading GPU Options...")
         gpus = tf.config.list_physical_devices('GPU')
         for i, g in enumerate(gpus):
             g.id = i
@@ -98,6 +99,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
         tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:
+        logger.info("Skipping GPU Options")
         deactivate_gpu()
 
 
