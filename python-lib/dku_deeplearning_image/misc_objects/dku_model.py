@@ -215,7 +215,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=self.model.input, output=predictions)
+        self.model = Model(inputs=self.model.input, outputs=predictions)
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
