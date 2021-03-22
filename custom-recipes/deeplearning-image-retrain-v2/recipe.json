@@ -4,7 +4,7 @@
         "description" : "Retrain a keras model with a new set of images. You can fine-tune the optimization parameters.<br>It is possible to retrain a model that was previously retrained. In that case some parameters will not be modifiable as they were fixed by the first retraining (size, pooling).<br>The recipe takes as inputs:\n* A managed folder containing a keras model (for example downloaded with the 'Download pre-trained model' macro)\n* A managed folder containing images on which the model will be retrained\n* A dataset containing the labels of the images from the managed folder, along with the relative path of each image",
         "icon" : "icon-retweet"
     },
-    "selectableFromDataset": "image_folder",
+    "selectableFromFolder": "image_folder",
     "kind" : "PYTHON",
     "inputRoles" : [
         {
