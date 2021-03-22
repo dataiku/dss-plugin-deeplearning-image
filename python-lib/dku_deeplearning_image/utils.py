@@ -16,7 +16,6 @@ import GPUtil
 import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile
 import logging
-import warnings
 
 
 logger = logging.getLogger(__name__)
