@@ -125,15 +125,17 @@ def get_file_path(folder_path, file_name):
     return os.path.join(str(folder_path), str(file_name))
 
 
-def get_cached_file_from_folder(folder, file_path):
+def get_cached_file_from_folder(folder, file_path, verbose=False):
     filename = file_path.replace('/', '_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                logger.info(f"cached file {file_path}")
+                if verbose:
+                    logger.info(f"cached file {file_path}")
     else:
-        logger.info(f"read from cache {file_path}")
+        if verbose:
+            logger.info(f"read from cache {file_path}")
     return filename
 
 
