@@ -28,8 +28,7 @@ def get_input_output():
 
 
 def save_output_model(output_folder, model):
-    output_model = model.deepcopy(folder=output_folder)
-    output_model.save_to_folder()
+    model.save_to_folder(new_folder=output_folder)
 
 
 @utils.log_func(txt='recipes')
