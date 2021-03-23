@@ -28,7 +28,7 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Random Seed</label>
+            <label class="control-label">Random seed</label>
             <div class="controls">
                 <input type="number" min="0" step="1" ng-model="config.random_seed" required/>
                 <span class="help-inline">Using a fixed random seed allows for reproducible result</span>
@@ -46,7 +46,7 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Image Shape (Height | Width)</label>
+            <label class="control-label">Image shape (Height | Width)</label>
             <div class="controls">
                 <input style="width: 98px; margin-left: 8px;" type="number" min="197" step="1"
                        ng-model="config.image_height" ng-disabled="retrained" required/>
@@ -111,7 +111,7 @@
             </div>
         </div>
         <div class="control-group several-controls">
-            <label class="control-label">Custom Parameters</label>
+            <label class="control-label">Custom parameters</label>
             <div class="controls" ng-repeat="cp in config.model_custom_params_opti">
                 <input type="text" ng-model="cp.name" placeholder="Parameter"/>
                 <input type="text" ng-model="cp.value" placeholder="Value"/>
@@ -148,7 +148,7 @@
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Data Augmentation</label>
+            <label class="control-label">Data augmentation</label>
             <div class="controls">
                 <input name="data_augmentation" type="checkbox" ng-model="config.data_augmentation"/>
             </div>
