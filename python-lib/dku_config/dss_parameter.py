@@ -91,7 +91,7 @@ class DSSParameter:
         logger.info('All checks have been successfully done for {}.'.format(self.name))
 
     def __repr__(self):
-        return "DSSParameter(name={}, value={})".format(self.name, self.value)
+        return str({"value": self.value})
 
     def __str__(self):
-        return "DSSParameter(name={}, value={})".format(self.name, self.value)
+        return str({"value": self.value})

@@ -10,8 +10,8 @@ import json
 import pandas as pd
 import numpy as np
 import tables
-from keras.layers import Dense
-from keras.models import Model, clone_model
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model, clone_model
 import base64
 
 import copy as cp
@@ -49,8 +49,8 @@ class DkuModel(object):
             include_top=include_top,
             input_shape=input_shape
         )
-        self.model = clone_model(self.base_model)
         with strategy.scope():
+            self.model = clone_model(self.base_model)
             self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape
 
@@ -215,7 +215,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=self.model.input, output=predictions)
+        self.model = Model(inputs=self.model.input, outputs=predictions)
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
@@ -304,7 +304,7 @@ class DkuModel(object):
         self.get_model().compile(**kwargs)
 
     def fit_generator(self, **kwargs):
-        self.model.fit_generator(**kwargs)
+        self.model.fit(**kwargs)
 
     def setattrs(self, d):
         for k, v in d.items():
