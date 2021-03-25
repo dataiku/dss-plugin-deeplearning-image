@@ -122,11 +122,13 @@ class RetrainRecipe(DkuRecipe):
             verbose=2
         )
 
-    def _preprocess_image(self, images_folder, image_filename):
-        image_path = tf.numpy_function(
+    def _retrieve_image_from_folder(self, images_folder, image_fn):
+        return tf.numpy_function(
             func=lambda x: utils.get_cached_file_from_folder(images_folder, x, is_byte=True),
-            inp=[image_filename],
+            inp=[image_fn],
             Tout=tf.string)
+
+    def _preprocess_image(self, image_path):
         return tf.numpy_function(
             func=lambda x: utils.preprocess_img(x, self.config.input_shape, self.dku_model.application.preprocessing),
             inp=[image_path],
@@ -145,8 +147,11 @@ class RetrainRecipe(DkuRecipe):
     def _build_tfds(self, pddf, images_folder, extra_images_gen, ignore_augm=False):
         use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = tf.data.Dataset.from_tensor_slices(pddf[constants.FILENAME].values.reshape(-1, 1))
+        X_tfds = X_tfds.interleave(
+            map_func=lambda x: self._retrieve_image_from_folder(images_folder, x),
+            num_parallel_calls=self.AUTOTUNE)
         X_tfds = X_tfds.map(
-            map_func=lambda x: self._preprocess_image(images_folder, x),
+            map_func=lambda x: self._preprocess_image(x),
             num_parallel_calls=self.AUTOTUNE)
         if use_augm:
             X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
@@ -158,8 +163,8 @@ class RetrainRecipe(DkuRecipe):
             y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
-
-        return tfds
+        optim_tfds = tfds.prefetch(self.AUTOTUNE)
+        return optim_tfds
 
     def compute_with_opti(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
