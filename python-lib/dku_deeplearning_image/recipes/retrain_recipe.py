@@ -123,39 +123,43 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _preprocess_image(self, images_folder, image_filename):
-        image_path = tf.numpy_function(lambda x: utils.get_cached_file_from_folder(images_folder, x, is_byte=True), [image_filename],
-                                       tf.string)
-        return tf.numpy_function(lambda x: utils.preprocess_img(
-            x, self.config.input_shape, self.dku_model.application.preprocessing), [image_path], tf.float32)
+        image_path = tf.numpy_function(
+            func=lambda x: utils.get_cached_file_from_folder(images_folder, x, is_byte=True),
+            inp=[image_filename],
+            Tout=tf.string)
+        return tf.numpy_function(
+            func=lambda x: utils.preprocess_img(x, self.config.input_shape, self.dku_model.application.preprocessing),
+            inp=[image_path],
+            Tout=tf.float32)
 
-    def _convert_target_to_np_array(self, target_array):
-        dummies = pd.get_dummies(target_array)
-        return {"remapped": dummies.values.astype(np.int8), "classes": list(dummies.columns)}
-
-    def _run_augm_image(self, image, extra_images_gen):
+    def _run_image_augm(self, image, extra_images_gen):
         image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
         return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
 
     def _get_augmented_images(self, image, extra_images_gen):
-        return tf.numpy_function(lambda x: self._run_augm_image(x, extra_images_gen), [image], tf.float32)
+        return tf.numpy_function(
+            func=lambda x: self._run_image_augm(x, extra_images_gen),
+            inp=[image],
+            Tout=tf.float32)
 
-    def _build_tfds(self, pddf, images_folder, extra_images_gen):
+    def _build_tfds(self, pddf, images_folder, extra_images_gen, ignore_augm=False):
+        use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = tf.data.Dataset.from_tensor_slices(pddf[constants.FILENAME].values.reshape(-1, 1))
-        X_tfds = X_tfds.map(lambda x: self._preprocess_image(images_folder, x), num_parallel_calls=self.AUTOTUNE)
-        if self.config.data_augmentation:
-            X_tfds = X_tfds.map(lambda x: self._get_augmented_images(x, extra_images_gen), num_parallel_calls=self.AUTOTUNE)
-            X_tfds = X_tfds.flat_map(lambda x: tf.data.Dataset.from_tensor_slices(x))
+        X_tfds = X_tfds.map(
+            map_func=lambda x: self._preprocess_image(images_folder, x),
+            num_parallel_calls=self.AUTOTUNE)
+        if use_augm:
+            X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
+                                num_parallel_calls=self.AUTOTUNE)
+            X_tfds = X_tfds.flat_map(map_func=lambda x: tf.data.Dataset.from_tensor_slices(x))
 
-        y_values = self._convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
-        if self.config.data_augmentation:
+        y_values = utils.convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
+        if use_augm:
             y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
 
         return tfds
-
-    def _get_batch_size_adapted(self):
-        return int(self.config.batch_size / self.config.n_augm) if self.config.use_augmentation else self.config.batch_size
 
     def compute_with_opti(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
@@ -165,7 +169,7 @@ class RetrainRecipe(DkuRecipe):
         extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
 
         train_tfds = self._build_tfds(train_df, image_folder, extra_images_gen)
-        test_tfds = self._build_tfds(test_df, image_folder, extra_images_gen)
+        test_tfds = self._build_tfds(test_df, image_folder, extra_images_gen, ignore_augm=True)
 
         model_weights_path = self.dku_model.get_weights_path()
 
@@ -188,7 +192,6 @@ class RetrainRecipe(DkuRecipe):
 
         train_df, test_df = self._build_train_test_sets(label_df)
         extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
-
 
         dku_generator = DkuImageGenerator(
             images_folder=image_folder,

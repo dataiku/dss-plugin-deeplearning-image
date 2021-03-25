@@ -135,6 +135,11 @@ def get_cached_file_from_folder(folder, file_path, is_byte=False):
     return filename
 
 
+def convert_target_to_np_array(target_array):
+    dummies = pd.get_dummies(target_array)
+    return {"remapped": dummies.values.astype(np.int8), "classes": list(dummies.columns)}
+
+
 def get_model_config_from_file(model_folder):
     return json.loads(model_folder.get_download_stream(constants.CONFIG_FILE).read())
 
