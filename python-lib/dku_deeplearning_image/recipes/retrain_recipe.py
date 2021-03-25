@@ -133,8 +133,8 @@ class RetrainRecipe(DkuRecipe):
         return {"remapped": dummies.values.astype(np.int8), "classes": list(dummies.columns)}
 
     def _run_augm_image(self, image, extra_images_gen):
-        image_augm = np.tile(image, (self.config.batch_size, 1, 1, 1))
-        return next(extra_images_gen.flow(image_augm, batch_size=self.config.batch_size))
+        image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
+        return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
 
     def _get_augmented_images(self, image, extra_images_gen):
         return tf.numpy_function(lambda x: self._run_augm_image(x, extra_images_gen), [image], tf.float32)
@@ -148,7 +148,7 @@ class RetrainRecipe(DkuRecipe):
 
         y_values = self._convert_target_to_np_array(pddf[constants.LABEL].values)
         if self.config.data_augmentation:
-            y_values = np.repeat(y_values, self.config.n_augm, axis=0)
+            y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values["remapped"])
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
 
