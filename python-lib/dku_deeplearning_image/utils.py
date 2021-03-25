@@ -86,7 +86,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         logger.info(f"GPUs on the machine: {[g.id for g in GPUtil.getGPUs()]}")
         logger.info(f"Will use the following GPUs: {gpus_to_use}")
-        if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
+        if gpu_memory_allocation_mode == constants.GPU_MEMORY.LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
                 memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
                 logger.info(f"Restraining GPU {gpu} to {memory_limit} Mo ({memory_limit_ratio}%)")
@@ -94,7 +94,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
                     gpu,
                     [tf.config.LogicalDeviceConfiguration(memory_limit=int(memory_limit))]
                 )
-        elif gpu_memory_allocation_mode == constants.GPU_MEMORY_GROWTH:
+        elif gpu_memory_allocation_mode == constants.GPU_MEMORY.GROWTH:
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
         tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:

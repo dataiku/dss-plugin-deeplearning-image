@@ -18,7 +18,7 @@ class MyRunnable(Runnable):
         return None
 
     def run(self, progress_callback):
-        config = create_dku_config(self.config, constants.API_DESIGNER, self.project)
+        config = create_dku_config(self.config, constants.GOAL.API_DESIGNER, self.project)
         model_folder_id = config.get("model_folder_id")
         endpoint_id = config.get("endpoint_id")
         service_id = config.get("service_id")
