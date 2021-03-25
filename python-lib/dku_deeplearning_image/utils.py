@@ -123,8 +123,8 @@ def get_file_path(folder_path, file_name):
     return os.path.join(str(folder_path), str(file_name))
 
 
-def get_cached_file_from_folder(folder, file_path):
-    filename = file_path.replace('/', '_')
+def get_cached_file_from_folder(folder, file_path, is_byte=False):
+    filename = file_path.replace('/', '_') if not is_byte else file_path[0].replace(b'/', b'_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:

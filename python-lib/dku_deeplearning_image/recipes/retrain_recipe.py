@@ -123,7 +123,7 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _preprocess_image(self, images_folder, image_filename):
-        image_path = tf.numpy_function(lambda x: utils.get_cached_file_from_folder(images_folder, x), [image_filename],
+        image_path = tf.numpy_function(lambda x: utils.get_cached_file_from_folder(images_folder, x, is_byte=True), [image_filename],
                                        tf.string)
         return tf.numpy_function(lambda x: utils.preprocess_img(
             x, self.config.input_shape, self.dku_model.application.preprocessing), [image_path], tf.float32)
@@ -146,10 +146,10 @@ class RetrainRecipe(DkuRecipe):
             X_tfds = X_tfds.map(lambda x: self._get_augmented_images(x, extra_images_gen), num_parallel_calls=self.AUTOTUNE)
             X_tfds = X_tfds.flat_map(lambda x: tf.data.Dataset.from_tensor_slices(x))
 
-        y_values = self._convert_target_to_np_array(pddf[constants.LABEL].values)
+        y_values = self._convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
         if self.config.data_augmentation:
             y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
-        y_tfds = tf.data.Dataset.from_tensor_slices(y_values["remapped"])
+        y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
 
         return tfds
