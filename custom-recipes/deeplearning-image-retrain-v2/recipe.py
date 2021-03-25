@@ -39,7 +39,7 @@ def run():
     image_folder, label_dataset, model_folder, output_folder = get_input_output()
     label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
     recipe = RetrainRecipe(config)
-    new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
+    new_model = recipe.compute_with_opti(image_folder, model_folder, label_df, output_folder)
     save_output_model(output_folder, new_model)
 
 
