@@ -31,9 +31,9 @@ def get_output_managed_folder(project_key):
 
 def get_model_choice():
     choices = [{
-        'label': '{app[label]} trained on {ds}'.format(app=app, ds=ds.capitalize()),
-        'value': '{}::{}'.format(app['name'].value, ds)
-    } for app in APPLICATIONS for ds in list(app['weights'].keys())]
+        'label': '{app[label]} trained on {ds}'.format(app=app, ds=image_bank.capitalize()),
+        'value': '{}::{}'.format(app['name'].value, image_bank)
+    } for app in APPLICATIONS for image_bank in list(app['weights'].keys())]
     return choices
 
 

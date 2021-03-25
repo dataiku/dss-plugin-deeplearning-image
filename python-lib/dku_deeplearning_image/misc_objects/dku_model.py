@@ -174,9 +174,9 @@ class DkuModel(object):
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
-        dku_application_params = [x for x in APPLICATIONS if x['name'].value == self.architecture]
+        dku_application_params = [app for app in APPLICATIONS if app['name'].value == self.architecture]
         if not dku_application_params:
-            available_apps = [x['name'].value for x in APPLICATIONS]
+            available_apps = [app['name'].value for app in APPLICATIONS]
             print(self.architecture)
             print(available_apps)
             raise IOError("The application {} you asked for is not available. Available are : {}.".format(
