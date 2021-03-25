@@ -152,22 +152,23 @@
                 <input type="number" min="1" step="1" ng-model="config.nb_validation_steps" required/>
             </div>
         </div>
+        <h2 class="settings-section-title">Data Augmentation</h2>
         <div class="control-group">
-            <label class="control-label">Data Augmentation</label>
+            <label class="control-label">Use data augmentation</label>
             <div class="controls">
                 <input name="data_augmentation" type="checkbox" ng-model="config.data_augmentation"/>
             </div>
         </div>
         <div ng-show="config.data_augmentation">
             <div class="control-group">
-                <label class="control-label"># augmentation per image</label>
+                <label class="control-label">↳ # augmentation per image</label>
                 <div class="controls">
                     <input type="number" min="1" step="1" ng-model="config.n_augmentation" required/>
                     <span class="help-inline">This number must be lower than batch size</span>
                 </div>
             </div>
             <div class="control-group several-controls">
-                <label class="control-label">Data augment. custom params</label>
+                <label class="control-label">↳ Custom parameters</label>
                 <div class="controls" ng-repeat="cp in config.model_custom_params_data_augmentation">
                     <input type="text" ng-model="cp.name" placeholder="Parameter"/>
                     <input type="text" ng-model="cp.value" placeholder="Value"/>
@@ -187,8 +188,9 @@
                 </div>
             </div>
         </div>
+        <h2 class="settings-section-title">TensorBoard</h2>
         <div class="control-group">
-            <label class="control-label">Tensorboard</label>
+            <label class="control-label">Use TensorBoard</label>
             <div class="controls">
                 <input name="tensorboard" type="checkbox" ng-model="config.tensorboard"/>
                 <span class="help-inline">You can access tensorboard via a DSS webapp</span>
