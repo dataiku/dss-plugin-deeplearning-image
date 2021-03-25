@@ -148,7 +148,8 @@ class RetrainRecipe(DkuRecipe):
         use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = tf.data.Dataset.from_tensor_slices(pddf[constants.FILENAME].values.reshape(-1, 1))
         X_tfds = X_tfds.interleave(
-            map_func=lambda x: self._retrieve_image_from_folder(images_folder, x),
+            map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
+                lambda y: self._retrieve_image_from_folder(images_folder, y), num_parallel_calls=self.AUTOTUNE),
             num_parallel_calls=self.AUTOTUNE)
         X_tfds = X_tfds.map(
             map_func=lambda x: self._preprocess_image(x),
