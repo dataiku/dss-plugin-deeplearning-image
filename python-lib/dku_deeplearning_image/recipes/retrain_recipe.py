@@ -1,7 +1,6 @@
 from .dku_recipe import DkuRecipe
 from dku_deeplearning_image.misc_objects import DkuModel
 import dku_deeplearning_image.utils as utils
-from dku_deeplearning_image.misc_objects import DkuImageGenerator
 import dku_deeplearning_image.dku_constants as constants
 from sklearn.model_selection import train_test_split
 import tensorflow as tf
@@ -11,7 +10,6 @@ from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
 import numpy as np
-import pandas as pd
 
 import logging
 logger = logging.getLogger(__name__)
@@ -152,7 +150,7 @@ class RetrainRecipe(DkuRecipe):
         optim_tfds = tfds.prefetch(self.AUTOTUNE)
         return optim_tfds
 
-    def compute_with_opti(self, image_folder, model_folder, label_df, output_folder):
+    def compute(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
         self.compile()
 
@@ -171,40 +169,6 @@ class RetrainRecipe(DkuRecipe):
         self._retrain(
             train_generator=train_tfds,
             test_generator=test_tfds,
-            callback_list=callbacks
-        )
-
-        self.dku_model.retrained = True
-        return self.dku_model
-
-    def compute(self, image_folder, model_folder, label_df, output_folder):
-        self.load_dku_model(model_folder, label_df)
-        self.compile()
-
-        train_df, test_df = self._build_train_test_sets(label_df)
-        extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
-
-        dku_generator = DkuImageGenerator(
-            images_folder=image_folder,
-            labels=self.dku_model.get_distinct_labels(),
-            input_shape=self.config.input_shape,
-            batch_size=self.config.batch_size,
-            preprocessing=self.dku_model.application.preprocessing,
-            use_augmentation=self.config.data_augmentation,
-            extra_images_gen=extra_images_gen,
-            n_augm=self.config.n_augmentation
-        )
-        train_gen, test_gen = dku_generator.load(train_df), dku_generator.load(test_df)
-
-        model_weights_path = self.dku_model.get_weights_path()
-
-        callbacks = self._get_callbacks(
-            output_model_folder=output_folder,
-            model_weights_path=model_weights_path
-        )
-        self._retrain(
-            train_generator=train_gen,
-            test_generator=test_gen,
             callback_list=callbacks
         )
 
