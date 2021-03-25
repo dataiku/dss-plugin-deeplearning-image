@@ -147,10 +147,15 @@ class RetrainRecipe(DkuRecipe):
             X_tfds = X_tfds.flat_map(lambda x: tf.data.Dataset.from_tensor_slices(x))
 
         y_values = self._convert_target_to_np_array(pddf[constants.LABEL].values)
+        if self.config.data_augmentation:
+            y_values = np.repeat(y_values, self.config.n_augm, axis=0)
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values["remapped"])
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
 
         return tfds
+
+    def _get_batch_size_adapted(self):
+        return int(self.config.batch_size / self.config.n_augm) if self.config.use_augmentation else self.config.batch_size
 
     def compute_with_opti(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
