@@ -22,7 +22,8 @@ def get_logdir(folder_id):
 
 
 def __get_logs_path():
-    return get_logdir(get_webapp_config().get('retrained_model_folder'))
+    retrained_model_folder = get_webapp_config().get('retrained_model_folder')
+    return get_logdir(retrained_model_folder) if retrained_model_folder else None
 
 
 def __get_custom_assets_zip_provider():
@@ -79,4 +80,31 @@ def tensorboard_wsgi_app(environ, start_response):
         start_response(status, headers)
         return [b"200"]
     else:
-        return __get_tb_app(__get_logs_path())(environ, start_response)
+        logs_path = __get_logs_path()
+        if logs_path:
+            return __get_tb_app(logs_path)(environ, start_response)
+        else:
+            status = '400'
+            headers = [('Content-type', 'text/html; charset=utf-8')]
+            start_response(status, headers)
+            return [get_no_folder_selected_error()]
+
+
+def get_no_folder_selected_error():
+    return b"""
+        <div style="text-align: center; margin-top: 20px;">
+            <span style="color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            position: relative;
+            padding: .75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            ">
+                You must select a folder in the <b>Settings</b> tab before starting the webapp.
+                Select a folder containing the tensorboard logs and <b>restart the webapp</b>.
+            <span>
+        </div>
+    """
