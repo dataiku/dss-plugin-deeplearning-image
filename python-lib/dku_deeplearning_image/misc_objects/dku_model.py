@@ -73,30 +73,25 @@ class DkuModel(object):
                 self.enrich(**enrich_kwargs)
             self.load_weights(**load_weights_kwargs)
 
-    def deepcopy(self, **kwargs):
-        new_model = cp.deepcopy(self)
-        new_model.update_attributes(**kwargs)
-        return new_model
-
     def update_attributes(self, **kwargs):
         for attr, value in kwargs.items():
             utils.dbg_msg(kwargs, 'kwargs')
             if self.hasattr(attr):
                 self.setattr(attr, value)
 
-    def save_label_df(self):
+    def save_label_df(self, output_folder):
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=output_folder,
             file_path=constants.MODEL_LABELS_FILE,
             content=df_labels.to_csv(index=False))
 
-    def save_weights(self):
+    def save_weights(self, output_folder):
         # This copies a local file to the managed folder
         model_weights_path = self.get_weights_path()
         with open(model_weights_path, 'rb') as f:
-            self.folder.upload_stream(model_weights_path, f)
+            output_folder.upload_stream(model_weights_path, f)
 
     def get_base_model(self):
         return self.getattr('base_model', self.model)
@@ -143,9 +138,9 @@ class DkuModel(object):
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
 
-    def save_config(self):
+    def save_config(self, output_folder):
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=output_folder,
             file_path=constants.CONFIG_FILE,
             content=json.dumps(self.jsonify_config()))
 
@@ -155,22 +150,23 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
-    def save_info(self):
+    def save_info(self, output_folder):
         model_info = {
             constants.SCORE: self.get_info(),
             constants.BEFORE_TRAIN: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=output_folder,
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
-    def save_to_folder(self):
+    def save_to_folder(self, new_output_folder=None):
         logger.info("Starting model saving...")
-        self.save_config()
-        self.save_label_df()
-        self.save_weights()
-        self.save_info()
+        output_folder = new_output_folder or self.folder
+        self.save_config(output_folder)
+        self.save_label_df(output_folder)
+        self.save_weights(output_folder)
+        self.save_info(output_folder)
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
