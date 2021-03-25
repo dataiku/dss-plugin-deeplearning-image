@@ -219,73 +219,19 @@ class DkuModel(object):
 
     def score_image_folder(self, images_folder, **kwargs):
         images_paths = images_folder.list_paths_in_partition()
-        images = []
-        for path in images_paths:
-            try:
-                images.append(images_folder.get_download_stream(path))
-            except IOError as e:
-                logging.warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
-                images.append(None)
-
-        images_2 = utils.read_images_to_tfds(
+        images = utils.read_images_to_tfds(
             images_folder=images_folder,
             np_images=np.array(images_paths),
             input_shape=self.get_input_shape(),
             preprocessing=self.application.preprocessing
         )
-        return self.score(images, images_2, **kwargs)
+        return self.score(images, **kwargs)
 
-    def score(self, images, images_2, limit=constants.DEFAULT_PRED_LIMIT,
+    def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
-        batch_size = constants.PREDICTION_BATCH_SIZE
-        images_batched = images_2.batch(batch_size)
+        images_batched = images.batch(constants.PREDICTION_BATCH_SIZE)
         predictions = self.get_model().predict(images_batched)
-        print(predictions)
-        n = 0
-        results = {"prediction": [], "error": []}
-        num_images = len(images)
-        while True:
-            if (n * batch_size) >= num_images: break
-            next_batch_list, error_indices = [], []
-            for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
-                image = images[i]
-                preprocessed_img = utils.preprocess_img(
-                    img_path=image,
-                    img_shape=self.get_input_shape(),
-                    preprocessing=self.application.preprocessing
-                ) if image else None
-                print(preprocessed_img)
-                if preprocessed_img is None:
-                    error_indices.append(index_in_batch)
-                else:
-                    next_batch_list.append(preprocessed_img)
-
-            next_batch = np.array(next_batch_list)
-
-            prediction_batch = self.get_predictions_for_batch(next_batch, classify, limit, min_threshold)
-            error_batch = [0] * len(prediction_batch)
-
-            for err_index in error_indices:
-                prediction_batch.insert(err_index, None)
-                error_batch.insert(err_index, 1)
-
-            results["prediction"].extend(prediction_batch)
-            results["error"].extend(error_batch)
-            n += 1
-            logger.info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
-        return results
-
-    def get_predictions_for_batch(self, batch, classify, limit, min_threshold):
-        if not batch.size:
-            return []
-        return utils.get_predictions(
-                model=self.get_model(),
-                batch=batch,
-                classify=classify,
-                limit=limit,
-                min_threshold=min_threshold,
-                labels_df=self.get_label_df()
-        )
+        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
 
     def get_weights_path(self, with_top=False):
         weights_filename = utils.get_weights_filename(with_top)

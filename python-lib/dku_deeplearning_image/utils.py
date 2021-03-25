@@ -181,11 +181,6 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
     return formatted_predictions
 
 
-def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, labels_df=None):
-    predictions = model.predict(batch)
-    return format_predictions_output(predictions, classify, labels_df, limit, min_threshold)
-
-
 def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
