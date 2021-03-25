@@ -191,6 +191,18 @@ def get_ordered_dict(predictions):
 
 
 def read_images_to_tfds(images_folder, np_images, input_shape, preprocessing):
+    def retrieve_image_from_folder(images_folder, image_fn):
+        return tf.numpy_function(
+            func=lambda x: get_cached_file_from_folder(images_folder, x, is_byte=True),
+            inp=[image_fn],
+            Tout=tf.string)
+
+    def apply_preprocess_image(image_path, input_shape, preprocessing):
+        return tf.numpy_function(
+            func=lambda x: preprocess_img(x, input_shape, preprocessing),
+            inp=[image_path],
+            Tout=tf.float32)
+
     X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
     X_tfds = X_tfds.interleave(
         map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
@@ -200,20 +212,6 @@ def read_images_to_tfds(images_folder, np_images, input_shape, preprocessing):
         map_func=lambda x: apply_preprocess_image(x, input_shape, preprocessing),
         num_parallel_calls=constants.AUTOTUNE)
     return X_tfds
-
-
-def retrieve_image_from_folder(images_folder, image_fn):
-    return tf.numpy_function(
-        func=lambda x: get_cached_file_from_folder(images_folder, x, is_byte=True),
-        inp=[image_fn],
-        Tout=tf.string)
-
-
-def apply_preprocess_image(image_path, input_shape, preprocessing):
-    return tf.numpy_function(
-        func=lambda x: preprocess_img(x, input_shape, preprocessing),
-        inp=[image_path],
-        Tout=tf.float32)
 
 
 def preprocess_img(img_path, img_shape, preprocessing):

@@ -120,13 +120,13 @@ class RetrainRecipe(DkuRecipe):
             verbose=2
         )
 
-    def _run_image_augm(self, image, extra_images_gen):
-        image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
-        return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
-
     def _get_augmented_images(self, image, extra_images_gen):
+        def _run_image_augm(image, extra_images_gen):
+            image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
+            return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
+
         return tf.numpy_function(
-            func=lambda x: self._run_image_augm(x, extra_images_gen),
+            func=lambda x: _run_image_augm(x, extra_images_gen),
             inp=[image],
             Tout=tf.float32)
 
