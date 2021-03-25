@@ -215,7 +215,8 @@ class DkuModel(object):
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
         image = BytesIO(img_b64_decode)
-        return self.score([image], **kwargs)
+        images = tf.data.Dataset.from_tensor_slices(np.array([image]))
+        return self.score(images, **kwargs)
 
     def score_image_folder(self, images_folder, **kwargs):
         images_paths = images_folder.list_paths_in_partition()
