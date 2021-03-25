@@ -23,7 +23,7 @@ def get_logdir(folder_id):
 
 def __get_logs_path():
     retrained_model_folder = get_webapp_config().get('retrained_model_folder')
-    return get_logdir(get_webapp_config().get('retrained_model_folder')) if retrained_model_folder else None
+    return get_logdir(retrained_model_folder) if retrained_model_folder else None
 
 
 def __get_custom_assets_zip_provider():
