@@ -42,7 +42,7 @@ class DkuModel(object):
 
     def load_model(self, config, goal):
         strategy = utils.get_tf_strategy()
-        include_top = goal == constants.SCORE and not self.retrained
+        include_top = goal == constants.GOAL.SCORE and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
         self.base_model = self.application.model_func(
             weights=None,
@@ -65,7 +65,7 @@ class DkuModel(object):
         load_weights_kwargs = {
             "with_top": include_top
         }
-        if goal == constants.RETRAIN:
+        if goal == constants.GOAL.RETRAIN:
             self.load_weights(**load_weights_kwargs)
             self.enrich(**enrich_kwargs)
         else:
@@ -157,8 +157,8 @@ class DkuModel(object):
 
     def save_info(self):
         model_info = {
-            constants.SCORE: self.get_info(),
-            constants.BEFORE_TRAIN: self.get_info(base=True)
+            constants.GOAL.SCORE.value: self.get_info(),
+            constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
             folder=self.folder,
@@ -174,10 +174,14 @@ class DkuModel(object):
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
-        dku_application_params = list(filter(lambda x: x['name'] == self.architecture, APPLICATIONS))
+        dku_application_params = [app for app in APPLICATIONS if app['name'].value == self.architecture]
         if not dku_application_params:
-            available_apps = [x['name'] for x in APPLICATIONS]
-            raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+            available_apps = [app['name'].value for app in APPLICATIONS]
+            print(self.architecture)
+            print(available_apps)
+            raise IOError("The application {} you asked for is not available. Available are : {}.".format(
+                self.architecture,
+                available_apps))
         return DkuApplication(**dku_application_params[0])
 
     def get_or_load(self, attr, default):
