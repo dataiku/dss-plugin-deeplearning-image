@@ -174,11 +174,16 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
         return predictions.tolist()
     formatted_predictions = []
     id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
+    pred_errors = []
     for pred in predictions:
-        formatted_pred = get_ordered_dict(
-            {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
-        formatted_predictions.append(formatted_pred)
-    return formatted_predictions
+        try:
+            formatted_pred = get_ordered_dict(
+                {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
+            formatted_predictions.append(formatted_pred)
+            pred_errors.append(0)
+        except Exception as err:
+            pred_errors.append(1)
+    return {"prediction": formatted_predictions, "error": pred_errors}
 
 
 def get_ordered_dict(predictions):
