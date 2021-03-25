@@ -232,7 +232,8 @@ class DkuModel(object):
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
         images_batched = images.batch(constants.PREDICTION_BATCH_SIZE)
         predictions = self.get_model().predict(images_batched)
-        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
+        predictions_formatted = utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
+        return {'prediction': predictions_formatted}
 
     def get_weights_path(self, with_top=False):
         weights_filename = utils.get_weights_filename(with_top)
