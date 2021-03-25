@@ -64,3 +64,4 @@ NOTOP_SUFFIX = "_notop"
 LABEL = "__dku__image_label"
 FILENAME = "__dku__image_filename"
 ENV_NAME = 'plugin_dl-image_api-node'
+AUTOTUNE = -1

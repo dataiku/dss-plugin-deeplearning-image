@@ -122,18 +122,6 @@ class RetrainRecipe(DkuRecipe):
             verbose=2
         )
 
-    def _retrieve_image_from_folder(self, images_folder, image_fn):
-        return tf.numpy_function(
-            func=lambda x: utils.get_cached_file_from_folder(images_folder, x, is_byte=True),
-            inp=[image_fn],
-            Tout=tf.string)
-
-    def _preprocess_image(self, image_path):
-        return tf.numpy_function(
-            func=lambda x: utils.preprocess_img(x, self.config.input_shape, self.dku_model.application.preprocessing),
-            inp=[image_path],
-            Tout=tf.float32)
-
     def _run_image_augm(self, image, extra_images_gen):
         image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
         return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
@@ -146,14 +134,11 @@ class RetrainRecipe(DkuRecipe):
 
     def _build_tfds(self, pddf, images_folder, extra_images_gen, ignore_augm=False):
         use_augm = self.config.data_augmentation and not ignore_augm
-        X_tfds = tf.data.Dataset.from_tensor_slices(pddf[constants.FILENAME].values.reshape(-1, 1))
-        X_tfds = X_tfds.interleave(
-            map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
-                lambda y: self._retrieve_image_from_folder(images_folder, y), num_parallel_calls=self.AUTOTUNE),
-            num_parallel_calls=self.AUTOTUNE)
-        X_tfds = X_tfds.map(
-            map_func=lambda x: self._preprocess_image(x),
-            num_parallel_calls=self.AUTOTUNE)
+        X_tfds = utils.read_images_to_tfds(
+            images_folder=images_folder,
+            np_images=pddf[constants.FILENAME].values,
+            input_shape=self.config.input_shape,
+            preprocessing=self.dku_model.application.preprocessing)
         if use_augm:
             X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
                                 num_parallel_calls=self.AUTOTUNE)

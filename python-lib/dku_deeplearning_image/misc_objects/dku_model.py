@@ -13,8 +13,7 @@ import tables
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
 import base64
-
-import copy as cp
+import tensorflow as tf
 
 import logging
 logger = logging.getLogger(__name__)
@@ -227,11 +226,21 @@ class DkuModel(object):
             except IOError as e:
                 logging.warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
                 images.append(None)
-        return self.score(images, **kwargs)
 
-    def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
+        images_2 = utils.read_images_to_tfds(
+            images_folder=images_folder,
+            np_images=np.array(images_paths),
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing
+        )
+        return self.score(images, images_2, **kwargs)
+
+    def score(self, images, images_2, limit=constants.DEFAULT_PRED_LIMIT,
               min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
         batch_size = constants.PREDICTION_BATCH_SIZE
+        images_batched = images_2.batch(batch_size)
+        predictions = self.get_model().predict(images_batched)
+        print(predictions)
         n = 0
         results = {"prediction": [], "error": []}
         num_images = len(images)
@@ -245,6 +254,7 @@ class DkuModel(object):
                     img_shape=self.get_input_shape(),
                     preprocessing=self.application.preprocessing
                 ) if image else None
+                print(preprocessed_img)
                 if preprocessed_img is None:
                     error_indices.append(index_in_batch)
                 else:
