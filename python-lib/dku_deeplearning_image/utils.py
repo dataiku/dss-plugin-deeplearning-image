@@ -181,7 +181,7 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
                 {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
             formatted_predictions.append(formatted_pred)
             pred_errors.append(0)
-        except Exception as err:
+        except Exception:
             pred_errors.append(1)
     return {"prediction": formatted_predictions, "error": pred_errors}
 
@@ -191,13 +191,13 @@ def get_ordered_dict(predictions):
 
 
 def read_images_to_tfds(images_folder, np_images, input_shape, preprocessing):
-    def retrieve_image_from_folder(images_folder, image_fn):
+    def retrieve_image_from_folder(image_fn):
         return tf.numpy_function(
             func=lambda x: get_cached_file_from_folder(images_folder, x, is_byte=True),
             inp=[image_fn],
             Tout=tf.string)
 
-    def apply_preprocess_image(image_path, input_shape, preprocessing):
+    def apply_preprocess_image(image_path):
         return tf.numpy_function(
             func=lambda x: preprocess_img(x, input_shape, preprocessing),
             inp=[image_path],
@@ -206,11 +206,9 @@ def read_images_to_tfds(images_folder, np_images, input_shape, preprocessing):
     X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
     X_tfds = X_tfds.interleave(
         map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
-            lambda y: retrieve_image_from_folder(images_folder, y), num_parallel_calls=constants.AUTOTUNE),
+            retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE),
         num_parallel_calls=constants.AUTOTUNE)
-    X_tfds = X_tfds.map(
-        map_func=lambda x: apply_preprocess_image(x, input_shape, preprocessing),
-        num_parallel_calls=constants.AUTOTUNE)
+    X_tfds = X_tfds.map(map_func=apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
     return X_tfds
 
 

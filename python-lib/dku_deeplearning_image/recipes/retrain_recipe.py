@@ -16,8 +16,6 @@ logger = logging.getLogger(__name__)
 
 
 class RetrainRecipe(DkuRecipe):
-    AUTOTUNE = -1
-
     def __init__(self, config):
         super(RetrainRecipe, self).__init__(config)
 
@@ -81,10 +79,8 @@ class RetrainRecipe(DkuRecipe):
 
     def _get_tensorboard(self, output_model_folder):
         log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
-
         if os.path.isdir(log_path):
             shutil.rmtree(log_path)
-
         return TensorBoard(log_dir=log_path, write_graph=True)
 
     def _get_callbacks(self, output_model_folder, model_weights_path):
@@ -121,33 +117,37 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _get_augmented_images(self, image, extra_images_gen):
-        def _run_image_augm(image, extra_images_gen):
-            image_augm = np.tile(image, (self.config.data_augmentation, 1, 1, 1))
-            return next(extra_images_gen.flow(image_augm, batch_size=self.config.data_augmentation))
+        def _run_image_augm(im, augm_gen):
+            image_augm = np.tile(im, (self.config.data_augmentation, 1, 1, 1))
+            return next(augm_gen.flow(image_augm, batch_size=self.config.data_augmentation))
 
         return tf.numpy_function(
             func=lambda x: _run_image_augm(x, extra_images_gen),
             inp=[image],
             Tout=tf.float32)
 
-    def _build_tfds(self, pddf, images_folder, extra_images_gen, ignore_augm=False):
+    def _add_data_augmentation(self, X_tfds, y_values):
+        extra_images_gen = self._get_tf_image_data_gen()
+        X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
+                            num_parallel_calls=constants.AUTOTUNE)
+        X_tfds = X_tfds.flat_map(map_func=lambda x: tf.data.Dataset.from_tensor_slices(x))
+        y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
+        return X_tfds, y_values
+
+    def _build_tfds(self, pddf, images_folder, ignore_augm=False):
         use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = utils.read_images_to_tfds(
             images_folder=images_folder,
             np_images=pddf[constants.FILENAME].values,
             input_shape=self.config.input_shape,
             preprocessing=self.dku_model.application.preprocessing)
-        if use_augm:
-            X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
-                                num_parallel_calls=self.AUTOTUNE)
-            X_tfds = X_tfds.flat_map(map_func=lambda x: tf.data.Dataset.from_tensor_slices(x))
-
         y_values = utils.convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
         if use_augm:
-            y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
+            X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
+
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
-        optim_tfds = tfds.prefetch(self.AUTOTUNE)
+        optim_tfds = tfds.prefetch(constants.AUTOTUNE)
         return optim_tfds
 
     def compute(self, image_folder, model_folder, label_df, output_folder):
@@ -155,16 +155,13 @@ class RetrainRecipe(DkuRecipe):
         self.compile()
 
         train_df, test_df = self._build_train_test_sets(label_df)
-        extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
 
-        train_tfds = self._build_tfds(train_df, image_folder, extra_images_gen)
-        test_tfds = self._build_tfds(test_df, image_folder, extra_images_gen, ignore_augm=True)
-
-        model_weights_path = self.dku_model.get_weights_path()
+        train_tfds = self._build_tfds(train_df, image_folder)
+        test_tfds = self._build_tfds(test_df, image_folder, ignore_augm=True)
 
         callbacks = self._get_callbacks(
             output_model_folder=output_folder,
-            model_weights_path=model_weights_path
+            model_weights_path=self.dku_model.get_weights_path()
         )
         self._retrain(
             train_generator=train_tfds,

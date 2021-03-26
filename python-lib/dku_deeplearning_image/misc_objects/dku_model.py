@@ -236,8 +236,7 @@ class DkuModel(object):
         return predictions_formatted
 
     def get_weights_path(self, with_top=False):
-        weights_filename = utils.get_weights_filename(with_top)
-        return weights_filename
+        return utils.get_weights_filename(with_top)
 
     def load_weights_to_local(self, weights_path):
         model_weights_path = self.folder.get_download_stream(weights_path)
