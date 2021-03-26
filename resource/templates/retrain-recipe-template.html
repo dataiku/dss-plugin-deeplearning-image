@@ -120,6 +120,11 @@
             </div>
             <div class="controls">
                 <button class="btn btn-default" ng-click="addCustomParam('model_custom_params_opti')">Add</button>
+                <span class="help-inline">See available parameters here:
+                    <a href="https://keras.io/api/optimizers/#available-optimizers" target="_blank">
+                        https://keras.io/api/optimizers/#available-optimizers
+                    </a>
+                </span>
             </div>
         </div>
         <h2 class="settings-section-title">Training</h2>
@@ -147,22 +152,23 @@
                 <input type="number" min="1" step="1" ng-model="config.nb_validation_steps" required/>
             </div>
         </div>
+        <h2 class="settings-section-title">Advanced</h2>
         <div class="control-group">
-            <label class="control-label">Data augmentation</label>
+            <label class="control-label">Use data augmentation</label>
             <div class="controls">
                 <input name="data_augmentation" type="checkbox" ng-model="config.data_augmentation"/>
             </div>
         </div>
         <div ng-show="config.data_augmentation">
             <div class="control-group">
-                <label class="control-label"># augmentation per image</label>
+                <label class="control-label">↳ # augmentation per image</label>
                 <div class="controls">
                     <input type="number" min="1" step="1" ng-model="config.n_augmentation" required/>
                     <span class="help-inline">This number must be lower than batch size</span>
                 </div>
             </div>
             <div class="control-group several-controls">
-                <label class="control-label">Data augment. custom params</label>
+                <label class="control-label">↳ Custom parameters</label>
                 <div class="controls" ng-repeat="cp in config.model_custom_params_data_augmentation">
                     <input type="text" ng-model="cp.name" placeholder="Parameter"/>
                     <input type="text" ng-model="cp.value" placeholder="Value"/>
@@ -174,11 +180,16 @@
                     <button class="btn btn-default" ng-click="addCustomParam('model_custom_params_data_augmentation')">
                         Add
                     </button>
+                    <span class="help-inline">See available parameters here:
+                        <a href="https://keras.io/api/preprocessing/image/#imagedatagenerator-class" target="_blank">
+                            https://keras.io/api/preprocessing/image/#imagedatagenerator-class
+                        </a>
+                    </span>
                 </div>
             </div>
         </div>
         <div class="control-group">
-            <label class="control-label">Tensorboard</label>
+            <label class="control-label">Use TensorBoard</label>
             <div class="controls">
                 <input name="tensorboard" type="checkbox" ng-model="config.tensorboard"/>
                 <span class="help-inline">You can access tensorboard via a DSS webapp</span>
