@@ -12,7 +12,7 @@ import numpy as np
 import tables
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
-from tensorflow.keras.preprocessing.image import img_to_array, load_img
+from PIL import Image
 import base64
 import tensorflow as tf
 
@@ -219,8 +219,8 @@ class DkuModel(object):
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
-        image = BytesIO(img_b64_decode)
-        image_as_numpy = img_to_array(load_img(image))
+        image = Image.open(BytesIO(img_b64_decode))
+        image_as_numpy = np.array(image)
         images = tf.data.Dataset.from_tensor_slices(image_as_numpy)
         images = utils.apply_preprocess_image(
             tfds=images,
