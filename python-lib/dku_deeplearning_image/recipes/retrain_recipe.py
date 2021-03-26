@@ -138,7 +138,9 @@ class RetrainRecipe(DkuRecipe):
         use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = utils.read_images_to_tfds(
             images_folder=images_folder,
-            np_images=pddf[constants.FILENAME].values,
+            np_images=pddf[constants.FILENAME].values)
+        X_tfds = utils.apply_preprocess_image(
+            tfds=X_tfds,
             input_shape=self.config.input_shape,
             preprocessing=self.dku_model.application.preprocessing)
         y_values = utils.convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
