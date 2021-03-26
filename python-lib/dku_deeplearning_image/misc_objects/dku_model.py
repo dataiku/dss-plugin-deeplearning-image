@@ -78,7 +78,8 @@ class DkuModel(object):
             if self.hasattr(attr):
                 self.setattr(attr, value)
 
-    def save_label_df(self, output_folder):
+    def save_label_df(self, ext_output_folder=None):
+        output_folder = ext_output_folder or self.model
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
@@ -86,8 +87,9 @@ class DkuModel(object):
             file_path=constants.MODEL_LABELS_FILE,
             content=df_labels.to_csv(index=False))
 
-    def save_weights(self, output_folder):
+    def save_weights(self, ext_output_folder=None):
         # This copies a local file to the managed folder
+        output_folder = ext_output_folder or self.model
         model_weights_path = self.get_weights_path()
         with open(model_weights_path, 'rb') as f:
             output_folder.upload_stream(model_weights_path, f)
@@ -137,7 +139,8 @@ class DkuModel(object):
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
 
-    def save_config(self, output_folder):
+    def save_config(self, ext_output_folder=None):
+        output_folder = ext_output_folder or self.model
         DkuFileManager.write_to_folder(
             folder=output_folder,
             file_path=constants.CONFIG_FILE,
@@ -149,7 +152,8 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
-    def save_info(self, output_folder):
+    def save_info(self, ext_output_folder=None):
+        output_folder = ext_output_folder or self.model
         model_info = {
             constants.SCORE: self.get_info(),
             constants.BEFORE_TRAIN: self.get_info(base=True)
@@ -159,9 +163,9 @@ class DkuModel(object):
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
-    def save_to_folder(self, new_output_folder=None):
+    def save_to_folder(self, ext_output_folder=None):
         logger.info("Starting model saving...")
-        output_folder = new_output_folder or self.folder
+        output_folder = ext_output_folder or self.folder
         self.save_config(output_folder)
         self.save_label_df(output_folder)
         self.save_weights(output_folder)

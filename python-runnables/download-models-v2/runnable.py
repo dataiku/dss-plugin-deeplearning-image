@@ -119,6 +119,6 @@ class MyRunnable(Runnable):
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
 
         new_model.load_model({}, constants.SCORE)
-        new_model.save_info()
+        new_model.save_info(output_folder)
         return "<span>DONE</span>"
 
