@@ -190,26 +190,28 @@ def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
 
-def read_images_to_tfds(images_folder, np_images, input_shape, preprocessing):
+def apply_preprocess_image(tfds, input_shape, preprocessing):
+    def _apply_preprocess_image(image_path):
+        return tf.numpy_function(
+            func=lambda x: preprocess_img(x, input_shape, preprocessing),
+            inp=[image_path],
+            Tout=tf.float32)
+
+    return tfds.map(map_func=_apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
+
+
+def read_images_to_tfds(images_folder, np_images):
     def retrieve_image_from_folder(image_fn):
         return tf.numpy_function(
             func=lambda x: get_cached_file_from_folder(images_folder, x, is_byte=True),
             inp=[image_fn],
             Tout=tf.string)
 
-    def apply_preprocess_image(image_path):
-        return tf.numpy_function(
-            func=lambda x: preprocess_img(x, input_shape, preprocessing),
-            inp=[image_path],
-            Tout=tf.float32)
-
     X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
-    X_tfds = X_tfds.interleave(
+    return X_tfds.interleave(
         map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
             retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE),
         num_parallel_calls=constants.AUTOTUNE)
-    X_tfds = X_tfds.map(map_func=apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
-    return X_tfds
 
 
 def preprocess_img(img_path, img_shape, preprocessing):

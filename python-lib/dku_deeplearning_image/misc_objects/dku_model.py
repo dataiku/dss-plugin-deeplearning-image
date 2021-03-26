@@ -12,6 +12,7 @@ import numpy as np
 import tables
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
+from tensorflow.keras.preprocessing.image import img_to_array, load_img
 import base64
 import tensorflow as tf
 
@@ -219,17 +220,24 @@ class DkuModel(object):
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
         image = BytesIO(img_b64_decode)
-        images = tf.data.Dataset.from_tensor_slices(np.array([image]))
+        image_as_numpy = img_to_array(load_img(image))
+        images = tf.data.Dataset.from_tensor_slices(image_as_numpy)
+        images = utils.apply_preprocess_image(
+            tfds=images,
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing)
         return self.score(images, **kwargs)
 
     def score_image_folder(self, images_folder, **kwargs):
         images_paths = images_folder.list_paths_in_partition()
         images = utils.read_images_to_tfds(
             images_folder=images_folder,
-            np_images=np.array(images_paths),
-            input_shape=self.get_input_shape(),
-            preprocessing=self.application.preprocessing
+            np_images=np.array(images_paths)
         )
+        images = utils.apply_preprocess_image(
+            tfds=images,
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing)
         return self.score(images, **kwargs)
 
     def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
