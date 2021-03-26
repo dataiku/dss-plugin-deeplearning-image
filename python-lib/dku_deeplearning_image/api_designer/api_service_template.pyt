@@ -13,7 +13,7 @@ sys.path.append(python_lib_path)
 from dku_deeplearning_image.misc_objects import DkuModel
 from dku_deeplearning_image.misc_objects import VirtualManagedFolder
 import dku_deeplearning_image.dku_constants as constants
-from dku_deeplearning_image.config_handler as create_dku_config
+from dku_deeplearning_image.config_handler import create_dku_config
 
 config = {{
     'max_nb_labels': {max_nb_labels},
