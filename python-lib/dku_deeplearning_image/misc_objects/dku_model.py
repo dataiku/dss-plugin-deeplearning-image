@@ -12,7 +12,6 @@ import numpy as np
 import tables
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
-from PIL import Image
 import base64
 import tensorflow as tf
 
