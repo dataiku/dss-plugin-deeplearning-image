@@ -2,7 +2,7 @@ import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
 
-from io import StringIO, BytesIO
+from io import StringIO
 from dku_deeplearning_image.misc_objects import DkuFileManager
 from dku_deeplearning_image.misc_objects import DkuApplication
 
@@ -218,13 +218,12 @@ class DkuModel(object):
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
-        image = Image.open(BytesIO(img_b64_decode))
-        image_as_numpy = np.array(image)
-        images = tf.data.Dataset.from_tensor_slices(image_as_numpy)
+        images = tf.data.Dataset.from_tensor_slices([img_b64_decode])
         images = utils.apply_preprocess_image(
             tfds=images,
             input_shape=self.get_input_shape(),
-            preprocessing=self.application.preprocessing)
+            preprocessing=self.application.preprocessing,
+            is_b64=True)
         return self.score(images, **kwargs)
 
     def score_image_folder(self, images_folder, **kwargs):

@@ -15,6 +15,7 @@ import GPUtil
 import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -189,10 +190,10 @@ def get_ordered_dict(predictions):
     return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
 
-def apply_preprocess_image(tfds, input_shape, preprocessing):
+def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
     def _apply_preprocess_image(image_path):
         return tf.numpy_function(
-            func=lambda x: preprocess_img(x, input_shape, preprocessing),
+            func=lambda x: preprocess_img(x, input_shape, preprocessing, is_b64),
             inp=[image_path],
             Tout=tf.float32)
 
@@ -213,8 +214,10 @@ def read_images_to_tfds(images_folder, np_images):
         num_parallel_calls=constants.AUTOTUNE)
 
 
-def preprocess_img(img_path, img_shape, preprocessing):
+def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
     try:
+        if is_b64:
+            img_path = BytesIO(img_path)
         img = Image.open(img_path).resize(img_shape[:2])
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
