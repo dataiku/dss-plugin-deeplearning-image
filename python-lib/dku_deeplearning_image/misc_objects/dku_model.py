@@ -10,8 +10,8 @@ import json
 import pandas as pd
 import numpy as np
 import tables
-from keras.layers import Dense
-from keras.models import Model, clone_model
+from tensorflow.keras.layers import Dense
+from tensorflow.keras.models import Model, clone_model
 import base64
 
 import copy as cp
@@ -49,8 +49,8 @@ class DkuModel(object):
             include_top=include_top,
             input_shape=input_shape
         )
-        self.model = clone_model(self.base_model)
         with strategy.scope():
+            self.model = clone_model(self.base_model)
             self._load_weights_and_enrich(config, goal, include_top)
             self.top_params['input_shape'] = input_shape
 
@@ -73,30 +73,26 @@ class DkuModel(object):
                 self.enrich(**enrich_kwargs)
             self.load_weights(**load_weights_kwargs)
 
-    def deepcopy(self, **kwargs):
-        new_model = cp.deepcopy(self)
-        new_model.update_attributes(**kwargs)
-        return new_model
-
     def update_attributes(self, **kwargs):
         for attr, value in kwargs.items():
             utils.dbg_msg(kwargs, 'kwargs')
             if self.hasattr(attr):
                 self.setattr(attr, value)
 
-    def save_label_df(self):
+    def save_label_df(self, new_folder=None):
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=new_folder or self.folder,
             file_path=constants.MODEL_LABELS_FILE,
             content=df_labels.to_csv(index=False))
 
-    def save_weights(self):
+    def save_weights(self, new_folder=None):
         # This copies a local file to the managed folder
+        output_folder = new_folder or self.folder
         model_weights_path = self.get_weights_path()
         with open(model_weights_path, 'rb') as f:
-            self.folder.upload_stream(model_weights_path, f)
+            output_folder.upload_stream(model_weights_path, f)
 
     def get_base_model(self):
         return self.getattr('base_model', self.model)
@@ -143,9 +139,9 @@ class DkuModel(object):
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
 
-    def save_config(self):
+    def save_config(self, new_folder=None):
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=new_folder or self.folder,
             file_path=constants.CONFIG_FILE,
             content=json.dumps(self.jsonify_config()))
 
@@ -155,22 +151,22 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
-    def save_info(self):
+    def save_info(self, new_folder=None):
         model_info = {
             constants.GOAL.SCORE.value: self.get_info(),
             constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
-            folder=self.folder,
+            folder=new_folder or self.folder,
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
-    def save_to_folder(self):
+    def save_to_folder(self, new_folder=None):
         logger.info("Starting model saving...")
-        self.save_config()
-        self.save_label_df()
-        self.save_weights()
-        self.save_info()
+        self.save_config(new_folder)
+        self.save_label_df(new_folder)
+        self.save_weights(new_folder)
+        self.save_info(new_folder)
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
@@ -219,7 +215,7 @@ class DkuModel(object):
 
         predictions = Dense(self.top_params['n_classes'], activation='softmax', name='predictions',
                             kernel_regularizer=regularizer)(x)
-        self.model = Model(input=self.model.input, output=predictions)
+        self.model = Model(inputs=self.model.input, outputs=predictions)
 
     def score_b64_image(self, img_b64, **kwargs):
         img_b64_decode = base64.b64decode(img_b64)
@@ -307,8 +303,8 @@ class DkuModel(object):
     def compile(self, **kwargs):
         self.get_model().compile(**kwargs)
 
-    def fit_generator(self, **kwargs):
-        self.model.fit_generator(**kwargs)
+    def fit(self, **kwargs):
+        self.model.fit(**kwargs)
 
     def setattrs(self, d):
         for k, v in d.items():

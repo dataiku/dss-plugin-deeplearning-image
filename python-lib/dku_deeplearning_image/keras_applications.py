@@ -1,7 +1,7 @@
-from keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
-from keras.applications.xception import Xception, preprocess_input as xception_preprocessing
-from keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
-from keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
+from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as resnet50_preprocessing
+from tensorflow.keras.applications.xception import Xception, preprocess_input as xception_preprocessing
+from tensorflow.keras.applications.inception_v3 import InceptionV3, preprocess_input as inceptionv3_preprocessing
+from tensorflow.keras.applications.vgg16 import VGG16, preprocess_input as vgg16_preprocessing
 
 from dku_deeplearning_image.dku_constants import IMAGENET, MODEL
 
@@ -15,8 +15,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.2/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/resnet/resnet50_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     },
@@ -29,8 +29,8 @@ APPLICATIONS = [{
         "input_shape": (299, 299, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.4/xception_weights_tf_dim_ordering_tf_kernels_notop.h5",
+                "top": "https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/xception/xception_weights_tf_dim_ordering_tf_kernels_notop.h5",
             }
         }
     },
@@ -43,8 +43,8 @@ APPLICATIONS = [{
         "input_shape": (299, 299, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.5/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": "https://storage.googleapis.com/tensorflow/keras-applications/inception_v3/inception_v3_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/inception_v3/inception_v3_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     },
@@ -57,8 +57,9 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.1/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": "https://storage.googleapis.com/tensorflow/keras-applications/vgg16/vgg16_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": "https://storage.googleapis.com/tensorflow/keras-applications/vgg16/vgg16_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
-}]
+    }
+]

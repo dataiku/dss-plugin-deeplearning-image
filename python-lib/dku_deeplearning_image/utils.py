@@ -1,9 +1,8 @@
 import os
 import tensorflow as tf
 
-from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras import regularizers
+from tensorflow.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
+from tensorflow.keras import regularizers
 
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
@@ -14,7 +13,7 @@ import numpy as np
 from datetime import datetime
 import GPUtil
 import pandas as pd
-from PIL import UnidentifiedImageError, ImageFile
+from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
 
 logger = logging.getLogger(__name__)
@@ -187,11 +186,11 @@ def get_ordered_dict(predictions):
 
 def preprocess_img(img_path, img_shape, preprocessing):
     try:
-        img = load_img(img_path, target_size=img_shape)
+        img = Image.open(img_path).resize(img_shape[:2])
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return
-    array = img_to_array(img)
+    array = np.array(img)
     array = preprocessing(array)
     return array
 
