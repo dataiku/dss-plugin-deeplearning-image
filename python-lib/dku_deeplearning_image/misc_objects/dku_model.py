@@ -299,7 +299,7 @@ class DkuModel(object):
     def compile(self, **kwargs):
         self.get_model().compile(**kwargs)
 
-    def fit_generator(self, **kwargs):
+    def fit(self, **kwargs):
         self.model.fit(**kwargs)
 
     def setattrs(self, d):

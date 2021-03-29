@@ -108,8 +108,8 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _retrain(self, train_generator, test_generator, callback_list):
-        self.dku_model.fit_generator(
-            generator=train_generator,
+        self.dku_model.fit(
+            x=train_generator,
             steps_per_epoch=self.config.nb_steps_per_epoch,
             epochs=self.config.nb_epochs,
             validation_data=test_generator,
