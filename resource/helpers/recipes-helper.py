@@ -44,14 +44,14 @@ def get_model_config(model_folder):
 
 def get_model_info(model_folder, goal):
     if utils.is_path_in_folder(constants.MODEL_INFO_FILE, model_folder):
-        return download_json(model_folder, constants.MODEL_INFO_FILE)[goal]
+        return download_json(model_folder, constants.MODEL_INFO_FILE)[goal.value]
     else:
         return {"summary": "Not Available before 1st run", "layers": "Not Available before 1st run"}
 
 
 def get_info_about_model(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = get_model_info(model_folder, goal=constants.SCORE)
+    model_info = get_model_info(model_folder, goal=constants.GOAL.SCORE)
     config = get_model_config(model_folder)
 
     return {
@@ -63,7 +63,7 @@ def get_info_about_model(inputs):
 
 def get_info_retrain(inputs):
     model_folder = get_model_folder_path(inputs)
-    model_info = get_model_info(model_folder, goal=constants.BEFORE_TRAIN)
+    model_info = get_model_info(model_folder, goal=constants.GOAL.BEFORE_TRAIN)
     label_dataset = get_label_dataset(inputs)
     label_columns = [c["name"] for c in label_dataset.read_schema()]
     model_config = get_model_config(model_folder)
@@ -115,15 +115,15 @@ def get_info_gpu():
     response["gpu_memory_allocation_mode"] = [
         {
             'label': 'No limitation',
-            'value': 'all'
+            'value': constants.GPU_MEMORY.NO_LIMIT.value
         },
         {
             'label': 'Allocate memory automatically',
-            'value': constants.GPU_MEMORY_GROWTH
+            'value': constants.GPU_MEMORY.GROWTH.value
         },
         {
             'label': 'Set a custom memory limit...',
-            'value': constants.GPU_MEMORY_LIMIT
+            'value': constants.GPU_MEMORY.LIMIT.value
         }
     ]
     return response
