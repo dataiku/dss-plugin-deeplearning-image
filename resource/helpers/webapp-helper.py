@@ -1,12 +1,18 @@
 import dataiku
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 import dku_deeplearning_image.utils as utils
+import logging
 
+logger = logging.getLogger(__name__)
 api_client = dataiku.api_client()
 
 
 def has_path(folder, path):
-    folder_paths = folder.list_paths_in_partition()
+    try:
+        folder_paths = folder.list_paths_in_partition()
+    except Exception:
+        logger.warning(f"The folder {folder.get_name()} could not be read. Skipping it.")
+        return False
     return len([p for p in folder_paths if utils.sanitize_path(p).startswith(path)]) > 0
 
 
