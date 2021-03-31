@@ -201,7 +201,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            logger.info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
+            logger.warning("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
