@@ -11,31 +11,40 @@ from dataikuapi.utils import DataikuException
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 
 
-def load_logs_from_folder(folder_id):
-    folder = dataiku.Folder(folder_id)
+def check_folder_exists(folder):
     try:
         _ = folder.get_info()
     except Exception:
-        raise DataikuException(f'Folder with ID {folder_id} does not exist.')
+        raise DataikuException(f'Folder with ID {folder} does not exist.')
 
+
+def is_filesystem_folder(folder):
     try:
-        folder_path = folder.get_path()
-    except Exception as err:
-        if err.args[0].startswith('Folder is not on the local filesystem'):
-            for path in folder.list_paths_in_partition():
-                relative_path = '.' + path
-                os.makedirs(os.path.dirname(relative_path), exist_ok=True)
-                file = folder.get_download_stream(path)
-                with open(relative_path, 'wb+') as nf:
-                    nf.write(file.read())
-            folder_path = '.'
-        else:
-            raise err
-    return os.path.join(folder_path, TENSORBOARD_LOGS)
+        _ = folder.get_path()
+        return True
+    except Exception:
+        return False
+
+
+def download_logs_to_local(folder):
+    for path in folder.list_paths_in_partition():
+        relative_path = '.' + path
+        os.makedirs(os.path.dirname(relative_path), exist_ok=True)
+        file = folder.get_download_stream(path)
+        with open(relative_path, 'wb+') as nf:
+            nf.write(file.read())
 
 
 def __get_logs_path():
-    return load_logs_from_folder(get_webapp_config().get('retrained_model_folder'))
+    retrained_model_folder = dataiku.Folder(get_webapp_config().get('retrained_model_folder'))
+    check_folder_exists(retrained_model_folder)
+
+    if not is_filesystem_folder(retrained_model_folder):
+        download_logs_to_local(retrained_model_folder)
+        folder_path = '.'
+    else:
+        folder_path = retrained_model_folder.get_path()
+    return os.path.join(folder_path, TENSORBOARD_LOGS)
 
 
 def __get_custom_assets_zip_provider():
@@ -61,7 +70,7 @@ def __get_tb_app(tensorboard_logs):
     flags.reload_interval = 5.0
     flags.logdir = tensorboard_logs
     return application.standard_tensorboard_wsgi(
-        plugin_loaders=plugins_or_loaders,
+        plugin_loaders=plugins,
         assets_zip_provider=__get_custom_assets_zip_provider(),
         flags=flags
     )
@@ -77,4 +86,31 @@ def tensorboard_wsgi_app(environ, start_response):
         start_response(status, headers)
         return [b"200"]
     else:
-        return __get_tb_app(__get_logs_path())(environ, start_response)
+        logs_path = __get_logs_path()
+        if logs_path:
+            return __get_tb_app(logs_path)(environ, start_response)
+        else:
+            status = '400'
+            headers = [('Content-type', 'text/html; charset=utf-8')]
+            start_response(status, headers)
+            return [get_no_folder_selected_error()]
+
+
+def get_no_folder_selected_error():
+    return b"""
+        <div style="text-align: center; margin-top: 20px;">
+            <span style="color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            position: relative;
+            padding: .75rem 1.25rem;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: .25rem;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            ">
+                You must select a folder in the <b>Settings</b> tab before starting the webapp.
+                Select a folder containing the tensorboard logs and <b>restart the webapp</b>.
+            <span>
+        </div>
+    """

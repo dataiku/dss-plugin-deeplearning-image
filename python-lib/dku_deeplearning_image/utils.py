@@ -1,9 +1,8 @@
 import os
 import tensorflow as tf
 
-from keras.preprocessing.image import img_to_array, load_img
-from keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
-from keras import regularizers
+from tensorflow.keras.layers import GlobalAveragePooling2D, GlobalMaxPooling2D, Flatten, Dropout
+from tensorflow.keras import regularizers
 
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
@@ -14,7 +13,7 @@ import numpy as np
 from datetime import datetime
 import GPUtil
 import pandas as pd
-from PIL import UnidentifiedImageError, ImageFile
+from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
 
 logger = logging.getLogger(__name__)
@@ -86,7 +85,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
         gpus_to_use = [gpus[int(i)] for i in gpu_list] or gpus
         logger.info(f"GPUs on the machine: {[g.id for g in GPUtil.getGPUs()]}")
         logger.info(f"Will use the following GPUs: {gpus_to_use}")
-        if gpu_memory_allocation_mode == constants.GPU_MEMORY_LIMIT and memory_limit_ratio:
+        if gpu_memory_allocation_mode == constants.GPU_MEMORY.LIMIT and memory_limit_ratio:
             for gpu in gpus_to_use:
                 memory_limit = calculate_gpu_memory_allocation(memory_limit_ratio, gpu)
                 logger.info(f"Restraining GPU {gpu} to {memory_limit} Mo ({memory_limit_ratio}%)")
@@ -94,7 +93,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
                     gpu,
                     [tf.config.LogicalDeviceConfiguration(memory_limit=int(memory_limit))]
                 )
-        elif gpu_memory_allocation_mode == constants.GPU_MEMORY_GROWTH:
+        elif gpu_memory_allocation_mode == constants.GPU_MEMORY.GROWTH:
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
         tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:
@@ -187,11 +186,11 @@ def get_ordered_dict(predictions):
 
 def preprocess_img(img_path, img_shape, preprocessing):
     try:
-        img = load_img(img_path, target_size=img_shape)
+        img = Image.open(img_path).resize(img_shape[:2])
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return
-    array = img_to_array(img)
+    array = np.array(img)
     array = preprocessing(array)
     return array
 

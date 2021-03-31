@@ -89,13 +89,7 @@ class MyRunnable(Runnable):
                         update_time = update_percent(percent, update_time)
                         f.write(content)
 
-        if trained_on == constants.IMAGENET:
-            # Downloading mapping id <-> name for imagenet classes
-            # File used by Keras in all its 'decode_predictions' methods
-            # Found here : https://github.com/keras-team/keras/blob/2.1.1/keras/applications/imagenet_utils.py
-            class_mapping_url = "https://s3.amazonaws.com/deep-learning-models/image-models/imagenet_class_index.json"
-        else:
-            class_mapping_url = ''
+        class_mapping_url = constants.IMAGENET_URL if trained_on == constants.IMAGENET else ""
 
         files_to_dl = [
             {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},
@@ -118,7 +112,7 @@ class MyRunnable(Runnable):
                 content=mapping_df.to_csv(index=False, sep=","))
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
 
-        new_model.load_model({}, constants.SCORE)
+        new_model.load_model({}, constants.GOAL.SCORE)
         new_model.save_info()
         return "<span>DONE</span>"
 
