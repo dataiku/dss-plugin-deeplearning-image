@@ -55,8 +55,8 @@ def init_flags(loader_list):
 
 
 def __get_tb_app(tensorboard_logs):
-    plugins_or_loaders = tb_default.get_plugins()
-    flags = init_flags(plugins_or_loaders)
+    plugins = tb_default.get_plugins()
+    flags = init_flags(plugins)
     flags.purge_orphaned_data = True
     flags.reload_interval = 5.0
     flags.logdir = tensorboard_logs
