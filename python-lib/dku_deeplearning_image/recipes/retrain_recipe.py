@@ -4,9 +4,9 @@ import dku_deeplearning_image.utils as utils
 from dku_deeplearning_image.misc_objects import DkuImageGenerator
 import dku_deeplearning_image.dku_constants as constants
 from sklearn.model_selection import train_test_split
-from keras.preprocessing.image import ImageDataGenerator
-from keras import optimizers
-from keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras import optimizers
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
 
@@ -22,7 +22,7 @@ class RetrainRecipe(DkuRecipe):
     def load_dku_model(self, model_folder, label_df):
         self.dku_model = DkuModel(model_folder)
         self.dku_model.label_df = label_df
-        self.dku_model.load_model(self.config, constants.RETRAIN)
+        self.dku_model.load_model(self.config, constants.GOAL.RETRAIN)
         self._set_trainable_layers()
 
     def _set_trainable_layers(self):
@@ -107,8 +107,8 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _retrain(self, train_generator, test_generator, callback_list):
-        self.dku_model.fit_generator(
-            generator=train_generator,
+        self.dku_model.fit(
+            x=train_generator,
             steps_per_epoch=self.config.nb_steps_per_epoch,
             epochs=self.config.nb_epochs,
             validation_data=test_generator,
