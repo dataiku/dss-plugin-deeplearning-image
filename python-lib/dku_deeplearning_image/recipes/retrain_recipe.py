@@ -22,7 +22,7 @@ class RetrainRecipe(DkuRecipe):
     def load_dku_model(self, model_folder, label_df):
         self.dku_model = DkuModel(model_folder)
         self.dku_model.label_df = label_df
-        self.dku_model.load_model(self.config, constants.RETRAIN)
+        self.dku_model.load_model(self.config, constants.GOAL.RETRAIN)
         self._set_trainable_layers()
 
     def _set_trainable_layers(self):
@@ -105,7 +105,7 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _retrain(self, train_generator, test_generator, callback_list):
-        self.dku_model.fit_generator(
+        self.dku_model.fit(
             x=train_generator,
             steps_per_epoch=self.config.nb_steps_per_epoch,
             epochs=self.config.nb_epochs,

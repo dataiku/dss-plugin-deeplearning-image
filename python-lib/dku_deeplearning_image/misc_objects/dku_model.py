@@ -41,7 +41,7 @@ class DkuModel(object):
 
     def load_model(self, config, goal):
         strategy = utils.get_tf_strategy()
-        include_top = goal == constants.SCORE and not self.retrained
+        include_top = goal == constants.GOAL.SCORE and not self.retrained
         input_shape = config.get('input_shape', self.get_input_shape())
         self.base_model = self.application.model_func(
             weights=None,
@@ -64,7 +64,7 @@ class DkuModel(object):
         load_weights_kwargs = {
             "with_top": include_top
         }
-        if goal == constants.RETRAIN:
+        if goal == constants.GOAL.RETRAIN:
             self.load_weights(**load_weights_kwargs)
             self.enrich(**enrich_kwargs)
         else:
@@ -78,8 +78,8 @@ class DkuModel(object):
             if self.hasattr(attr):
                 self.setattr(attr, value)
 
-    def save_label_df(self, ext_output_folder=None):
-        output_folder = ext_output_folder or self.model
+    def save_label_df(self, new_folder=None):
+        output_folder = new_folder or self.model
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
@@ -87,9 +87,9 @@ class DkuModel(object):
             file_path=constants.MODEL_LABELS_FILE,
             content=df_labels.to_csv(index=False))
 
-    def save_weights(self, ext_output_folder=None):
+    def save_weights(self, new_folder=None):
         # This copies a local file to the managed folder
-        output_folder = ext_output_folder or self.model
+        output_folder = new_folder or self.model
         model_weights_path = self.get_weights_path()
         with open(model_weights_path, 'rb') as f:
             output_folder.upload_stream(model_weights_path, f)
@@ -139,8 +139,8 @@ class DkuModel(object):
     def get_weights_url(self):
         return self.application.get_weights_url(self.trained_on)
 
-    def save_config(self, ext_output_folder=None):
-        output_folder = ext_output_folder or self.model
+    def save_config(self, new_folder=None):
+        output_folder = new_folder or self.model
         DkuFileManager.write_to_folder(
             folder=output_folder,
             file_path=constants.CONFIG_FILE,
@@ -152,31 +152,34 @@ class DkuModel(object):
             'summary': self.get_model_summary(base)
         }
 
-    def save_info(self, ext_output_folder=None):
-        output_folder = ext_output_folder or self.model
+    def save_info(self, new_folder=None):
+        output_folder = new_folder or self.model
         model_info = {
-            constants.SCORE: self.get_info(),
-            constants.BEFORE_TRAIN: self.get_info(base=True)
+            constants.GOAL.SCORE.value: self.get_info(),
+            constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
             folder=output_folder,
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
-    def save_to_folder(self, ext_output_folder=None):
+    def save_to_folder(self, new_folder=None):
         logger.info("Starting model saving...")
-        output_folder = ext_output_folder or self.folder
-        self.save_config(output_folder)
-        self.save_label_df(output_folder)
-        self.save_weights(output_folder)
-        self.save_info(output_folder)
+        self.save_config(new_folder)
+        self.save_label_df(new_folder)
+        self.save_weights(new_folder)
+        self.save_info(new_folder)
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
-        dku_application_params = list(filter(lambda x: x['name'] == self.architecture, APPLICATIONS))
+        dku_application_params = [app for app in APPLICATIONS if app['name'].value == self.architecture]
         if not dku_application_params:
-            available_apps = [x['name'] for x in APPLICATIONS]
-            raise IOError("The application you asked for is not available. Available are : {}.".format(available_apps))
+            available_apps = [app['name'].value for app in APPLICATIONS]
+            print(self.architecture)
+            print(available_apps)
+            raise IOError("The application {} you asked for is not available. Available are : {}.".format(
+                self.architecture,
+                available_apps))
         return DkuApplication(**dku_application_params[0])
 
     def get_or_load(self, attr, default):
@@ -266,7 +269,7 @@ class DkuModel(object):
     def compile(self, **kwargs):
         self.get_model().compile(**kwargs)
 
-    def fit_generator(self, **kwargs):
+    def fit(self, **kwargs):
         self.model.fit(**kwargs)
 
     def setattrs(self, d):

@@ -8,10 +8,10 @@ def add_integration_test(user_dss_clients, scenario_id):
     dss_scenario.run(user_dss_clients, project_key=TEST_PROJECT_KEY, scenario_id=scenario_id)
 
 
-def test_run_tensorboard(user_dss_clients):
-    """This test only checks if the webapp can be started without any error. There are no frontend checks as it
-    is complicated to implement"""
-    add_integration_test(user_dss_clients, "Webapp_-_Tensorboard")
+def test_model_download(user_dss_clients):
+    """Runs the macro to download model for each model available. It then verifies that we got all required files
+    in output folder"""
+    add_integration_test(user_dss_clients, "Macro_-_Model_Download")
 
 
 def test_extract_features(user_dss_clients):
@@ -38,10 +38,10 @@ def test_advanced_retrain(user_dss_clients):
     add_integration_test(user_dss_clients, "Recipe_-_Advanced_Retrain")
 
 
-def test_model_download(user_dss_clients):
-    """Runs the macro to download model for each model available. It then verifies that we got all required files
-    in output folder"""
-    add_integration_test(user_dss_clients, "Macro_-_Model_Download")
+def test_run_tensorboard(user_dss_clients):
+    """This test only checks if the webapp can be started without any error. There are no frontend checks as it
+    is complicated to implement"""
+    add_integration_test(user_dss_clients, "Webapp_-_Tensorboard")
 
 
 def test_cloud_integration(user_dss_clients):

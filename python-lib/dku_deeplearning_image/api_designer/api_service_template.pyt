@@ -27,7 +27,7 @@ def get_model_folder(mf_path):
 
 def load_and_get_model(mf, conf):
     dku_model = DkuModel(mf)
-    dku_model.load_model(conf, constants.SCORE)
+    dku_model.load_model(conf, constants.GOAL.SCORE)
     return dku_model
 
 
@@ -40,7 +40,7 @@ def score_image(md, conf, img_b64):
     return predictions
 
 
-dku_config = create_dku_config(config, constants.SCORE)
+dku_config = create_dku_config(config, constants.GOAL.SCORE)
 model_folder = get_model_folder(model_folder_path)
 model = load_and_get_model(model_folder, dku_config)
 
