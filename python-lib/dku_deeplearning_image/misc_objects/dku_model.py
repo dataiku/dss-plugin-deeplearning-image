@@ -1,23 +1,23 @@
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
-
 from io import StringIO, BytesIO
 from dku_deeplearning_image.misc_objects import DkuFileManager
 from dku_deeplearning_image.misc_objects import DkuApplication
-
 import json
 import pandas as pd
 import numpy as np
 import tables
+import warnings
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
 import base64
 from pathlib import Path
 
-import copy as cp
-
 import logging
+
+warnings.simplefilter('ignore', tables.NaturalNameWarning)
+warnings.simplefilter('ignore', DeprecationWarning)
 logger = logging.getLogger(__name__)
 
 
@@ -214,7 +214,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            logger.info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
+            logger.warning("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None
         return label_df
 

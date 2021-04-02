@@ -24,7 +24,6 @@ class RetrainRecipe(DkuRecipe):
         self.dku_model.label_df = label_df
         self.dku_model.load_model(self.config, constants.GOAL.RETRAIN)
         self._set_trainable_layers()
-        self.dku_model.print_summary()
 
     def _set_trainable_layers(self):
         logger.info("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))

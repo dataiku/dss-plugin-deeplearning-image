@@ -195,6 +195,6 @@ def is_user_admin():
         _ = dataiku.api_client().list_code_envs()
         return True
     except DataikuException as err:
-        logger.info("Could not list code envs. This probably means the user is not an admin."
+        logger.warning("Could not list code envs. This probably means the user is not an admin."
                     "Original error: {}".format(err))
         return False
