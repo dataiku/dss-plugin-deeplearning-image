@@ -5,6 +5,7 @@ TEST_PROJECT_KEY = "PLUGINTESTDEEPLEARNINGIMAGE"
 
 
 def add_integration_test(user_dss_clients, scenario_id):
+    raise Exception(user_dss_clients)
     dss_scenario.run(user_dss_clients, project_key=TEST_PROJECT_KEY, scenario_id=scenario_id)
 
 
