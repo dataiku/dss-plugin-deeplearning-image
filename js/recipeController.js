@@ -91,7 +91,7 @@ app.controller('retrainRecipeController', function ($scope, utils) {
         utils.initVariable($scope, 'n_augmentation', 2);
         utils.initVariable($scope, 'model_custom_params_data_augmentation', []);
         utils.initVariable($scope, 'data_augmentation', false);
-        utils.initVariable($scope, 'tensorboard', false);
+        utils.initVariable($scope, 'tensorboard', true);
     };
 
     const init = function () {

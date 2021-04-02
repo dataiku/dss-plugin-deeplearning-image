@@ -86,9 +86,9 @@ class DSSParameter:
         self.print_success_message()
 
     def print_success_message(self):
-        """Formats the succee message
+        """Formats the success message
         """
-        logger.info('All checks have been successfully done for {}.'.format(self.name))
+        logger.debug('All checks have been successfully done for {}.'.format(self.name))
 
     def __repr__(self):
         return str({"value": self.value})

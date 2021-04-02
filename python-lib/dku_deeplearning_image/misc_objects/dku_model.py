@@ -1,21 +1,24 @@
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
-
 from io import StringIO
 from dku_deeplearning_image.misc_objects import DkuFileManager
 from dku_deeplearning_image.misc_objects import DkuApplication
-
 import json
 import pandas as pd
 import numpy as np
 import tables
+import warnings
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
 import base64
 import tensorflow as tf
+from pathlib import Path
 
 import logging
+
+warnings.simplefilter('ignore', tables.NaturalNameWarning)
+warnings.simplefilter('ignore', DeprecationWarning)
 logger = logging.getLogger(__name__)
 
 
@@ -163,12 +166,27 @@ class DkuModel(object):
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
+    def save_tensorboard_logs(self, new_folder=None):
+        logger.info("Saving tensorboard logs...")
+        output_folder = new_folder or self.folder
+        tb_files = Path(utils.get_file_path('.', constants.TENSORBOARD_LOGS)).rglob(r'*')
+        for file in tb_files:
+            if file.is_file():
+                with file.open('rb') as f:
+                    output_folder.upload_stream(
+                        path=str(file),
+                        f=f
+                    )
+        logger.info("Tensorboard logs have been successfully saved.")
+
     def save_to_folder(self, new_folder=None):
         logger.info("Starting model saving...")
         self.save_config(new_folder)
         self.save_label_df(new_folder)
         self.save_weights(new_folder)
         self.save_info(new_folder)
+        self.save_tensorboard_logs(new_folder)
+
         logger.info("Model has been successfully saved.")
 
     def get_application(self):
@@ -200,7 +218,7 @@ class DkuModel(object):
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
             label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
         else:
-            logger.info("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
+            logger.warning("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None
         return label_df
 
