@@ -16,6 +16,7 @@ import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
 
+
 logger = logging.getLogger(__name__)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
@@ -76,9 +77,8 @@ def can_use_gpu():
 
 
 def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory_limit_ratio=None):
-    logger.info("load_gpu_options")
     if should_use_gpu and can_use_gpu():
-        logger.info("should use GPU")
+        logger.info("Loading GPU Options...")
         gpus = tf.config.list_physical_devices('GPU')
         for i, g in enumerate(gpus):
             g.id = i
@@ -97,6 +97,7 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
             map(lambda g: tf.config.experimental.set_memory_growth(g, True), gpus_to_use)
         tf.config.set_visible_devices(gpus_to_use, 'GPU')
     else:
+        logger.info("Skipping GPU Options")
         deactivate_gpu()
 
 
@@ -128,9 +129,9 @@ def get_cached_file_from_folder(folder, file_path):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
                 f.write(stream.read())
-                logger.info(f"cached file {file_path}")
+                logger.debug(f"Cached file {file_path}")
     else:
-        logger.info(f"read from cache {file_path}")
+        logger.debug(f"Read from cache {file_path}")
     return filename
 
 
@@ -141,7 +142,7 @@ def get_model_config_from_file(model_folder):
 def build_prediction_output_df(images_paths, predictions):
     output = pd.DataFrame()
     output["images"] = images_paths
-    logger.info("------->" + str(output))
+    logger.debug("------->" + str(output))
     output["prediction"] = predictions["prediction"]
     output["error"] = predictions["error"]
     return output

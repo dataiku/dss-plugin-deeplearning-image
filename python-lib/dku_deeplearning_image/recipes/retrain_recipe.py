@@ -24,7 +24,6 @@ class RetrainRecipe(DkuRecipe):
         self.dku_model.label_df = label_df
         self.dku_model.load_model(self.config, constants.GOAL.RETRAIN)
         self._set_trainable_layers()
-        self.dku_model.print_summary()
 
     def _set_trainable_layers(self):
         logger.info("Will Retrain layer(s) with mode: {}".format(self.config.layer_to_retrain))
@@ -79,7 +78,7 @@ class RetrainRecipe(DkuRecipe):
         )
 
     def _get_tensorboard(self, output_model_folder):
-        log_path = utils.get_file_path(output_model_folder.get_path(), constants.TENSORBOARD_LOGS)
+        log_path = utils.get_file_path('.', constants.TENSORBOARD_LOGS)
 
         if os.path.isdir(log_path):
             shutil.rmtree(log_path)

@@ -6,24 +6,45 @@ from tensorboard.backend import application
 import os
 import logging
 from argparse import ArgumentParser
-from tensorboard.plugins import base_plugin
 from dataikuapi.utils import DataikuException
 
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 
 
-def get_logdir(folder_id):
-    folder = dataiku.Folder(folder_id)
+def check_folder_exists(folder):
     try:
-        folder_path = folder.get_path()
-        return os.path.join(folder_path, TENSORBOARD_LOGS)
+        _ = folder.get_info()
     except Exception:
-        raise DataikuException('Folder with ID %s does not exist.' % str(folder_id))
+        raise DataikuException(f'Folder with ID {folder} does not exist.')
+
+
+def is_filesystem_folder(folder):
+    try:
+        _ = folder.get_path()
+        return True
+    except Exception:
+        return False
+
+
+def download_logs_to_local(folder):
+    for path in folder.list_paths_in_partition():
+        relative_path = '.' + path
+        os.makedirs(os.path.dirname(relative_path), exist_ok=True)
+        file = folder.get_download_stream(path)
+        with open(relative_path, 'wb+') as nf:
+            nf.write(file.read())
 
 
 def __get_logs_path():
-    retrained_model_folder = get_webapp_config().get('retrained_model_folder')
-    return get_logdir(retrained_model_folder) if retrained_model_folder else None
+    retrained_model_folder = dataiku.Folder(get_webapp_config().get('retrained_model_folder'))
+    check_folder_exists(retrained_model_folder)
+
+    if not is_filesystem_folder(retrained_model_folder):
+        download_logs_to_local(retrained_model_folder)
+        folder_path = '.'
+    else:
+        folder_path = retrained_model_folder.get_path()
+    return os.path.join(folder_path, TENSORBOARD_LOGS)
 
 
 def __get_custom_assets_zip_provider():
@@ -42,29 +63,14 @@ def init_flags(loader_list):
     return flags
 
 
-def make_plugin_loader(plugin_spec):
-    """Returns a plugin loader for the given plugin.
-    Args:
-      plugin_spec: A TBPlugin subclass, or a TBLoader instance or subclass.
-    Returns:
-      A TBLoader for the given plugin.
-    """
-    if issubclass(plugin_spec, base_plugin.TBLoader):
-        return plugin_spec()
-    if issubclass(plugin_spec, base_plugin.TBPlugin):
-        return base_plugin.BasicLoader(plugin_spec)
-    raise TypeError("Not a TBLoader or TBPlugin subclass: %r" % (plugin_spec,))
-
-
 def __get_tb_app(tensorboard_logs):
-    plugins_or_loaders = tb_default.get_plugins()
-    loaders = [make_plugin_loader(plugin_spec) for plugin_spec in plugins_or_loaders]
-    flags = init_flags(loaders)
+    plugins = tb_default.get_plugins()
+    flags = init_flags(plugins)
     flags.purge_orphaned_data = True
     flags.reload_interval = 5.0
     flags.logdir = tensorboard_logs
     return application.standard_tensorboard_wsgi(
-        plugin_loaders=loaders,
+        plugin_loaders=plugins,
         assets_zip_provider=__get_custom_assets_zip_provider(),
         flags=flags
     )
