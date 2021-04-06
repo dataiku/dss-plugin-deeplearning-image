@@ -124,8 +124,8 @@ def get_file_path(folder_path, file_name):
     return os.path.join(str(folder_path), str(file_name))
 
 
-def get_cached_file_from_folder(folder, file_path, is_byte=False):
-    filename = file_path.replace('/', '_') if not is_byte else file_path.replace(b'/', b'_')
+def get_cached_file_from_folder(folder, file_path):
+    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path.replace(b'/', b'_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
@@ -176,15 +176,14 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
     formatted_predictions = []
     id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
     pred_errors = []
-    print('predictions: ', predictions)
-    print('labels_df: ', labels_df)
-    for pred in predictions:
+    for pred_i, pred in enumerate(predictions):
         try:
             formatted_pred = OrderedDict(
                 [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
             formatted_predictions.append(json.dumps(formatted_pred))
             pred_errors.append(0)
-        except Exception:
+        except Exception as err:
+            logger.warning(f"There has been an error with prediction: {pred_i}.\n Original error: {err}")
             pred_errors.append(1)
     return {"prediction": formatted_predictions, "error": pred_errors}
 
@@ -202,7 +201,7 @@ def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
 def read_images_to_tfds(images_folder, np_images):
     def retrieve_image_from_folder(image_fn):
         return tf.numpy_function(
-            func=lambda x: get_cached_file_from_folder(images_folder, x, is_byte=True),
+            func=lambda x: get_cached_file_from_folder(images_folder, x),
             inp=[image_fn],
             Tout=tf.string)
 

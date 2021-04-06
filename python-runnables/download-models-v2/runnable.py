@@ -44,7 +44,7 @@ class MyRunnable(Runnable):
         # Creating new Managed Folder if needed
         project = self.client.get_project(self.project_key)
 
-        if output_new_folder_name:
+        if output_new_folder_name and output_managed_id == "create_new_folder":
             output_folder_dss = project.create_managed_folder(output_new_folder_name)
         else:
             output_folder_dss = project.get_managed_folder(output_managed_id)
