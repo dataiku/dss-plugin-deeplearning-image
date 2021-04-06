@@ -171,19 +171,21 @@ def log_func(txt):
 
 
 def format_predictions_output(predictions, classify=False, labels_df=None, limit=None, min_threshold=None):
-    if not classify:
-        return predictions.tolist()
     formatted_predictions = []
-    id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
     pred_errors = []
+    id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
     for pred_i, pred in enumerate(predictions):
         try:
-            formatted_pred = OrderedDict(
-                [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
-            formatted_predictions.append(json.dumps(formatted_pred))
+            if classify:
+                formatted_pred = OrderedDict(
+                    [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
+                formatted_predictions.append(json.dumps(formatted_pred))
+            else:
+                formatted_predictions.append(pred.tolist())
             pred_errors.append(0)
         except Exception as err:
             logger.warning(f"There has been an error with prediction: {pred_i}.\n Original error: {err}")
+            formatted_predictions.append(None)
             pred_errors.append(1)
     return {"prediction": formatted_predictions, "error": pred_errors}
 
