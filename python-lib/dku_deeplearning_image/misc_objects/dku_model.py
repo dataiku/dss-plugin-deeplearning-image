@@ -193,8 +193,6 @@ class DkuModel(object):
         dku_application_params = [app for app in APPLICATIONS if app['name'].value == self.architecture]
         if not dku_application_params:
             available_apps = [app['name'].value for app in APPLICATIONS]
-            print(self.architecture)
-            print(available_apps)
             raise IOError("The application {} you asked for is not available. Available are : {}.".format(
                 self.architecture,
                 available_apps))
