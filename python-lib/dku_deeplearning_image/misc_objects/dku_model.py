@@ -82,7 +82,7 @@ class DkuModel(object):
                 self.setattr(attr, value)
 
     def save_label_df(self, new_folder=None):
-        output_folder = new_folder or self.model
+        output_folder = new_folder or self.folder
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
@@ -92,7 +92,7 @@ class DkuModel(object):
 
     def save_weights(self, new_folder=None):
         # This copies a local file to the managed folder
-        output_folder = new_folder or self.model
+        output_folder = new_folder or self.folder
         model_weights_path = self.get_weights_path()
         with open(model_weights_path, 'rb') as f:
             output_folder.upload_stream(model_weights_path, f)
@@ -143,7 +143,7 @@ class DkuModel(object):
         return self.application.get_weights_url(self.trained_on)
 
     def save_config(self, new_folder=None):
-        output_folder = new_folder or self.model
+        output_folder = new_folder or self.folder
         DkuFileManager.write_to_folder(
             folder=output_folder,
             file_path=constants.CONFIG_FILE,
@@ -156,7 +156,7 @@ class DkuModel(object):
         }
 
     def save_info(self, new_folder=None):
-        output_folder = new_folder or self.model
+        output_folder = new_folder or self.folder
         model_info = {
             constants.GOAL.SCORE.value: self.get_info(),
             constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
