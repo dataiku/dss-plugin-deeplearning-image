@@ -134,16 +134,16 @@ class RetrainRecipe(DkuRecipe):
         y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
         return X_tfds, y_values
 
-    def _build_tfds(self, pddf, images_folder, ignore_augm=False):
+    def _build_tfds(self, df, images_folder, ignore_augm=False):
         use_augm = self.config.data_augmentation and not ignore_augm
         X_tfds = utils.read_images_to_tfds(
             images_folder=images_folder,
-            np_images=pddf[constants.FILENAME].values)
+            np_images=df[constants.FILENAME].values)
         X_tfds = utils.apply_preprocess_image(
             tfds=X_tfds,
             input_shape=self.config.input_shape,
             preprocessing=self.dku_model.application.preprocessing)
-        y_values = utils.convert_target_to_np_array(pddf[constants.LABEL].values)["remapped"]
+        y_values = utils.convert_target_to_np_array(df[constants.LABEL].values)["remapped"]
         if use_augm:
             X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
 
