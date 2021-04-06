@@ -176,19 +176,17 @@ def format_predictions_output(predictions, classify=False, labels_df=None, limit
     formatted_predictions = []
     id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
     pred_errors = []
+    print('predictions: ', predictions)
+    print('labels_df: ', labels_df)
     for pred in predictions:
         try:
-            formatted_pred = get_ordered_dict(
-                {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
-            formatted_predictions.append(formatted_pred)
+            formatted_pred = OrderedDict(
+                [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
+            formatted_predictions.append(json.dumps(formatted_pred))
             pred_errors.append(0)
         except Exception:
             pred_errors.append(1)
     return {"prediction": formatted_predictions, "error": pred_errors}
-
-
-def get_ordered_dict(predictions):
-    return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
 
 
 def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
