@@ -148,7 +148,7 @@ class RetrainRecipe(DkuRecipe):
             X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
 
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
-        tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size, drop_remainder=True).repeat()
+        tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size).repeat()
         optim_tfds = tfds.prefetch(constants.AUTOTUNE)
         return optim_tfds
 
