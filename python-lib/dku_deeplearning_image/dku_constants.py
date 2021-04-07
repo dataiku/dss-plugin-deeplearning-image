@@ -4,12 +4,12 @@ from enum import Enum
 PLUGIN_ID = 'deeplearning-image-v2'
 
 
-
 class MODEL(Enum):
     RESNET = "resnet"
     XCEPTION = "xception"
     INCEPTIONV3 = "inception_v3"
     VGG16 = "vgg16"
+    INCEPTION_RESNET = "inception_resnet"
     MOBILENET = "mobilenet"
     DENSENET = "densenet"
     NASNET_LARGE = "nasnet_large"
