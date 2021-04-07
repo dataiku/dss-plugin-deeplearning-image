@@ -171,24 +171,25 @@ def log_func(txt):
     return inner
 
 
-def format_predictions_output(predictions, classify=False, labels_df=None, limit=None, min_threshold=None):
+def format_predictions_output(predictions, errors, classify=False, labels_df=None, limit=None, min_threshold=None):
     formatted_predictions = []
-    pred_errors = []
+    predictions = list(predictions)
     id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
+    for err_i in range(len(errors)):
+        if errors[err_i] == 1:
+            predictions.insert(err_i, None)
     for pred_i, pred in enumerate(predictions):
-        try:
+        if pred is not None:
             if classify:
                 formatted_pred = OrderedDict(
                     [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
                 formatted_predictions.append(json.dumps(formatted_pred))
             else:
                 formatted_predictions.append(pred.tolist())
-            pred_errors.append(0)
-        except Exception as err:
-            logger.warning(f"There has been an error with prediction: {pred_i}.\n Original error: {err}")
+        else:
+            logger.warning(f"There has been an error with prediction: {pred_i}. (It is probably not an image)")
             formatted_predictions.append(None)
-            pred_errors.append(1)
-    return {"prediction": formatted_predictions, "error": pred_errors}
+    return {"prediction": formatted_predictions, "error": errors}
 
 
 def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
@@ -198,7 +199,23 @@ def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
             inp=[image_path],
             Tout=tf.float32)
 
-    return tfds.map(map_func=_apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
+    def _convert_errors(images):
+        return tf.numpy_function(
+            func=lambda x: tf.cast(x.size == 0, tf.int8),
+            inp=[images],
+            Tout=tf.int8)
+
+    def _filter_errors(images):
+        return tf.numpy_function(
+            func=lambda x: x.size != 0,
+            inp=[images],
+            Tout=tf.bool)
+
+    preprocessed_images = tfds.map(map_func=_apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
+    error_array = preprocessed_images.map(map_func=_convert_errors, num_parallel_calls=constants.AUTOTUNE)
+    preprocessed_images_filtered = preprocessed_images.filter(predicate=_filter_errors)
+
+    return preprocessed_images_filtered, error_array
 
 
 def read_images_to_tfds(images_folder, np_images):
@@ -222,7 +239,7 @@ def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
         img = Image.open(img_path).resize(img_shape[:2])
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
-        return
+        return tf.cast(np.array([]), tf.float32)
     array = np.array(img)
     array = preprocessing(array)
     return array

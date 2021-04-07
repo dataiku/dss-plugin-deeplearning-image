@@ -238,29 +238,31 @@ class DkuModel(object):
     def score_b64_image(self, img_b64, limit=None, min_threshold=None, classify=True):
         img_b64_decode = base64.b64decode(img_b64)
         images = tf.data.Dataset.from_tensor_slices([img_b64_decode])
-        images = utils.apply_preprocess_image(
+        images, errors = utils.apply_preprocess_image(
             tfds=images,
             input_shape=self.get_input_shape(),
             preprocessing=self.application.preprocessing,
             is_b64=True)
         predictions = self.score(images)
-        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
+        errors = list(errors.as_numpy_iterator())
+        return utils.format_predictions_output(predictions, errors, classify, self.get_label_df(), limit, min_threshold)
 
     def score_image_folder(self, images_folder, limit=None, min_threshold=None, classify=True):
         images_paths = images_folder.list_paths_in_partition()
-        if not images_paths:
+        images = utils.read_images_to_tfds(
+            images_folder=images_folder,
+            np_images=np.array(images_paths)
+        )
+        images, errors = utils.apply_preprocess_image(
+            tfds=images,
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing)
+        errors = list(errors.as_numpy_iterator())
+        if not images_paths or all(errors):
             predictions = []
         else:
-            images = utils.read_images_to_tfds(
-                images_folder=images_folder,
-                np_images=np.array(images_paths)
-            )
-            images = utils.apply_preprocess_image(
-                tfds=images,
-                input_shape=self.get_input_shape(),
-                preprocessing=self.application.preprocessing)
             predictions = self.score(images)
-        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
+        return utils.format_predictions_output(predictions, errors, classify, self.get_label_df(), limit, min_threshold)
 
     def score(self, images):
         images_batched = images.batch(constants.PREDICTION_BATCH_SIZE)

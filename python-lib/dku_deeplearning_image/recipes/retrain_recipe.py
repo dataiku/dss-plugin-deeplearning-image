@@ -139,7 +139,7 @@ class RetrainRecipe(DkuRecipe):
         X_tfds = utils.read_images_to_tfds(
             images_folder=images_folder,
             np_images=df[constants.FILENAME].values)
-        X_tfds = utils.apply_preprocess_image(
+        X_tfds, errors_tdfs = utils.apply_preprocess_image(
             tfds=X_tfds,
             input_shape=self.config.input_shape,
             preprocessing=self.dku_model.application.preprocessing)
