@@ -246,7 +246,6 @@ class DkuModel(object):
         return self.score(images, **kwargs)
 
     def score_image_folder(self, images_folder, **kwargs):
-        utils.check_images_folder(images_folder)
         images_paths = images_folder.list_paths_in_partition()
         images = utils.read_images_to_tfds(
             images_folder=images_folder,

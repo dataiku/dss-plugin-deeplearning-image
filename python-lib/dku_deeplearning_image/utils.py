@@ -16,7 +16,6 @@ import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
 from io import BytesIO
-from dku_config.dss_parameter import DSSParameterError
 
 
 logger = logging.getLogger(__name__)
@@ -264,11 +263,6 @@ def dbg_msg(msg, title=''):
     logger.debug('DEBUG : {}'.format(title).center(100, '-'))
     logger.debug(msg)
     logger.debug(''.center(100, '-'))
-
-def check_images_folder(images_folder):
-    images_path = images_folder.list_paths_in_partition()
-    if not images_path:
-        raise DSSParameterError("The folder ")
 
 
 ###############################################################
