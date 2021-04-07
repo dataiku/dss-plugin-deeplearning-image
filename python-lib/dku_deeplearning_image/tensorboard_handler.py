@@ -58,7 +58,8 @@ def __get_custom_assets_zip_provider():
 def init_flags(loader_list):
     parser = ArgumentParser()
     for x in loader_list:
-        x.define_flags(parser)
+        print("help of x: ", help(x.define_flags))
+        x.define_flags(parser=parser)
     flags = parser.parse_args([])
     return flags
 
