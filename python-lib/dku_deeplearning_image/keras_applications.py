@@ -76,8 +76,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_v2_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf.h5",
-                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_v2_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf_no_top.h5"
+                "top": f"https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_{MOBILENET_ALPHA}_{MOBILENET_ROWS}.h5",
+                "no_top": f"https://storage.googleapis.com/tensorflow/keras-applications/mobilenet_v2/mobilenet_v2_weights_tf_dim_ordering_tf_kernels_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_no_top.h5"
             }
         }
     },
@@ -90,8 +90,8 @@ APPLICATIONS = [{
         "input_shape": (299, 299, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.7/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": f"https://storage.googleapis.com/tensorflow/keras-applications/inception_resnet_v2/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": f"https://storage.googleapis.com/tensorflow/keras-applications/inception_resnet_v2/inception_resnet_v2_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     },
@@ -104,8 +104,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/densenet201_weights_tf_dim_ordering_tf_kernels.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/densenet201_weights_tf_dim_ordering_tf_kernels_notop.h5"
+                "top": f"https://storage.googleapis.com/tensorflow/keras-applications/densenet/densenet201_weights_tf_dim_ordering_tf_kernels.h5",
+                "no_top": f"https://storage.googleapis.com/tensorflow/keras-applications/densenet/densenet201_weights_tf_dim_ordering_tf_kernels_notop.h5"
             }
         }
     },
@@ -118,8 +118,8 @@ APPLICATIONS = [{
         "input_shape": (331, 331, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-large.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-large-no-top.h5"
+                "top": f"https://storage.googleapis.com/tensorflow/keras-applications/nasnet/NASNet-large.h5",
+                "no_top": f"https://storage.googleapis.com/tensorflow/keras-applications/nasnet/NASNet-large-no-top.h5"
             }
         }
     },
@@ -132,8 +132,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-mobile.h5",
-                "no_top": "https://github.com/fchollet/deep-learning-models/releases/download/v0.8/NASNet-mobile-no-top.h5"
+                "top": f"https://storage.googleapis.com/tensorflow/keras-applications/nasnet/NASNet-mobile.h5",
+                "no_top": f"https://storage.googleapis.com/tensorflow/keras-applications/nasnet/NASNet-mobile-no-top.h5"
             }
         }
     }

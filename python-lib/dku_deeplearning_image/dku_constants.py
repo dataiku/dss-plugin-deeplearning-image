@@ -72,7 +72,7 @@ COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
 COMPILE_METRICS = ["accuracy"]
 
 # Models Parameters
-MOBILENET_ALPHA = "1_0"
+MOBILENET_ALPHA = "1.0"
 MOBILENET_ROWS = "224"
 
 # Other
