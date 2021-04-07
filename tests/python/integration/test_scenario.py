@@ -50,20 +50,20 @@ def test_api_endpoint_deployment(user_dss_clients):
 
 
 def test_model_resnet(user_dss_clients):
-    """Creates an API endpoint eand checks it has been created properly"""
+    """Tests a specific model"""
     add_integration_test(user_dss_clients, "Model_-_Resnet")
 
 
 def test_model_inception_v3(user_dss_clients):
-    """Creates an API endpoint eand checks it has been created properly"""
+    """Tests a specific model"""
     add_integration_test(user_dss_clients, "Model_-_InceptionV3")
 
 
 def test_model_xception(user_dss_clients):
-    """Creates an API endpoint eand checks it has been created properly"""
+    """Tests a specific model"""
     add_integration_test(user_dss_clients, "Model_-_Xception")
 
 
 def test_model_vgg16(user_dss_clients):
-    """Creates an API endpoint eand checks it has been created properly"""
+    """Tests a specific model"""
     add_integration_test(user_dss_clients, "Model_-_VGG16")
