@@ -76,8 +76,8 @@ APPLICATIONS = [{
         "input_shape": (224, 224, 3),
         "weights": {
             IMAGENET: {
-                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf.h5",
-                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf_no_top.h5"
+                "top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_v2_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf.h5",
+                "no_top": f"https://github.com/fchollet/deep-learning-models/releases/download/v0.6/mobilenet_v2_{MOBILENET_ALPHA}_{MOBILENET_ROWS}_tf_no_top.h5"
             }
         }
     },
