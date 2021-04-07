@@ -235,7 +235,7 @@ class DkuModel(object):
                             kernel_regularizer=regularizer)(x)
         self.model = Model(inputs=self.model.input, outputs=predictions)
 
-    def score_b64_image(self, img_b64, **kwargs):
+    def score_b64_image(self, img_b64, limit=None, min_threshold=None, classify=True):
         img_b64_decode = base64.b64decode(img_b64)
         images = tf.data.Dataset.from_tensor_slices([img_b64_decode])
         images = utils.apply_preprocess_image(
@@ -243,26 +243,29 @@ class DkuModel(object):
             input_shape=self.get_input_shape(),
             preprocessing=self.application.preprocessing,
             is_b64=True)
-        return self.score(images, **kwargs)
+        predictions = self.score(images)
+        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
 
-    def score_image_folder(self, images_folder, **kwargs):
+    def score_image_folder(self, images_folder, limit=None, min_threshold=None, classify=True):
         images_paths = images_folder.list_paths_in_partition()
-        images = utils.read_images_to_tfds(
-            images_folder=images_folder,
-            np_images=np.array(images_paths)
-        )
-        images = utils.apply_preprocess_image(
-            tfds=images,
-            input_shape=self.get_input_shape(),
-            preprocessing=self.application.preprocessing)
-        return self.score(images, **kwargs)
+        if not images_paths:
+            predictions = []
+        else:
+            images = utils.read_images_to_tfds(
+                images_folder=images_folder,
+                np_images=np.array(images_paths)
+            )
+            images = utils.apply_preprocess_image(
+                tfds=images,
+                input_shape=self.get_input_shape(),
+                preprocessing=self.application.preprocessing)
+            predictions = self.score(images)
+        return utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
 
-    def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
-              min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
+    def score(self, images):
         images_batched = images.batch(constants.PREDICTION_BATCH_SIZE)
         predictions = self.get_model().predict(images_batched)
-        predictions_formatted = utils.format_predictions_output(predictions, classify, self.get_label_df(), limit, min_threshold)
-        return predictions_formatted
+        return predictions
 
     def get_weights_path(self, with_top=False):
         return utils.get_weights_filename(with_top)
