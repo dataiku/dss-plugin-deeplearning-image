@@ -1,8 +1,6 @@
 import pandas as pd
 from dataiku.customrecipe import get_recipe_config
 
-print(help('modules'))
-
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.config_handler import create_dku_config
