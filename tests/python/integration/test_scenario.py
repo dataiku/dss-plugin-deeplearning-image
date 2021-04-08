@@ -66,7 +66,7 @@ def test_model_vgg16(user_dss_clients):
 
 def test_model_densenet(user_dss_clients):
     """Tests a specific model"""
-    add_integration_test(user_dss_clients, "Model_-_Resnet")
+    add_integration_test(user_dss_clients, "Model_-_DenseNet")
 
 
 def test_model_mobilenet(user_dss_clients):
