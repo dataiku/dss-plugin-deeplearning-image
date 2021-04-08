@@ -29,7 +29,7 @@ class DkuModel(object):
                 self.load_config()
             else:
                 raise IOError(
-                    "Error when creating DkuModel. {constants.CONFIG_FILE} should exist in the following list: {files}"
+                    f"Error when creating DkuModel. {constants.CONFIG_FILE} should exist in the following list: {files}"
                 )
 
     def jsonify_config(self):
