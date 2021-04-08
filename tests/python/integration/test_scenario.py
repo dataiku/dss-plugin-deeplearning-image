@@ -39,11 +39,6 @@ def test_run_tensorboard(user_dss_clients):
     add_integration_test(user_dss_clients, "Webapp_-_Tensorboard")
 
 
-def test_cloud_integration(user_dss_clients):
-    """Runs an entire workflow on folders from the cloud"""
-    add_integration_test(user_dss_clients, "Recipe_-_Cloud_Integration")
-
-
 def test_api_endpoint_deployment(user_dss_clients):
     """Creates an API endpoint eand checks it has been created properly"""
     add_integration_test(user_dss_clients, "Macro_-_Deploy_API_Service")
@@ -67,3 +62,8 @@ def test_model_xception(user_dss_clients):
 def test_model_vgg16(user_dss_clients):
     """Tests a specific model"""
     add_integration_test(user_dss_clients, "Model_-_VGG16")
+
+
+def test_cloud_integration(user_dss_clients):
+    """Runs an entire workflow on folders from the cloud"""
+    add_integration_test(user_dss_clients, "Model_-_Resnet_on_Cloud")
