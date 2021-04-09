@@ -29,8 +29,9 @@ class DkuModel(object):
             if utils.is_path_in_folder(constants.CONFIG_FILE, self.folder):
                 self.load_config()
             else:
+                files = self.folder.list_paths_in_partition()
                 raise IOError(
-                    "Error when creating DkuModel. {constants.CONFIG_FILE} should exist in the following list: {files}"
+                    f"Error when creating DkuModel. {constants.CONFIG_FILE} should exist in the following list: {files}"
                 )
 
     def jsonify_config(self):

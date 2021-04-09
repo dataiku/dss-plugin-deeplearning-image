@@ -64,6 +64,31 @@ def test_model_vgg16(user_dss_clients):
     add_integration_test(user_dss_clients, "Model_-_VGG16")
 
 
+def test_model_densenet(user_dss_clients):
+    """Tests a specific model"""
+    add_integration_test(user_dss_clients, "Model_-_DenseNet")
+
+
+def test_model_mobilenet(user_dss_clients):
+    """Tests a specific model"""
+    add_integration_test(user_dss_clients, "Model_-_MobileNet")
+
+
+def test_model_inception_resnet(user_dss_clients):
+    """Tests a specific model"""
+    add_integration_test(user_dss_clients, "Model_-_InceptionResnet")
+
+
+def test_model_nasnet_large(user_dss_clients):
+    """Tests a specific model"""
+    add_integration_test(user_dss_clients, "Model_-_NasNetLarge")
+
+
+def test_model_nasnet_mobile(user_dss_clients):
+    """Tests a specific model"""
+    add_integration_test(user_dss_clients, "Model_-_NasNetMobile")
+
+
 def test_cloud_integration(user_dss_clients):
     """Runs an entire workflow on folders from the cloud"""
     add_integration_test(user_dss_clients, "Model_-_Resnet_on_Cloud")
