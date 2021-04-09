@@ -8,6 +8,8 @@ pipeline {
       stage('Run Integration Tests') {
          steps {
             sh 'echo "Running integration tests"'
+            // Clean before build
+            cleanWs()
             catchError(stageResult: 'FAILURE') {
             sh """
                make integration-tests
