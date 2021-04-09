@@ -3,13 +3,19 @@ pipeline {
    agent { label 'dss-plugin-tests'}
    environment {
         PLUGIN_INTEGRATION_TEST_INSTANCE="/home/jenkins-agent/instance_config.json"
-    }
+   }
+   options {
+        // This is required if you want to clean before build
+        skipDefaultCheckout(true)
+   }
    stages {
       stage('Run Integration Tests') {
          steps {
             sh 'echo "Running integration tests"'
             // Clean before build
             cleanWs()
+            // We need to explicitly checkout from SCM here
+            checkout scm
             catchError(stageResult: 'FAILURE') {
             sh """
                make integration-tests
