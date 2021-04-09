@@ -4,12 +4,16 @@ from enum import Enum
 PLUGIN_ID = 'deeplearning-image-v2'
 
 
-# Integrated models
 class MODEL(Enum):
     RESNET = "resnet"
     XCEPTION = "xception"
     INCEPTIONV3 = "inception_v3"
     VGG16 = "vgg16"
+    INCEPTION_RESNET = "inception_resnet"
+    MOBILENET = "mobilenet"
+    DENSENET = "densenet"
+    NASNET_LARGE = "nasnet_large"
+    NASNET_MOBILE = "nasnet_mobile"
 
 
 # Goals
@@ -66,6 +70,10 @@ DEFAULT_PRED_LIMIT = 5
 DEFAULT_PRED_MIN_THRESHOLD = 0
 COMPILE_LOSS_FUNCTION = 'categorical_crossentropy'
 COMPILE_METRICS = ["accuracy"]
+
+# Models Parameters
+MOBILENET_ALPHA = "1.0"
+MOBILENET_ROWS = "224"
 
 # Other
 NOTOP_SUFFIX = "_notop"
