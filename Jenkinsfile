@@ -1,12 +1,12 @@
 pipeline {
-   options { disableConcurrentBuilds() }
+   options {
+        disableConcurrentBuilds()
+        // This is required if you want to clean before build
+        skipDefaultCheckout(true)
+    }
    agent { label 'dss-plugin-tests'}
    environment {
         PLUGIN_INTEGRATION_TEST_INSTANCE="/home/jenkins-agent/instance_config.json"
-   }
-   options {
-        // This is required if you want to clean before build
-        skipDefaultCheckout(true)
    }
    stages {
       stage('Run Integration Tests') {
