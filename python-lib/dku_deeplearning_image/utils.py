@@ -19,6 +19,7 @@ from io import BytesIO
 from dku_config.dss_parameter import DSSParameterError
 
 
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
