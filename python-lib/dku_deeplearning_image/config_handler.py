@@ -27,8 +27,8 @@ def add_gpu_config(dku_config, config):
 
 
 def add_score_recipe_config(dku_config, config):
-    dku_config.add_param(name='max_nb_labels', value=int(config['max_nb_labels']))
-    dku_config.add_param(name='min_threshold', value=float(config['min_threshold']))
+    dku_config.add_param(name='max_nb_labels', value=int(config.get('max_nb_labels')))
+    dku_config.add_param(name='min_threshold', value=float(config.get('min_threshold')))
 
 
 def add_extract_recipe_config(dku_config, config):
