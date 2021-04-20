@@ -1,5 +1,6 @@
 import dataiku
 from dku_deeplearning_image.keras_applications import APPLICATIONS
+from dku_deeplearning_image.dku_constants import IMAGENET
 import dku_deeplearning_image.api_designer.api_designer_utils as utils
 
 api_client = dataiku.api_client()
@@ -31,9 +32,9 @@ def get_output_managed_folder(project_key):
 
 def get_model_choice():
     choices = [{
-        'label': '{app[label]} trained on {ds}'.format(app=app, ds=image_bank.capitalize()),
-        'value': '{}::{}'.format(app['name'].value, image_bank)
-    } for app in APPLICATIONS for image_bank in list(app['weights'].keys())]
+        'label': '{app[label]} trained on {ds}'.format(app=app, ds=IMAGENET.capitalize()),
+        'value': app['name'].value
+    } for app in APPLICATIONS]
     return choices
 
 

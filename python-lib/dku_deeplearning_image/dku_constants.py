@@ -2,6 +2,7 @@ from enum import Enum
 
 # Plugin ID
 PLUGIN_ID = 'deeplearning-image-v2'
+PROJECT_VARS_PREFIX = 'DEEPLEARNING-IMAGE-V2__'
 
 
 class MODEL(Enum):
@@ -23,6 +24,7 @@ class GOAL(Enum):
     EXTRACT = "extract"
     API_DESIGNER = "api_designer"
     BEFORE_TRAIN = "before_train"
+    DOWNLOAD_MODEL = "download_model"
 
 
 # Options for custom form

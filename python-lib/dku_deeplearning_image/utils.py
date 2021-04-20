@@ -228,6 +228,10 @@ def is_path_in_folder(path, folder):
     return sanitize_path(path) in [sanitize_path(p) for p in folder.list_paths_in_partition()]
 
 
+def list_enum_values(enum):
+    return [el.value for el in list(enum)]
+
+
 def dbg_msg(msg, title=''):
     logger.debug('DEBUG : {}'.format(title).center(100, '-'))
     logger.debug(msg)

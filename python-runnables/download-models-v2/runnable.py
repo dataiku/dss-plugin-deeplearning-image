@@ -6,10 +6,12 @@ import pandas as pd
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.misc_objects import DkuModel
 from dku_deeplearning_image.misc_objects import DkuFileManager
+from dku_deeplearning_image.config_handler import create_dku_config
 import time
 
 # We deactivate GPU for this script, because all the methods only need to 
 # fetch information about model and do not make computation
+
 
 class MyRunnable(Runnable):
     """The base interface for a Python runnable"""
@@ -25,7 +27,6 @@ class MyRunnable(Runnable):
         self.plugin_config = plugin_config
         self.client = dataiku.api_client()
 
-        
     def get_progress_target(self):
         """
         If the runnable will return some progress info, have this function return a tuple of 
@@ -33,37 +34,7 @@ class MyRunnable(Runnable):
         """
         return (100, 'NONE')
 
-
     def run(self, progress_callback):
-
-        # Retrieving parameters
-        output_managed_id = self.config.get('output_managed_folder')
-        output_new_folder_name = self.config.get('output_new_folder_name', '')
-        model_choice = self.config.get('model_choice')
-        
-        # Creating new Managed Folder if needed
-        project = self.client.get_project(self.project_key)
-
-        if output_new_folder_name:
-            output_folder_dss = project.create_managed_folder(output_new_folder_name)
-        else:
-            output_folder_dss = project.get_managed_folder(output_managed_id)
-
-        output_folder = dataiku.Folder(output_folder_dss.get_definition()['name'], project_key=self.project_key)
-        new_model = DkuModel(output_folder, is_empty=True)
-
-        architecture, trained_on = model_choice.split('::')
-        config = {
-            "architecture": architecture,
-            "trained_on": trained_on,
-            "extract_layer_default_index": -2
-        }
-
-        new_model.set_config(config)
-
-        # Downloading weights
-        url_to_weights = new_model.get_weights_url()
-
         def update_percent(percent, last_update_time):
             new_time = time.time()
             if (new_time - last_update_time) > 3:
@@ -89,7 +60,33 @@ class MyRunnable(Runnable):
                         update_time = update_percent(percent, update_time)
                         f.write(content)
 
-        class_mapping_url = constants.IMAGENET_URL if trained_on == constants.IMAGENET else ""
+        # Creating new Managed Folder if needed
+        project = self.client.get_project(self.project_key)
+        project_vars = project.get_variables()['local']
+
+        # Retrieving parameters
+        dku_config = create_dku_config(self.config, constants.GOAL.DOWNLOAD_MODEL, project_vars=project_vars)
+
+        if dku_config.output_new_folder_name:
+            output_folder_dss = project.create_managed_folder(dku_config.output_new_folder_name)
+        else:
+            output_folder_dss = project.get_managed_folder(dku_config.output_managed_folder_id)
+
+        output_folder = dataiku.Folder(output_folder_dss.get_definition()['name'], project_key=self.project_key)
+        new_model = DkuModel(output_folder, is_empty=True)
+
+        config = {
+            "architecture": dku_config.model_choice,
+            "trained_on": constants.IMAGENET,
+            "extract_layer_default_index": -2
+        }
+
+        new_model.set_config(config)
+
+        # Downloading weights
+        url_to_weights = new_model.get_weights_url()
+
+        class_mapping_url = constants.IMAGENET_URL
 
         files_to_dl = [
             {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},

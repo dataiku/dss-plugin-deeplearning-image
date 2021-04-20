@@ -1,5 +1,6 @@
 from dku_config import DkuConfig
 import dku_deeplearning_image.dku_constants as constants
+import dku_deeplearning_image.utils as utils
 
 
 def add_gpu_config(dku_config, config):
@@ -163,8 +164,31 @@ def add_api_deployer_config(dku_config, config, project):
         ])
 
 
-def create_dku_config(config, goal, project=None):
-    dku_config = DkuConfig()
+def add_model_download_config(dku_config, config):
+    dku_config.add_param(
+        name='output_managed_folder_id',
+        value=config.get("output_managed_folder"),
+        required=True)
+    dku_config.add_param(
+        name='output_new_folder_name',
+        value=config.get("output_new_folder_name"))
+    dku_config.add_param(
+        name='model_choice',
+        value=config.get("model_choice"),
+        required=True,
+        checks=[
+            {
+                "type": "in",
+                "op": utils.list_enum_values(constants.MODEL)
+            }
+        ])
+
+
+def create_dku_config(config, goal, project=None, project_vars=None):
+    dku_config = DkuConfig(
+        local_prefix=constants.PROJECT_VARS_PREFIX,
+        project_vars=project_vars
+    )
     add_gpu_config(dku_config, config)
     if goal == constants.GOAL.SCORE:
         add_score_recipe_config(dku_config, config)
@@ -174,4 +198,6 @@ def create_dku_config(config, goal, project=None):
         add_extract_recipe_config(dku_config, config)
     elif goal == constants.GOAL.API_DESIGNER:
         add_api_deployer_config(dku_config, config, project)
+    elif goal == constants.GOAL.DOWNLOAD_MODEL:
+        add_model_download_config(dku_config, config)
     return dku_config
