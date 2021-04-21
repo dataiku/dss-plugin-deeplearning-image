@@ -188,6 +188,8 @@ def get_ordered_dict(predictions):
 def preprocess_img(img_path, img_shape, preprocessing):
     try:
         img = Image.open(img_path).resize(img_shape[:2])
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return
