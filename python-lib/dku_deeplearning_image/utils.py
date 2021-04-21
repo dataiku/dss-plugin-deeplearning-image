@@ -237,6 +237,8 @@ def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
         if is_b64:
             img_path = BytesIO(img_path)
         img = Image.open(img_path).resize(img_shape[:2])
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
         return tf.cast(np.array([]), tf.float32)
