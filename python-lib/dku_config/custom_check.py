@@ -16,7 +16,9 @@ DEFAULT_ERROR_MESSAGES = {
     'between': 'Should be between {op[0]} and {op[1]} (Currently {value}).',
     'between_strict': 'Should be strictly between {op[0]} and {op[1]} (Currently {value}).',
     'is_type': 'Should be of type {op}.',
-    'custom': "There has been an unknown error."
+    'is_castable': 'You cannot cast {value} to the type {op}.',
+    'custom': "There has been an unknown error.",
+    'match': "Should match the following pattern: {op}."
 }
 
 
@@ -220,6 +222,21 @@ class CustomCheck:
             bool: Whether the check has succeed
         """
         return isinstance(value, self.op)
+
+    def _is_castable(self, value: Any) -> bool:
+        """Checks whether the value can be cast to the op type
+
+        Args:
+            value(Any): Value to test
+
+        Returns:
+            bool: Whether the check has succeed
+        """
+        try:
+            _ = self.op(value)
+            return True
+        except TypeError:
+            return False
 
     def _custom(self, _) -> bool:
         """Checks whether "cond" attribute is true or false

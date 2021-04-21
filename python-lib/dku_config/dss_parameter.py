@@ -20,7 +20,7 @@ class DSSParameter:
         checks(list[dict], optional): Checks to run on provided value
         required(bool, optional): Whether the value can be None
     """
-    def __init__(self, name: str, value: Any, checks: List[dict] = None, required: bool = False):
+    def __init__(self, name: str, value: Any, checks: List[dict] = None, required: bool = False, cast_to: type = None, default: Any = None):
         """Initialization method for the DSSParameter class
 
         Args:
@@ -32,11 +32,18 @@ class DSSParameter:
         if checks is None:
             checks = []
         self.name = name
-        self.value = value
         self.checks = [CustomCheck(**check) for check in checks]
+        self.value = value or default
+        self.cast_to = cast_to
         if required:
             self.checks.append(CustomCheck(type='exists'))
+        if self.cast_to:
+            self.checks.append(CustomCheck(type='is_castable', op=cast_to))
         self.run_checks()
+        self.cast_value()
+
+    def cast_value(self):
+        self.value = self.cast_to(self.value)
 
     def run_checks(self):
         """Runs all checks provided for this parameter
