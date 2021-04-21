@@ -137,7 +137,7 @@ class RetrainRecipe(DkuRecipe):
 
     def _build_tfds(self, df, images_folder, ignore_augm=False):
         use_augm = self.config.data_augmentation and not ignore_augm
-        X_tfds = utils.read_images_to_tfds(
+        X_tfds = utils.retrieve_images_to_tfds(
             images_folder=images_folder,
             np_images=df[constants.FILENAME].values)
         X_tfds, errors_tdfs = utils.apply_preprocess_image(

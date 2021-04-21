@@ -218,7 +218,7 @@ def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
     return preprocessed_images_filtered, error_array
 
 
-def read_images_to_tfds(images_folder, np_images):
+def retrieve_images_to_tfds(images_folder, np_images):
     def retrieve_image_from_folder(image_fn):
         return tf.numpy_function(
             func=lambda x: get_cached_file_from_folder(images_folder, x),

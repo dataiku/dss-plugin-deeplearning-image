@@ -250,7 +250,7 @@ class DkuModel(object):
 
     def score_image_folder(self, images_folder, limit=None, min_threshold=None, classify=True):
         images_paths = images_folder.list_paths_in_partition()
-        images = utils.read_images_to_tfds(
+        images = utils.retrieve_images_to_tfds(
             images_folder=images_folder,
             np_images=np.array(images_paths)
         )
