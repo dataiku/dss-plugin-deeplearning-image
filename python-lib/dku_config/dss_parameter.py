@@ -36,55 +36,47 @@ class DSSParameter:
         self.value = value if value is not None else default
         self.cast_to = cast_to
         if required:
-            self.checks.append(CustomCheck(type='exists'))
+            self.run_checks([CustomCheck(type='exists')])
         if self.cast_to:
-            self.checks.append(CustomCheck(type='is_castable', op=cast_to))
-        self.run_checks()
-        self.cast_value()
+            self.run_checks([CustomCheck(type='is_castable', op=cast_to)])
+            self.cast_value()
+        self.run_checks(self.checks)
 
     def cast_value(self):
         self.value = self.cast_to(self.value) if self.cast_to else self.value
 
-    def run_checks(self):
+    def run_checks(self, checks):
         """Runs all checks provided for this parameter
         """
-        errors = []
-        for check in self.checks:
+        for check in checks:
             try:
                 check.run(self.value)
             except CustomCheckError as err:
-                errors.append(err)
-        if errors:
-            self.handle_failure(errors)
-        self.handle_success()
+                self.handle_failure(err)
 
-    def handle_failure(self, errors: List[CustomCheckError]):
+    def handle_failure(self, error: CustomCheckError):
         """Is called when at least one test fails. It will raise an Exception with understandable text
-
         Args:
-            errors(list[CustomCheckError]: Errors met when running checks
-
+            error(CustomCheckError: Errors met when running checks
         Raises:
             DSSParameterError: Raises if at least on check fails
         """
-        raise DSSParameterError(self.format_failure_message(errors))
+        raise DSSParameterError(self.format_failure_message(error))
 
-    def format_failure_message(self, errors: List[CustomCheckError]) -> str:
+    def format_failure_message(self, error: CustomCheckError) -> str:
         """Format failure text
-
         Args:
-            errors(list[CustomCheckError]: Errors met when running checks
-
+            error(CustomCheckError: Error met when running check
         Returns:
             str: Formatted error message
         """
         return """
         Error for parameter \"{name}\" :
-        {errors}
-        Please check your settings and fix errors.
+        {error}
+        Please check your settings and fix the error.
         """.format(
             name=self.name,
-            errors='\n'.join(["\t- {}".format(e) for e in errors])
+            error=error
         )
 
     def handle_success(self):
