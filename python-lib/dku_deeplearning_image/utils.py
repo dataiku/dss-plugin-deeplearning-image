@@ -226,7 +226,7 @@ def retrieve_images_to_tfds(images_folder, np_images):
             Tout=tf.string)
 
     X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
-    return X_tfds.interleave(
+    return X_tfds.map(
         map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
             retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE),
         num_parallel_calls=constants.AUTOTUNE)
