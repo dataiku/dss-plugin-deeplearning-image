@@ -243,7 +243,7 @@ def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
         return tf.cast(np.array([]), tf.float32)
     array = np.array(img)
     array = preprocessing(array)
-    return array
+    return tf.cast(array, tf.float32)
 
 
 def clean_custom_params(custom_params, params_type=""):
