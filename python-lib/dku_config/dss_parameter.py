@@ -33,7 +33,7 @@ class DSSParameter:
             checks = []
         self.name = name
         self.checks = [CustomCheck(**check) for check in checks]
-        self.value = value or default
+        self.value = value if value is not None else default
         self.cast_to = cast_to
         if required:
             self.checks.append(CustomCheck(type='exists'))
