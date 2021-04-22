@@ -29,8 +29,16 @@ def add_gpu_config(dku_config, config):
 
 
 def add_score_recipe_config(dku_config, config):
-    dku_config.add_param(name='max_nb_labels', value=config.get('max_nb_labels'), cast_to=int)
-    dku_config.add_param(name='min_threshold', value=config.get('min_threshold'), cast_to=float)
+    dku_config.add_param(
+        name='max_nb_labels',
+        value=config.get('max_nb_labels'),
+        required=True,
+        cast_to=int)
+    dku_config.add_param(
+        name='min_threshold',
+        value=config.get('min_threshold'),
+        required=True,
+        cast_to=float)
 
 
 def add_extract_recipe_config(dku_config, config):
@@ -38,6 +46,7 @@ def add_extract_recipe_config(dku_config, config):
         name='extract_layer_index',
         value=config.get('extract_layer_index'),
         cast_to=int,
+        required=True,
         default=-2)
 
 
@@ -49,19 +58,19 @@ def add_retrain_recipe_config(dku_config, config):
         name='input_shape',
         value=(config.get("image_height"), config.get("image_width"), 3),
         cast_to=(lambda el: tuple(map(int, el))))
-    dku_config.add_param(name='batch_size', value=config.get("batch_size"), cast_to=int)
-    dku_config.add_param(name='model_pooling', value=config.get("model_pooling"))
+    dku_config.add_param(name='batch_size', value=config.get("batch_size"), cast_to=int, required=True)
+    dku_config.add_param(name='model_pooling', value=config.get("model_pooling"), required=True)
     dku_config.add_param(name='model_reg', value=config.get("model_reg"))
     dku_config.add_param(name='model_dropout', value=config.get("model_dropout"), cast_to=float)
-    dku_config.add_param(name='layer_to_retrain', value=config.get("layer_to_retrain"))
-    dku_config.add_param(name='layer_to_retrain_n', value=config.get("layer_to_retrain_n"), required=True, cast_to=int)
-    dku_config.add_param(name='optimizer', value=config.get("model_optimizer"))
-    dku_config.add_param(name='learning_rate', value=config.get("model_learning_rate"))
+    dku_config.add_param(name='layer_to_retrain', value=config.get("layer_to_retrain"), required=True)
+    dku_config.add_param(name='layer_to_retrain_n', value=config.get("layer_to_retrain_n"), cast_to=int)
+    dku_config.add_param(name='optimizer', value=config.get("model_optimizer"), required=True)
+    dku_config.add_param(name='learning_rate', value=config.get("model_learning_rate"), required=True)
     dku_config.add_param(name='custom_params_opti', value=config.get("model_custom_params_opti"))
-    dku_config.add_param(name='nb_epochs', value=config.get("nb_epochs"), cast_to=int)
-    dku_config.add_param(name='nb_steps_per_epoch', value=config.get("nb_steps_per_epoch"), cast_to=int)
-    dku_config.add_param(name='nb_validation_steps', value=config.get("nb_validation_steps"), cast_to=int)
-    dku_config.add_param(name='data_augmentation', value=config.get("data_augmentation"))
+    dku_config.add_param(name='nb_epochs', value=config.get("nb_epochs"), cast_to=int, required=True)
+    dku_config.add_param(name='nb_steps_per_epoch', value=config.get("nb_steps_per_epoch"), cast_to=int, required=True)
+    dku_config.add_param(name='nb_validation_steps', value=config.get("nb_validation_steps"), cast_to=int, required=True)
+    dku_config.add_param(name='data_augmentation', value=config.get("data_augmentation"), required=True)
     n_augmentation = config.get("n_augmentation") if dku_config.data_augmentation else 0
     dku_config.add_param(
         name='n_augmentation',
