@@ -263,9 +263,9 @@ def clean_custom_params(custom_params, params_type=""):
     cleaned_params = {}
     params_type = " '{}'".format(params_type) if params_type else ""
     for i, p in enumerate(custom_params):
-        if not p.get("name", False):
+        if p.get("name") is None:
             raise IOError(f"The {params_type} custom param #{i} must have a 'name'")
-        if not p.get("value", False):
+        if p.get("value") is None:
             raise IOError(f"The {params_type} custom param #{i} must have a 'value'")
         cleaned_params[p["name"]] = string_to_arg(p["value"])
     return cleaned_params

@@ -17,7 +17,7 @@ def add_gpu_config(dku_config, config):
         value=gpu_list,
         checks=[{
             "type": "custom",
-            "cond": (not dku_config.should_use_gpu) or gpu_list or dku_config.gpu_usage != "custom",
+            "op": (not dku_config.should_use_gpu) or gpu_list or dku_config.gpu_usage != "custom",
             "err_msg": 'You have to select at least one GPU, or uncheck "Use GPU" checkbox.'
         }])
     dku_config.add_param(
@@ -66,7 +66,18 @@ def add_retrain_recipe_config(dku_config, config):
     dku_config.add_param(name='layer_to_retrain_n', value=config.get("layer_to_retrain_n"), cast_to=int)
     dku_config.add_param(name='optimizer', value=config.get("model_optimizer"), required=True)
     dku_config.add_param(name='learning_rate', value=config.get("model_learning_rate"), required=True)
-    dku_config.add_param(name='custom_params_opti', value=config.get("model_custom_params_opti"))
+    model_custom_params_opti = config.get("model_custom_params_opti", [])
+    dku_config.add_param(
+        name='custom_params_opti',
+        value=model_custom_params_opti,
+        checks=[
+            {
+                "type": "custom",
+                "op": all([el and el.get('name') and 'value' in el for el in model_custom_params_opti]),
+                "err_msg": "Names or values are missing in the Optimization custom parameters"
+            }
+        ]
+    )
     dku_config.add_param(name='nb_epochs', value=config.get("nb_epochs"), cast_to=int, required=True)
     dku_config.add_param(name='nb_steps_per_epoch', value=config.get("nb_steps_per_epoch"), cast_to=int, required=True)
     dku_config.add_param(name='nb_validation_steps', value=config.get("nb_validation_steps"), cast_to=int, required=True)
@@ -77,17 +88,24 @@ def add_retrain_recipe_config(dku_config, config):
         value=n_augmentation,
         checks=[
             {
-                'type': 'custom',
-                'cond': not n_augmentation or (n_augmentation <= dku_config.batch_size),
+                'type': 'inf_eq',
+                'op': dku_config.batch_size,
                 'err_msg': "The number of augmentations must be lower than the batch size. Aborting."
             }
         ],
         cast_to=int
     )
+    custom_params_data_augment = config.get("custom_params_data_augment", [])
     dku_config.add_param(
         name='custom_params_data_augment',
         value=config.get("model_custom_params_data_augmentation"),
-        default=[]
+        checks=[
+            {
+                "type": "custom",
+                "op": all([el and el.get('name') and 'value' in el for el in custom_params_data_augment]),
+                "err_msg": "Names or values are missing in the Data augmentation custom parameters"
+            }
+        ]
     )
     dku_config.add_param(name='use_tensorboard', value=config.get("tensorboard"))
     dku_config.add_param(name='random_seed', value=config.get("random_seed"), cast_to=int)

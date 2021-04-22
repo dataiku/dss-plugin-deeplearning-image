@@ -34,19 +34,16 @@ class CustomCheck:
     Attributes:
         type (str): Type of the CustomCheck. Must have a related method having "_" before type name
         op (Any, optional): Operator to compare the value to. Unnecessary for som checks
-        cond (bool, optional): Only necessary for type "custom". Must be true for check to pass
         err_msg (str, optional): Custom message to display if check fails. Default is a generic message
     """
     def __init__(self, type,
                  op: Any = None,
-                 cond: Any = bool,
                  err_msg: str = ''):
         """Initialization method for the CustomCheck class
 
         Args:
             type (str): Type of the CustomCheck. Must have a related method having "_" before type name
             op (Any, optional): Operator to compare the value to. Unnecessary for som checks
-            cond (bool, optional): Only necessary for type "custom". Must be true for check to pass
             err_msg (str, optional): Custom message to display if check fails. Default is a generic message
         """
         self.type = type
@@ -54,7 +51,6 @@ class CustomCheck:
         if not hasattr(self, func_name):
             raise CustomCheckError('Check of type {} does not exist.'.format(self.type))
         self.op = op
-        self.cond = cond
         self.err_msg = err_msg or self.get_default_err_msg()
 
     def run(self, value: Any = None):
@@ -239,15 +235,15 @@ class CustomCheck:
             return False
 
     def _custom(self, _) -> bool:
-        """Checks whether "cond" attribute is true or false
+        """Checks whether "op" attribute is true or false
 
         Returns:
             bool: Whether the check has succeed
         """
-        return self.cond
+        return self.op
 
     def _match(self, value) -> bool:
-        """Checks whether "cond" matches the regex provided in "op" attribute
+        """Checks whether "value" matches the regex provided in "op" attribute
 
         Returns:
             bool: Whether the check has succeed
