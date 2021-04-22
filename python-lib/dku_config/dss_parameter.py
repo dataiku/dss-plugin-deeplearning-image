@@ -43,7 +43,7 @@ class DSSParameter:
         self.cast_value()
 
     def cast_value(self):
-        self.value = self.cast_to(self.value)
+        self.value = self.cast_to(self.value) if self.cast_to else self.value
 
     def run_checks(self):
         """Runs all checks provided for this parameter
