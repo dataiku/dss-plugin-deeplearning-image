@@ -284,12 +284,6 @@ def dbg_msg(msg, title=''):
     logger.debug(''.center(100, '-'))
 
 
-def check_images_folder(images_folder):
-    images_path = images_folder.list_paths_in_partition()
-    if not images_path:
-        raise DSSParameterError("The folder ")
-
-
 ###############################################################
 # THREADSAFE GENERATOR / ITERATOR
 # Inspired by :
