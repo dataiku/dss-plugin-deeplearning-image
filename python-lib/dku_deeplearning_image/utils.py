@@ -126,7 +126,9 @@ def get_file_path(folder_path, file_name):
 
 
 def get_cached_file_from_folder(folder, file_path):
-    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path.replace(b'/', b'_')
+    if isinstance(file_path, list):
+        file_path = file_path[0]
+    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path[0].replace(b'/', b'_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
@@ -219,17 +221,14 @@ def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
 
 
 def retrieve_images_to_tfds(images_folder, np_images):
-    def retrieve_image_from_folder(image_fn):
+    def _retrieve_image_from_folder(image_fn):
         return tf.numpy_function(
             func=lambda x: get_cached_file_from_folder(images_folder, x),
             inp=[image_fn],
             Tout=tf.string)
 
     X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
-    return X_tfds.map(
-        map_func=lambda x: tf.data.Dataset.from_tensor_slices(x).map(
-            retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE),
-        num_parallel_calls=constants.AUTOTUNE)
+    return X_tfds.map(map_func=_retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE)
 
 
 def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
