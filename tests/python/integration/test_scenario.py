@@ -10,3 +10,6 @@ def add_integration_test(user_dss_clients, scenario_id):
 
 def test_1(user_dss_clients):
     return True
+
+def test_2(user_dss_clients):
+    return True
