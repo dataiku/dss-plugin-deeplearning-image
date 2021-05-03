@@ -1,7 +1,7 @@
 import dku_deeplearning_image.utils as utils
 import dku_deeplearning_image.dku_constants as constants
 from dku_deeplearning_image.keras_applications import APPLICATIONS
-from io import StringIO, BytesIO
+from io import StringIO
 from dku_deeplearning_image.misc_objects import DkuFileManager
 from dku_deeplearning_image.misc_objects import DkuApplication
 import json
@@ -12,6 +12,7 @@ import warnings
 from tensorflow.keras.layers import Dense
 from tensorflow.keras.models import Model, clone_model
 import base64
+import tensorflow as tf
 from pathlib import Path
 
 import logging
@@ -82,10 +83,11 @@ class DkuModel(object):
                 self.setattr(attr, value)
 
     def save_label_df(self, new_folder=None):
+        output_folder = new_folder or self.folder
         labels = self.get_distinct_labels()
         df_labels = pd.DataFrame({"id": range(len(labels)), "className": labels})
         DkuFileManager.write_to_folder(
-            folder=new_folder or self.folder,
+            folder=output_folder,
             file_path=constants.MODEL_LABELS_FILE,
             content=df_labels.to_csv(index=False))
 
@@ -142,8 +144,9 @@ class DkuModel(object):
         return self.application.get_weights_url(self.trained_on)
 
     def save_config(self, new_folder=None):
+        output_folder = new_folder or self.folder
         DkuFileManager.write_to_folder(
-            folder=new_folder or self.folder,
+            folder=output_folder,
             file_path=constants.CONFIG_FILE,
             content=json.dumps(self.jsonify_config()))
 
@@ -154,12 +157,13 @@ class DkuModel(object):
         }
 
     def save_info(self, new_folder=None):
+        output_folder = new_folder or self.folder
         model_info = {
             constants.GOAL.SCORE.value: self.get_info(),
             constants.GOAL.BEFORE_TRAIN.value: self.get_info(base=True)
         }
         DkuFileManager.write_to_folder(
-            folder=new_folder or self.folder,
+            folder=output_folder,
             file_path=constants.MODEL_INFO_FILE,
             content=json.dumps(model_info))
 
@@ -232,73 +236,42 @@ class DkuModel(object):
                             kernel_regularizer=regularizer)(x)
         self.model = Model(inputs=self.model.input, outputs=predictions)
 
-    def score_b64_image(self, img_b64, **kwargs):
+    def score_b64_image(self, img_b64, limit=None, min_threshold=None, classify=True):
         img_b64_decode = base64.b64decode(img_b64)
-        image = BytesIO(img_b64_decode)
-        return self.score([image], **kwargs)
+        images = tf.data.Dataset.from_tensor_slices([img_b64_decode])
+        images, errors = utils.apply_preprocess_image(
+            tfds=images,
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing,
+            is_b64=True)
+        predictions = self.score(images)
+        errors = list(errors.as_numpy_iterator())
+        return utils.format_predictions_output(predictions, errors, classify, self.get_label_df(), limit, min_threshold)
 
-    def score_image_folder(self, images_folder, **kwargs):
+    def score_image_folder(self, images_folder, limit=None, min_threshold=None, classify=True):
         images_paths = images_folder.list_paths_in_partition()
-        images = []
-        for path in images_paths:
-            try:
-                images.append(images_folder.get_download_stream(path))
-            except IOError as e:
-                logging.warning("Cannot read the image '{}', skipping it. Error: {}".format(path, e))
-                images.append(None)
-        return self.score(images, **kwargs)
-
-    def score(self, images, limit=constants.DEFAULT_PRED_LIMIT,
-              min_threshold=constants.DEFAULT_PRED_MIN_THRESHOLD, classify=True):
-        batch_size = constants.PREDICTION_BATCH_SIZE
-        n = 0
-        results = {"prediction": [], "error": []}
-        num_images = len(images)
-        while True:
-            if (n * batch_size) >= num_images: break
-            next_batch_list, error_indices = [], []
-            for index_in_batch, i in enumerate(range(n * batch_size, min((n + 1) * batch_size, num_images))):
-                image = images[i]
-                preprocessed_img = utils.preprocess_img(
-                    img_path=image,
-                    img_shape=self.get_input_shape(),
-                    preprocessing=self.application.preprocessing
-                ) if image else None
-                if preprocessed_img is None:
-                    error_indices.append(index_in_batch)
-                else:
-                    next_batch_list.append(preprocessed_img)
-
-            next_batch = np.array(next_batch_list)
-
-            prediction_batch = self.get_predictions_for_batch(next_batch, classify, limit, min_threshold)
-            error_batch = [0] * len(prediction_batch)
-
-            for err_index in error_indices:
-                prediction_batch.insert(err_index, None)
-                error_batch.insert(err_index, 1)
-
-            results["prediction"].extend(prediction_batch)
-            results["error"].extend(error_batch)
-            n += 1
-            logger.info("{} images treated, out of {}".format(min(n * batch_size, num_images), num_images))
-        return results
-
-    def get_predictions_for_batch(self, batch, classify, limit, min_threshold):
-        if not batch.size:
-            return []
-        return utils.get_predictions(
-                model=self.get_model(),
-                batch=batch,
-                classify=classify,
-                limit=limit,
-                min_threshold=min_threshold,
-                labels_df=self.get_label_df()
+        images = utils.retrieve_images_to_tfds(
+            images_folder=images_folder,
+            np_images=np.array(images_paths)
         )
+        images, errors = utils.apply_preprocess_image(
+            tfds=images,
+            input_shape=self.get_input_shape(),
+            preprocessing=self.application.preprocessing)
+        errors = list(errors.as_numpy_iterator())
+        if not images_paths or all(errors):
+            predictions = []
+        else:
+            predictions = self.score(images)
+        return utils.format_predictions_output(predictions, errors, classify, self.get_label_df(), limit, min_threshold)
+
+    def score(self, images):
+        images_batched = images.batch(constants.PREDICTION_BATCH_SIZE)
+        predictions = self.get_model().predict(images_batched)
+        return predictions
 
     def get_weights_path(self, with_top=False):
-        weights_filename = utils.get_weights_filename(with_top)
-        return weights_filename
+        return utils.get_weights_filename(with_top)
 
     def load_weights_to_local(self, weights_path):
         model_weights_path = self.folder.get_download_stream(weights_path)

@@ -44,7 +44,7 @@ class MyRunnable(Runnable):
         # Creating new Managed Folder if needed
         project = self.client.get_project(self.project_key)
 
-        if output_new_folder_name:
+        if output_new_folder_name and output_managed_id == "create_new_folder":
             output_folder_dss = project.create_managed_folder(output_new_folder_name)
         else:
             output_folder_dss = project.get_managed_folder(output_managed_id)
@@ -113,6 +113,6 @@ class MyRunnable(Runnable):
             output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
 
         new_model.load_model({}, constants.GOAL.SCORE)
-        new_model.save_info()
+        new_model.save_info(output_folder)
         return "<span>DONE</span>"
 
