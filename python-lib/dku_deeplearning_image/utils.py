@@ -125,7 +125,9 @@ def get_file_path(folder_path, file_name):
 
 
 def get_cached_file_from_folder(folder, file_path):
-    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path.replace(b'/', b'_')
+    if isinstance(file_path, bytes):
+        file_path = file_path.decode('utf-8')
+    filename = file_path.replace('/', '_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
