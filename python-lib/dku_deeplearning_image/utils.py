@@ -194,7 +194,7 @@ def format_predictions_output(predictions, errors, classify=False, labels_df=Non
 def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
     def _apply_preprocess_image(image_path):
         return tf.numpy_function(
-            func=lambda x: tf.cast(preprocess_img(x, input_shape, preprocessing, is_b64)),
+            func=lambda x: tf.cast(preprocess_img(x, input_shape, preprocessing, is_b64), tf.float32),
             inp=[image_path],
             Tout=tf.float32)
 
