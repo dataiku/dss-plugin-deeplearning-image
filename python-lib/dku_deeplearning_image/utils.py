@@ -16,7 +16,6 @@ import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
 from io import BytesIO
-from dku_config.dss_parameter import DSSParameterError
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)

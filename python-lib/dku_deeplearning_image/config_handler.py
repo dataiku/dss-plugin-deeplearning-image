@@ -22,7 +22,8 @@ def add_gpu_config(dku_config, config):
         }])
     dku_config.add_param(
         name='gpu_memory_allocation_mode',
-        value=config.get('gpu_memory_allocation_mode'))
+        value=config.get('gpu_memory_allocation_mode'),
+        cast_to=constants.GPU_MEMORY)
     dku_config.add_param(
         name='gpu_memory_limit',
         value=config.get('gpu_memory_limit') if dku_config.gpu_memory_allocation_mode == 'memory_limit' else 0)
