@@ -197,7 +197,7 @@ def format_predictions_output(predictions, errors, classify=False, labels_df=Non
 def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
     def _apply_preprocess_image(image_path):
         return tf.numpy_function(
-            func=lambda x: preprocess_img(x, input_shape, preprocessing, is_b64),
+            func=lambda x: tf.cast(preprocess_img(x, input_shape, preprocessing, is_b64)),
             inp=[image_path],
             Tout=tf.float32)
 
@@ -240,10 +240,10 @@ def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
             img = img.convert('RGB')
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
-        return tf.cast(np.array([]), tf.float32)
+        return np.array([])
     array = np.array(img)
     array = preprocessing(array)
-    return tf.cast(array, tf.float32)
+    return array
 
 
 def clean_custom_params(custom_params, params_type=""):
