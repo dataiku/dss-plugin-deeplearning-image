@@ -125,9 +125,7 @@ def get_file_path(folder_path, file_name):
 
 
 def get_cached_file_from_folder(folder, file_path):
-    if isinstance(file_path, list):
-        file_path = file_path[0]
-    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path[0].replace(b'/', b'_')
+    filename = file_path.replace('/', '_') if isinstance(file_path, str) else file_path.replace(b'/', b'_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
             with open(filename, 'wb') as f:
@@ -226,7 +224,7 @@ def retrieve_images_to_tfds(images_folder, np_images):
             inp=[image_fn],
             Tout=tf.string)
 
-    X_tfds = tf.data.Dataset.from_tensor_slices(np_images.reshape(-1, 1))
+    X_tfds = tf.data.Dataset.from_tensor_slices(np_images)
     return X_tfds.map(map_func=_retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE)
 
 
