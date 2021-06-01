@@ -6,6 +6,7 @@ from tensorboard.backend import application
 import os
 import logging
 from argparse import ArgumentParser
+from tensorboard.plugins import base_plugin
 from dataikuapi.utils import DataikuException
 
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
@@ -55,16 +56,30 @@ def __get_custom_assets_zip_provider():
     return lambda: open(path, "rb")
 
 
-def init_flags(loader_list):
+def make_plugin_loader(plugin_spec):
+    """Returns a plugin loader for the given plugin.
+    Args:
+      plugin_spec: A TBPlugin subclass, or a TBLoader instance or subclass.
+    Returns:
+      A TBLoader for the given plugin.
+    """
+    if issubclass(plugin_spec, base_plugin.TBLoader):
+        return plugin_spec()
+    if issubclass(plugin_spec, base_plugin.TBPlugin):
+        return base_plugin.BasicLoader(plugin_spec)
+    raise TypeError(f"Not a TBLoader or TBPlugin subclass: {plugin_spec}")
+
+
+def init_flags(plugin_list):
     parser = ArgumentParser()
-    for x in loader_list:
-        x.define_flags(parser)
+    for plugin in plugin_list:
+        plugin.define_flags(parser=parser)
     flags = parser.parse_args([])
     return flags
 
 
 def __get_tb_app(tensorboard_logs):
-    plugins = tb_default.get_plugins()
+    plugins = [make_plugin_loader(plugin) for plugin in tb_default.get_plugins()]
     flags = init_flags(plugins)
     flags.purge_orphaned_data = True
     flags.reload_interval = 5.0

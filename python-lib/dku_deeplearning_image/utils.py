@@ -15,9 +15,10 @@ import GPUtil
 import pandas as pd
 from PIL import UnidentifiedImageError, ImageFile, Image
 import logging
-
+from io import BytesIO
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 ImageFile.LOAD_TRUNCATED_IMAGES = True
 
 
@@ -124,6 +125,8 @@ def get_file_path(folder_path, file_name):
 
 
 def get_cached_file_from_folder(folder, file_path):
+    if isinstance(file_path, bytes):
+        file_path = file_path.decode('utf-8')
     filename = file_path.replace('/', '_')
     if not (os.path.exists(filename)):
         with folder.get_download_stream(file_path) as stream:
@@ -133,6 +136,11 @@ def get_cached_file_from_folder(folder, file_path):
     else:
         logger.debug(f"Read from cache {file_path}")
     return filename
+
+
+def convert_target_to_np_array(target_array):
+    dummies = pd.get_dummies(target_array)
+    return {"remapped": dummies.values.astype(np.int8), "classes": list(dummies.columns)}
 
 
 def get_model_config_from_file(model_folder):
@@ -164,35 +172,74 @@ def log_func(txt):
     return inner
 
 
-def format_predictions_output(predictions, classify=False, labels_df=None, limit=None, min_threshold=None):
-    if not classify:
-        return predictions.tolist()
+def format_predictions_output(predictions, errors, classify=False, labels_df=None, limit=None, min_threshold=None):
     formatted_predictions = []
+    predictions = list(predictions)
     id_pred = lambda index: labels_df.loc[index][constants.LABEL] if labels_df is not None else str(index)
-    for pred in predictions:
-        formatted_pred = get_ordered_dict(
-            {id_pred(i): float(pred[i]) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold})
-        formatted_predictions.append(formatted_pred)
-    return formatted_predictions
+    for err_i in range(len(errors)):
+        if errors[err_i] == 1:
+            predictions.insert(err_i, None)
+    for pred_i, pred in enumerate(predictions):
+        if pred is not None:
+            if classify:
+                formatted_pred = OrderedDict(
+                    [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
+                formatted_predictions.append(json.dumps(formatted_pred))
+            else:
+                formatted_predictions.append(pred.tolist())
+        else:
+            logger.warning(f"There has been an error with prediction: {pred_i}. (It is probably not an image)")
+            formatted_predictions.append(None)
+    return {"prediction": formatted_predictions, "error": errors}
 
 
-def get_predictions(model, batch, classify=False, limit=constants.DEFAULT_PRED_LIMIT, min_threshold=0, labels_df=None):
-    predictions = model.predict(batch)
-    return format_predictions_output(predictions, classify, labels_df, limit, min_threshold)
+def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
+    def _apply_preprocess_image(image_path):
+        return tf.numpy_function(
+            func=lambda x: tf.cast(preprocess_img(x, input_shape, preprocessing, is_b64), tf.float32),
+            inp=[image_path],
+            Tout=tf.float32)
+
+    def _convert_errors(images):
+        return tf.numpy_function(
+            func=lambda x: tf.cast(x.size == 0, tf.int8),
+            inp=[images],
+            Tout=tf.int8)
+
+    def _filter_errors(images):
+        return tf.numpy_function(
+            func=lambda x: x.size != 0,
+            inp=[images],
+            Tout=tf.bool)
+
+    preprocessed_images = tfds.map(map_func=_apply_preprocess_image, num_parallel_calls=constants.AUTOTUNE)
+    error_array = preprocessed_images.map(map_func=_convert_errors, num_parallel_calls=constants.AUTOTUNE)
+    preprocessed_images_filtered = preprocessed_images.filter(predicate=_filter_errors)
+
+    return preprocessed_images_filtered, error_array
 
 
-def get_ordered_dict(predictions):
-    return json.dumps(OrderedDict(sorted(predictions.items(), key=(lambda x: -x[1]))))
+def retrieve_images_to_tfds(images_folder, np_images):
+    def _retrieve_image_from_folder(image_fn):
+        return tf.numpy_function(
+            func=lambda x: get_cached_file_from_folder(images_folder, x),
+            inp=[image_fn],
+            Tout=tf.string)
+
+    X_tfds = tf.data.Dataset.from_tensor_slices(np_images)
+    return X_tfds.map(map_func=_retrieve_image_from_folder, num_parallel_calls=constants.AUTOTUNE)
 
 
-def preprocess_img(img_path, img_shape, preprocessing):
+def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
     try:
+        if is_b64:
+            img_path = BytesIO(img_path)
         img = Image.open(img_path).resize(img_shape[:2])
         if img.mode != 'RGB':
             img = img.convert('RGB')
     except UnidentifiedImageError as err:
         logger.warning(f'The file {img_path} is not a valid image. skipping it. Error: {err}')
-        return
+        return np.array([])
     array = np.array(img)
     array = preprocessing(array)
     return array
@@ -214,9 +261,9 @@ def clean_custom_params(custom_params, params_type=""):
     cleaned_params = {}
     params_type = " '{}'".format(params_type) if params_type else ""
     for i, p in enumerate(custom_params):
-        if not p.get("name", False):
+        if p.get("name") is None:
             raise IOError(f"The {params_type} custom param #{i} must have a 'name'")
-        if not p.get("value", False):
+        if p.get("value") is None:
             raise IOError(f"The {params_type} custom param #{i} must have a 'value'")
         cleaned_params[p["name"]] = string_to_arg(p["value"])
     return cleaned_params

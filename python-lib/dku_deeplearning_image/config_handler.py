@@ -5,7 +5,9 @@ import dku_deeplearning_image.dku_constants as constants
 def add_gpu_config(dku_config, config):
     dku_config.add_param(
         name='should_use_gpu',
-        value=config.get('should_use_gpu', False))
+        value=config.get('should_use_gpu'),
+        default=False
+    )
     dku_config.add_param(
         name='gpu_usage',
         value=config.get('gpu_usage'))
@@ -15,63 +17,99 @@ def add_gpu_config(dku_config, config):
         value=gpu_list,
         checks=[{
             "type": "custom",
-            "cond": (not dku_config.should_use_gpu) or gpu_list or dku_config.gpu_usage != "custom",
+            "op": (not dku_config.should_use_gpu) or gpu_list or dku_config.gpu_usage != "custom",
             "err_msg": 'You have to select at least one GPU, or uncheck "Use GPU" checkbox.'
         }])
     dku_config.add_param(
         name='gpu_memory_allocation_mode',
-        value=config.get('gpu_memory_allocation_mode'))
+        value=config.get('gpu_memory_allocation_mode'),
+        cast_to=constants.GPU_MEMORY)
     dku_config.add_param(
         name='gpu_memory_limit',
-        value=config.get('gpu_memory_limit') if dku_config.gpu_memory_allocation_mode == 'memory_limit' else 0)
+        value=config.get('gpu_memory_limit') if dku_config.gpu_memory_allocation_mode == constants.GPU_MEMORY.LIMIT else 0)
 
 
 def add_score_recipe_config(dku_config, config):
-    dku_config.add_param(name='max_nb_labels', value=int(config['max_nb_labels']))
-    dku_config.add_param(name='min_threshold', value=float(config['min_threshold']))
+    dku_config.add_param(
+        name='max_nb_labels',
+        value=config.get('max_nb_labels'),
+        required=True,
+        cast_to=int)
+    dku_config.add_param(
+        name='min_threshold',
+        value=config.get('min_threshold'),
+        required=True,
+        cast_to=float)
 
 
 def add_extract_recipe_config(dku_config, config):
-    dku_config.add_param(name='extract_layer_index', value=int(config.get('extract_layer_index', -2)))
+    dku_config.add_param(
+        name='extract_layer_index',
+        value=config.get('extract_layer_index'),
+        cast_to=int,
+        required=True,
+        default=-2)
 
 
 def add_retrain_recipe_config(dku_config, config):
     dku_config.add_param(name='col_filename', value=config.get("col_filename"), required=True)
     dku_config.add_param(name='col_label', value=config.get("col_label"), required=True)
-    dku_config.add_param(name='train_ratio', value=float(config.get("train_ratio")))
+    dku_config.add_param(name='train_ratio', value=config.get("train_ratio"), cast_to=float)
     dku_config.add_param(
         name='input_shape',
-        value=(int(config.get("image_height")), int(config.get("image_width")), 3))
-    dku_config.add_param(name='batch_size', value=int(config.get("batch_size")))
-    dku_config.add_param(name='model_pooling', value=config.get("model_pooling"))
+        value=(config.get("image_height"), config.get("image_width"), 3),
+        cast_to=(lambda el: tuple(map(int, el))))
+    dku_config.add_param(name='batch_size', value=config.get("batch_size"), cast_to=int, required=True)
+    dku_config.add_param(name='model_pooling', value=config.get("model_pooling"), required=True)
     dku_config.add_param(name='model_reg', value=config.get("model_reg"))
-    dku_config.add_param(name='model_dropout', value=float(config.get("model_dropout")))
-    dku_config.add_param(name='layer_to_retrain', value=config.get("layer_to_retrain"))
-    dku_config.add_param(name='layer_to_retrain_n', value=int(config.get("layer_to_retrain_n")), required=True)
-    dku_config.add_param(name='optimizer', value=config.get("model_optimizer"))
-    dku_config.add_param(name='learning_rate', value=config.get("model_learning_rate"))
-    dku_config.add_param(name='custom_params_opti', value=config.get("model_custom_params_opti"))
-    dku_config.add_param(name='nb_epochs', value=int(config.get("nb_epochs")))
-    dku_config.add_param(name='nb_steps_per_epoch', value=int(config.get("nb_steps_per_epoch")))
-    dku_config.add_param(name='nb_validation_steps', value=int(config.get("nb_validation_steps")))
-    dku_config.add_param(name='data_augmentation', value=config.get("data_augmentation"))
-    n_augmentation = int(config.get("n_augmentation")) if dku_config.data_augmentation else 0
+    dku_config.add_param(name='model_dropout', value=config.get("model_dropout"), cast_to=float)
+    dku_config.add_param(name='layer_to_retrain', value=config.get("layer_to_retrain"), required=True)
+    dku_config.add_param(name='layer_to_retrain_n', value=config.get("layer_to_retrain_n"), cast_to=int)
+    dku_config.add_param(name='optimizer', value=config.get("model_optimizer"), required=True)
+    dku_config.add_param(name='learning_rate', value=config.get("model_learning_rate"), required=True)
+    model_custom_params_opti = config.get("model_custom_params_opti", [])
+    dku_config.add_param(
+        name='custom_params_opti',
+        value=model_custom_params_opti,
+        checks=[
+            {
+                "type": "custom",
+                "op": all([el and el.get('name') and 'value' in el for el in model_custom_params_opti]),
+                "err_msg": "Names or values are missing in the Optimization custom parameters"
+            }
+        ]
+    )
+    dku_config.add_param(name='nb_epochs', value=config.get("nb_epochs"), cast_to=int, required=True)
+    dku_config.add_param(name='nb_steps_per_epoch', value=config.get("nb_steps_per_epoch"), cast_to=int, required=True)
+    dku_config.add_param(name='nb_validation_steps', value=config.get("nb_validation_steps"), cast_to=int, required=True)
+    dku_config.add_param(name='data_augmentation', value=config.get("data_augmentation"), required=True)
+    n_augmentation = config.get("n_augmentation") if dku_config.data_augmentation else 0
     dku_config.add_param(
         name='n_augmentation',
         value=n_augmentation,
         checks=[
             {
-                'type': 'custom',
-                'cond': not n_augmentation or (n_augmentation <= dku_config.batch_size),
+                'type': 'inf_eq',
+                'op': dku_config.batch_size,
                 'err_msg': "The number of augmentations must be lower than the batch size. Aborting."
+            }
+        ],
+        cast_to=int
+    )
+    custom_params_data_augment = config.get("custom_params_data_augment", [])
+    dku_config.add_param(
+        name='custom_params_data_augment',
+        value=config.get("model_custom_params_data_augmentation"),
+        checks=[
+            {
+                "type": "custom",
+                "op": all([el and el.get('name') and 'value' in el for el in custom_params_data_augment]),
+                "err_msg": "Names or values are missing in the Data augmentation custom parameters"
             }
         ]
     )
-    dku_config.add_param(
-        name='custom_params_data_augment',
-        value=config.get("model_custom_params_data_augmentation", []))
     dku_config.add_param(name='use_tensorboard', value=config.get("tensorboard"))
-    dku_config.add_param(name='random_seed', value=int(config.get("random_seed")))
+    dku_config.add_param(name='random_seed', value=config.get("random_seed"), cast_to=int)
 
 
 def add_api_deployer_config(dku_config, config, project):
@@ -148,19 +186,23 @@ def add_api_deployer_config(dku_config, config, project):
 
     dku_config.add_param(
         name='max_nb_labels',
-        value=int(config.get("max_nb_labels")),
+        value=config.get("max_nb_labels"),
         checks=[
             {'type': 'exists', 'err_msg': "Max number of labels is empty"},
             {'type': 'sup', 'op': 0, 'err_msg': "Max number of labels must be strictly greater than 0"}
-        ])
+        ],
+        cast_to=int,
+        required=True,
+        default=2)
 
     dku_config.add_param(
         name='min_threshold',
-        value=float(config.get("min_threshold")),
+        value=config.get("min_threshold"),
         checks=[
             {'type': 'exists', 'err_msg': "Min threshold is empty"},
             {'type': 'between', 'op': [0, 1], 'err_msg': "Min threshold must be between 0 and 1"}
-        ])
+        ],
+        cast_to=float)
 
 
 def create_dku_config(config, goal, project=None):

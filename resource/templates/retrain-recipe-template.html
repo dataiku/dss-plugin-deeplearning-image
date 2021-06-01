@@ -30,7 +30,7 @@
         <div class="control-group">
             <label class="control-label">Random seed</label>
             <div class="controls">
-                <input type="number" min="0" step="1" ng-model="config.random_seed" required/>
+                <input type="number" min="0" step="1" ng-model="config.random_seed"/>
                 <span class="help-inline">Using a fixed random seed allows for reproducible result</span>
             </div>
         </div>
@@ -69,19 +69,19 @@
         <div class="control-group">
             <label class="control-label">Dropout</label>
             <div class="controls">
-                <input type="number" min="0" max="1" step="0.001" ng-model="config.model_dropout" required/>
+                <input type="number" min="0" max="1" step="0.001" ng-model="config.model_dropout"/>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">L1 regularization</label>
             <div class="controls">
-                <input type="number" min="0" step="0.001" ng-model="config.model_reg.l1" required/>
+                <input type="number" min="0" step="0.001" ng-model="config.model_reg.l1"/>
             </div>
         </div>
         <div class="control-group">
             <label class="control-label">L2 regularization</label>
             <div class="controls">
-                <input type="number" min="0" step="0.001" ng-model="config.model_reg.l2" required/>
+                <input type="number" min="0" step="0.001" ng-model="config.model_reg.l2"/>
             </div>
         </div>
         <div class="control-group">

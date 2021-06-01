@@ -1,18 +1,18 @@
 from .dku_recipe import DkuRecipe
 from dku_deeplearning_image.misc_objects import DkuModel
 import dku_deeplearning_image.utils as utils
-from dku_deeplearning_image.misc_objects import DkuImageGenerator
 import dku_deeplearning_image.dku_constants as constants
 from sklearn.model_selection import train_test_split
+import tensorflow as tf
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from tensorflow.keras import optimizers
 from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 import shutil
+import numpy as np
 
 import logging
 logger = logging.getLogger(__name__)
-
 
 
 class RetrainRecipe(DkuRecipe):
@@ -79,10 +79,8 @@ class RetrainRecipe(DkuRecipe):
 
     def _get_tensorboard(self, output_model_folder):
         log_path = utils.get_file_path('.', constants.TENSORBOARD_LOGS)
-
         if os.path.isdir(log_path):
             shutil.rmtree(log_path)
-
         return TensorBoard(log_dir=log_path, write_graph=True)
 
     def _get_callbacks(self, output_model_folder, model_weights_path):
@@ -118,34 +116,59 @@ class RetrainRecipe(DkuRecipe):
             verbose=2
         )
 
+    def _get_augmented_images(self, image, extra_images_gen):
+        def _run_image_augm(im, augm_gen):
+            image_augm = np.tile(im, (self.config.data_augmentation, 1, 1, 1))
+            augmented_images = next(augm_gen.flow(image_augm, batch_size=self.config.data_augmentation))
+            return [im] + augmented_images
+
+        return tf.numpy_function(
+            func=lambda x: _run_image_augm(x, extra_images_gen),
+            inp=[image],
+            Tout=tf.float32)
+
+    def _add_data_augmentation(self, X_tfds, y_values):
+        extra_images_gen = self._get_tf_image_data_gen()
+        X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
+                            num_parallel_calls=constants.AUTOTUNE)
+        X_tfds = X_tfds.flat_map(map_func=lambda x: tf.data.Dataset.from_tensor_slices(x))
+        y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
+        return X_tfds, y_values
+
+    def _build_tfds(self, df, images_folder, ignore_augm=False):
+        use_augm = self.config.data_augmentation and not ignore_augm
+        X_tfds = utils.retrieve_images_to_tfds(
+            images_folder=images_folder,
+            np_images=df[constants.FILENAME].values)
+        X_tfds, errors_tdfs = utils.apply_preprocess_image(
+            tfds=X_tfds,
+            input_shape=self.config.input_shape,
+            preprocessing=self.dku_model.application.preprocessing)
+        y_values = utils.convert_target_to_np_array(df[constants.LABEL].values)["remapped"]
+        if use_augm:
+            X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
+
+        y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
+        tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size).repeat()
+        optim_tfds = tfds.prefetch(constants.AUTOTUNE)
+        return optim_tfds
+
     def compute(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
         self.compile()
 
         train_df, test_df = self._build_train_test_sets(label_df)
-        extra_images_gen = self._get_tf_image_data_gen() if self.config.data_augmentation else None
 
-        dku_generator = DkuImageGenerator(
-            images_folder=image_folder,
-            labels=self.dku_model.get_distinct_labels(),
-            input_shape=self.config.input_shape,
-            batch_size=self.config.batch_size,
-            preprocessing=self.dku_model.application.preprocessing,
-            use_augmentation=self.config.data_augmentation,
-            extra_images_gen=extra_images_gen,
-            n_augm=self.config.n_augmentation
-        )
-        train_gen, test_gen = dku_generator.load(train_df), dku_generator.load(test_df)
-
-        model_weights_path = self.dku_model.get_weights_path()
+        train_tfds = self._build_tfds(train_df, image_folder)
+        test_tfds = self._build_tfds(test_df, image_folder, ignore_augm=True)
 
         callbacks = self._get_callbacks(
             output_model_folder=output_folder,
-            model_weights_path=model_weights_path
+            model_weights_path=self.dku_model.get_weights_path()
         )
         self._retrain(
-            train_generator=train_gen,
-            test_generator=test_gen,
+            train_generator=train_tfds,
+            test_generator=test_tfds,
             callback_list=callbacks
         )
 
