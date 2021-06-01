@@ -1,7 +1,7 @@
 from enum import Enum
 
 # Plugin ID
-PLUGIN_ID = 'deeplearning-image-v2'
+PLUGIN_ID = 'deeplearning-image'
 
 
 class MODEL(Enum):

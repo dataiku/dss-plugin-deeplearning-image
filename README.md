@@ -8,4 +8,4 @@ This plugin provides a total of 3 recipes, a macro and a webapp template.
 This plugin will require the standard tensorflow package and runs on the CPU. Use the other plugin to enable GPU computation.
 
 ## Copyright notice
-Original work Copyright (c) 2016 François Chollet
+Original work Copyright (c) 2021 Henri Chabert
