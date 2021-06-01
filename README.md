@@ -3,9 +3,7 @@ This plugin provides several tools to use images in machine learning application
 
 This plugin relies on the Keras library. Keras is an open source neural network library written in Python. We use it to run on top of the TensorFlow library as it enables fast experimentation with deep neural networks.
 
-This plugin provides a total of 3 recipes, a macro and a webapp template.
-
-This plugin will require the standard tensorflow package and runs on the CPU. Use the other plugin to enable GPU computation.
+This plugin provides a total of 3 recipes, two macros and a webapp template.
 
 ## Copyright notice
 Original work Copyright (c) 2021 Henri Chabert
