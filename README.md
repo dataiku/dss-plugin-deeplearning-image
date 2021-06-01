@@ -5,5 +5,5 @@ This plugin relies on the Keras library. Keras is an open source neural network 
 
 This plugin provides a total of 3 recipes, two macros and a webapp template.
 
-## Copyright notice
-Original work Copyright (c) 2021 Henri Chabert
+## License
+This library is distributed under the Apache License version 2.0
