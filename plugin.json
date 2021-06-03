@@ -1,8 +1,8 @@
 {
-    "id": "deeplearning-image-v2",
+    "id": "deeplearning-image",
     "version": "2.0.0",
     "meta": {
-        "label": "Deep learning on images (v2)",
+        "label": "Deep learning on images",
         "category": "Computer Vision",
         "description": "Use a pre-trained model to score images or extract features. You can retrain generic models to specialize them on a particular set of images.",
         "author": "Dataiku (Henri Chabert)",

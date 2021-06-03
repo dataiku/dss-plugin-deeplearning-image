@@ -161,7 +161,7 @@ app.controller('gpuController', function ($scope, utils) {
 
 app.directive('gpuForm', function () {
     return {
-        templateUrl: '/plugins/deeplearning-image-v2/resource/templates/gpu-form-template.html'
+        templateUrl: '/plugins/deeplearning-image/resource/templates/gpu-form-template.html'
     };
 });
 

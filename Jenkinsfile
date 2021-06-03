@@ -1,7 +1,6 @@
 pipeline {
    options {
         disableConcurrentBuilds()
-        skipDefaultCheckout(true)
    }
    agent { label 'dss-plugin-tests'}
    environment {
@@ -10,10 +9,16 @@ pipeline {
         INTEGRATION_TEST_FILES_STATUS_CODE = sh(script: 'ls ./tests/*/integration/test*', returnStatus: true)
    }
    stages {
-      stage('Clear Workspace') {
+      stage('Run Unit Tests') {
+         when { environment name: 'UNIT_TEST_FILES_STATUS_CODE', value: "0"}
          steps {
-            cleanWs()
-            checkout scm
+            sh 'echo "Running unit tests"'
+            catchError(stageResult: 'FAILURE') {
+            sh """
+               make unit-tests
+               """
+            }
+            sh 'echo "Done with unit tests"'
          }
       }
       stage('Run Integration Tests') {
@@ -42,6 +47,7 @@ pipeline {
 
             def status = currentBuild.currentResult
             sh "file_name=\$(echo ${env.JOB_NAME} | tr '/' '-').status; touch \$file_name; echo \"${env.BUILD_URL};${env.CHANGE_TITLE};${env.CHANGE_AUTHOR};${env.CHANGE_URL};${env.BRANCH_NAME};${status};\" >> $HOME/daily-statuses/\$file_name"
+            cleanWs()
         }
      }
    }
