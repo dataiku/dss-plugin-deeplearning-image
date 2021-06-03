@@ -125,7 +125,7 @@ class RetrainRecipe(DkuRecipe):
         return tf.numpy_function(
             func=lambda x: _run_image_augm(x, extra_images_gen),
             inp=[image],
-            Tout=tf.float32)
+            Tout=tf.int8)
 
     def _add_data_augmentation(self, X_tfds, y_values):
         extra_images_gen = self._get_tf_image_data_gen()
