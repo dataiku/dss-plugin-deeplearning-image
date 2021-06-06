@@ -146,8 +146,7 @@ class RetrainRecipe(DkuRecipe):
             preprocessing=self.dku_model.application.preprocessing)
         y_values = utils.convert_target_to_np_array(df[constants.LABEL].values)["remapped"]
         if use_augm:
-            X_tfds_2, y_values_2 = self._add_data_augmentation(X_tfds, y_values)
-            return X_tfds, X_tfds_2, y_values, y_values_2
+            X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
 
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size).repeat()
