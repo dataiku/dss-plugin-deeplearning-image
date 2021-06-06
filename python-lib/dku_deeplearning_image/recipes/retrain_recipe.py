@@ -132,7 +132,7 @@ class RetrainRecipe(DkuRecipe):
         X_tfds = X_tfds.map(map_func=lambda x: self._get_augmented_images(x, extra_images_gen),
                             num_parallel_calls=constants.AUTOTUNE)
         X_tfds = X_tfds.flat_map(map_func=lambda x: tf.data.Dataset.from_tensor_slices(x))
-        y_values = np.repeat(y_values, self.config.n_augmentation + 1, axis=0)
+        y_values = np.repeat(y_values, self.config.n_augmentation, axis=0)
         return X_tfds, y_values
 
     def _build_tfds(self, df, images_folder, ignore_augm=False):
