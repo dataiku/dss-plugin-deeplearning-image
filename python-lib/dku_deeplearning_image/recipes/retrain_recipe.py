@@ -120,7 +120,7 @@ class RetrainRecipe(DkuRecipe):
         def _run_image_augm(im, augm_gen):
             image_augm = np.tile(im, (self.config.n_augmentation, 1, 1, 1))
             augmented_images = next(augm_gen.flow(image_augm, batch_size=self.config.n_augmentation)).astype("float32")
-            return [im] + augmented_images
+            return augmented_images
 
         return tf.numpy_function(
             func=lambda x: _run_image_augm(x, extra_images_gen),
@@ -146,12 +146,24 @@ class RetrainRecipe(DkuRecipe):
             preprocessing=self.dku_model.application.preprocessing)
         y_values = utils.convert_target_to_np_array(df[constants.LABEL].values)["remapped"]
         if use_augm:
-            X_tfds, y_values = self._add_data_augmentation(X_tfds, y_values)
+            X_tfds_2, y_values_2 = self._add_data_augmentation(X_tfds, y_values)
+            return X_tfds, X_tfds_2, y_values, y_values_2
 
         y_tfds = tf.data.Dataset.from_tensor_slices(y_values)
         tfds = tf.data.Dataset.zip((X_tfds, y_tfds)).batch(self.config.batch_size).repeat()
         optim_tfds = tfds.prefetch(constants.AUTOTUNE)
         return optim_tfds
+
+
+    def compute_dbg(self, image_folder, model_folder, label_df, output_folder):
+        self.load_dku_model(model_folder, label_df)
+        self.compile()
+
+        train_df, test_df = self._build_train_test_sets(label_df)
+
+        train_tfds = self._build_tfds(train_df, image_folder)
+
+        return train_tfds
 
     def compute(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
