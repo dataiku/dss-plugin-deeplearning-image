@@ -153,17 +153,6 @@ class RetrainRecipe(DkuRecipe):
         optim_tfds = tfds.prefetch(constants.AUTOTUNE)
         return optim_tfds
 
-
-    def compute_dbg(self, image_folder, model_folder, label_df, output_folder):
-        self.load_dku_model(model_folder, label_df)
-        self.compile()
-
-        train_df, test_df = self._build_train_test_sets(label_df)
-
-        train_tfds = self._build_tfds(train_df, image_folder)
-
-        return train_tfds
-
     def compute(self, image_folder, model_folder, label_df, output_folder):
         self.load_dku_model(model_folder, label_df)
         self.compile()
