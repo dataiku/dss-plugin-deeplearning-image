@@ -206,6 +206,8 @@ class DkuModel(object):
 
     def get_distinct_labels(self):
         label_df = self.get_label_df()
+        print("labels")
+        print(label_df[constants.LABEL])
         return self.get_or_load('distinct_labels', list(np.unique(label_df[constants.LABEL])))
 
     def get_label_df(self):
@@ -215,7 +217,10 @@ class DkuModel(object):
         details_model_label = self.folder.get_path_details(constants.MODEL_LABELS_FILE)
         if details_model_label['exists'] and not details_model_label["directory"]:
             labels_path = self.folder.get_download_stream(constants.MODEL_LABELS_FILE)
-            label_df = pd.read_csv(labels_path, sep=",").set_index('id').rename({'className': constants.LABEL}, axis=1)
+            label_df = pd.read_csv(labels_path, sep=",")\
+                .set_index('id')\
+                .rename({'className': constants.LABEL}, axis=1)\
+                .dropna(subset=[constants.LABEL])
         else:
             logger.warning("------ \n Info: No csv file in the recipes folder, will not use class names. \n ------")
             label_df = None

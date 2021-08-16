@@ -14,7 +14,9 @@ def format_label_df(label_dataset, col_filename, col_label):
         col_filename: constants.FILENAME,
         col_label: constants.LABEL
     }
-    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[list(renaming_mapping.values())]
+    label_df = label_dataset.get_dataframe()\
+        .rename(columns=renaming_mapping)[list(renaming_mapping.values())] \
+        .dropna(subset=[constants.LABEL])
     return label_df
 
 
