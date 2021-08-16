@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 2.0.1 - Patch release - 2021-08-13
+- Fixed problem for integer labels
+
 ## Version 2.0.0 - Feature release - 2021-06-01
 - Made plugin compatible with:
     - User Isolation Framework implementation

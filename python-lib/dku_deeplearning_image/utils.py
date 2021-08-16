@@ -183,7 +183,7 @@ def format_predictions_output(predictions, errors, classify=False, labels_df=Non
         if pred is not None:
             if classify:
                 formatted_pred = OrderedDict(
-                    [(id_pred(i), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
+                    [(str(id_pred(i)), float(pred[i])) for i in pred.argsort()[-limit:] if float(pred[i]) >= min_threshold])
                 formatted_predictions.append(json.dumps(formatted_pred))
             else:
                 formatted_predictions.append(pred.tolist())
