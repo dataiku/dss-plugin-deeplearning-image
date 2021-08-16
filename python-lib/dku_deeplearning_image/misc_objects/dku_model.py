@@ -206,8 +206,6 @@ class DkuModel(object):
 
     def get_distinct_labels(self):
         label_df = self.get_label_df()
-        print("labels")
-        print(label_df[constants.LABEL])
         return self.get_or_load('distinct_labels', list(np.unique(label_df[constants.LABEL])))
 
     def get_label_df(self):
