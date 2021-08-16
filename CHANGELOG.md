@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 2.0.2 - Patch release - 2021-08-16
+- Fixed problem for NaN labels
+
 ## Version 2.0.1 - Patch release - 2021-08-13
 - Fixed problem for integer labels
 
