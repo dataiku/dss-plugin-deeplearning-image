@@ -3,6 +3,7 @@
 ## Version 2.0.2 - Patch release - 2021-08-20
 - Fixed problem for NaN labels
 - Fixed problem for unexisting files in label dataset
+- Added custom error messages
 
 ## Version 2.0.1 - Patch release - 2021-08-13
 - Fixed problem for integer labels
