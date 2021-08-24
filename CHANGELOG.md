@@ -1,6 +1,6 @@
 # Changelog
 
-## Version 2.0.2 - Patch release - 2021-08-23
+## Version 2.0.2 - Patch release - 2021-08-24
 - Fixed problem for NaN labels
 - Fixed problem for unexisting files in label dataset
 - Added custom error messages
