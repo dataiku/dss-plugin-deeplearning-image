@@ -37,15 +37,18 @@ def save_output_model(output_folder, model):
 @utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
+
     config = create_dku_config(recipe_config, constants.GOAL.RETRAIN)
     image_folder, label_dataset, model_folder, output_folder = get_input_output()
     label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
     recipe = RetrainRecipe(config)
-    try:
-        new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
-    except Exception as err:
-        raise_plugin_error(err)
+
+    new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
+
     save_output_model(output_folder, new_model)
 
 
-run()
+try:
+    run()
+except Exception as err:
+    raise_plugin_error(err)
