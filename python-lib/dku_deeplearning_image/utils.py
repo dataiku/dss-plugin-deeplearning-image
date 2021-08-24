@@ -129,10 +129,14 @@ def get_cached_file_from_folder(folder, file_path):
         file_path = file_path.decode('utf-8')
     filename = file_path.replace('/', '_')
     if not (os.path.exists(filename)):
-        with folder.get_download_stream(file_path) as stream:
-            with open(filename, 'wb') as f:
-                f.write(stream.read())
-                logger.debug(f"Cached file {file_path}")
+        try:
+            with folder.get_download_stream(file_path) as stream:
+                with open(filename, 'wb') as f:
+                    f.write(stream.read())
+                    logger.debug(f"Cached file {file_path}")
+        except Exception as err:
+            logger.warning(f'The file {filename} does not exist in input folder. Skipping it.')
+            return ""
     else:
         logger.debug(f"Read from cache {file_path}")
     return filename
@@ -232,6 +236,8 @@ def retrieve_images_to_tfds(images_folder, np_images):
 
 def preprocess_img(img_path, img_shape, preprocessing, is_b64=False):
     try:
+        if not img_path:
+            return np.array([])
         if is_b64:
             img_path = BytesIO(img_path)
         img = Image.open(img_path).resize(img_shape[:2])

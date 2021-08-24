@@ -7,6 +7,7 @@ from dku_deeplearning_image.config_handler import create_dku_config
 
 from dku_deeplearning_image.recipes import ExtractRecipe
 from dku_deeplearning_image.misc_objects import DkuFileManager
+from dku_deeplearning_image.error_handler import raise_plugin_error
 
 
 def get_input_output():
@@ -27,8 +28,8 @@ def write_output_dataset(output_dataset, image_folder, features):
 @utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
-    config = create_dku_config(recipe_config, constants.GOAL.EXTRACT)
 
+    config = create_dku_config(recipe_config, constants.GOAL.EXTRACT)
     image_folder, model_folder, output_dataset = get_input_output()
     recipe = ExtractRecipe(config)
 
@@ -37,4 +38,7 @@ def run():
     write_output_dataset(output_dataset, image_folder, features)
 
 
-run()
+try:
+    run()
+except Exception as err:
+    raise_plugin_error(err)

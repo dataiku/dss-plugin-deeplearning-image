@@ -7,6 +7,7 @@ from dku_deeplearning_image.config_handler import create_dku_config
 
 from dku_deeplearning_image.recipes import RetrainRecipe
 from dku_deeplearning_image.misc_objects import DkuFileManager
+from dku_deeplearning_image.error_handler import raise_plugin_error
 
 
 def format_label_df(label_dataset, col_filename, col_label):
@@ -14,7 +15,9 @@ def format_label_df(label_dataset, col_filename, col_label):
         col_filename: constants.FILENAME,
         col_label: constants.LABEL
     }
-    label_df = label_dataset.get_dataframe().rename(columns=renaming_mapping)[list(renaming_mapping.values())]
+    label_df = label_dataset.get_dataframe()\
+        .rename(columns=renaming_mapping)[list(renaming_mapping.values())]\
+        .dropna(subset=[constants.LABEL])
     return label_df
 
 
@@ -34,12 +37,18 @@ def save_output_model(output_folder, model):
 @utils.log_func(txt='recipes')
 def run():
     recipe_config = get_recipe_config()
+
     config = create_dku_config(recipe_config, constants.GOAL.RETRAIN)
     image_folder, label_dataset, model_folder, output_folder = get_input_output()
     label_df = format_label_df(label_dataset, config.col_filename, config.col_label)
     recipe = RetrainRecipe(config)
+
     new_model = recipe.compute(image_folder, model_folder, label_df, output_folder)
+
     save_output_model(output_folder, new_model)
 
 
-run()
+try:
+    run()
+except Exception as err:
+    raise_plugin_error(err)
