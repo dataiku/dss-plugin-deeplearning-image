@@ -17,5 +17,8 @@
         }
     ],
     "baseType": "STANDARD",
-    "roles": []
+    "roles": [{
+        "type": "MANAGED_FOLDER",
+        "targetParamsKey": "retrained_model_folder"
+    }]
 }
