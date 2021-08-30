@@ -6,14 +6,12 @@
     },
     "libraries" : [],
     "hasBackend": "true",
-    "paramsPythonSetup": "helpers/webapp-helper.py",
     "params": [
         {
             "name": "retrained_model_folder",
-            "type": "SELECT",
+            "type": "MANAGED_FOLDER",
             "label": "Folder containing retrained model",
-            "mandatory": true,
-            "getChoicesFromPython": true
+            "mandatory": true
         }
     ],
     "baseType": "STANDARD",

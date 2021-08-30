@@ -37,6 +37,7 @@ def download_logs_to_local(folder):
 
 
 def __get_logs_path():
+
     retrained_model_folder = dataiku.Folder(get_webapp_config().get('retrained_model_folder'))
     check_folder_exists(retrained_model_folder)
 
