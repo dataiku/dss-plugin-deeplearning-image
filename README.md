@@ -5,7 +5,7 @@ This plugin relies on the Keras library. Keras is an open source neural network 
 
 This plugin provides a total of 3 recipes, two macros and a webapp template.
 
-⚠️ Starting with DSS version 11 this plugin is "partially superseded", we recommend using the native [image classification](https://doc.dataiku.com/dss/latest/machine-learning/computer-vision/index.html) capabilities.
+⚠️ Starting with DSS version 11 this plugin is partially superseded by the native [image classification capabilities](https://doc.dataiku.com/dss/latest/machine-learning/computer-vision/index.html).
 
 ## License
 This library is distributed under the Apache License version 2.0
