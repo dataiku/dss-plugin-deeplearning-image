@@ -1,5 +1,8 @@
 # Changelog
 
+## Version 2.0.3 - Deprecation release - 2022-08
+- ⚠️ The plugin is partially superseded by native capabilities
+
 ## Version 2.0.2 - Patch release - 2021-08-24
 - Fixed problem for NaN labels
 - Fixed problem for unexisting files in label dataset
