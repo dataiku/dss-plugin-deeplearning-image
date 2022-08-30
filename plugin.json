@@ -4,7 +4,7 @@
     "meta": {
         "label": "Deep learning on images",
         "category": "Computer Vision",
-        "description": "Use a pre-trained model to score images or extract features. You can retrain generic models to specialize them on a particular set of images.  ⚠️ This plugin is now \\\"partially superseded\\\", we recommend using the native [image classification](https://doc.dataiku.com/dss/latest/machine-learning/computer-vision/index.html) capabilities instead.\",\n",
+        "description": "Use a pre-trained model to score images or extract features. You can retrain generic models to specialize them on a particular set of images. \n⚠️ This plugin is now partially superseded by the native [image classification capabilities](https://doc.dataiku.com/dss/latest/machine-learning/computer-vision/index.html).",
         "author": "Dataiku (Henri Chabert)",
         "icon": "icon-picture",
         "licenseInfo": "Apache Software License",
