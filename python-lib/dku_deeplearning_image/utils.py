@@ -103,7 +103,10 @@ def set_gpu_options(should_use_gpu, gpu_list, gpu_memory_allocation_mode, memory
 
 
 def get_tf_strategy():
-    return tf.distribute.MirroredStrategy()
+    gpus = tf.config.list_physical_devices('GPU')
+    if len(gpus) > 1:
+        return tf.distribute.MirroredStrategy()
+    return tf.distribute.get_strategy()
 
 
 def calculate_gpu_memory_allocation(memory_limit_ratio, gpu_to_use):
@@ -116,7 +119,9 @@ def calculate_gpu_memory_allocation(memory_limit_ratio, gpu_to_use):
 
 
 def get_weights_filename(with_top=False):
-    return '{}{}.h5'.format(constants.WEIGHT_FILENAME, '' if with_top else constants.NOTOP_SUFFIX)
+    suffix = '' if with_top else constants.NOTOP_SUFFIX
+    ext = '.weights.h5'
+    return f'{constants.WEIGHT_FILENAME}{suffix}{ext}'
 
 
 def get_file_path(folder_path, file_name):
@@ -199,10 +204,12 @@ def format_predictions_output(predictions, errors, classify=False, labels_df=Non
 
 def apply_preprocess_image(tfds, input_shape, preprocessing, is_b64=False):
     def _apply_preprocess_image(image_path):
-        return tf.numpy_function(
+        result = tf.numpy_function(
             func=lambda x: tf.cast(preprocess_img(x, input_shape, preprocessing, is_b64), tf.float32),
             inp=[image_path],
             Tout=tf.float32)
+        result.set_shape(input_shape)
+        return result
 
     def _convert_errors(images):
         return tf.numpy_function(

@@ -1,5 +1,10 @@
 # Changelog
 
+## Version 3.0.0 - Python versions supported update - Breaking change - 2025-02
+- ⚠️ Drop python3.6 support
+- ⚠️ Base model weights needs redownloading to get weights in keras 3 format.
+- Supports Python3.9, 3.10, 3.11, 3.12, 3.13, 3.14
+
 ## Version 2.0.3 - Update regarding partial supersession - 2022-08
 - ⚠️ The plugin is now partially superseded by native capabilities
 

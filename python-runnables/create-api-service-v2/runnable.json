@@ -69,7 +69,7 @@
             "name": "code_env_name",
             "label": "Environment name",
             "type": "CODE_ENV",
-            "description":"Must be a PYTHON3 env containing the required packages: scikit-learn==0.23.1, tensorflow==2.2.2, h5py>=2.10.0, Pillow==8.1.1, tables==3.6.1, GPUtil==1.4.0",
+            "description":"Must be a Python 3.9+ env containing the required packages: scikit-learn, tensorflow, h5py, Pillow, tables, GPUtil",
 
             "visibilityCondition" : "model.code_env_options == 'existing'",
             "mandatory": true

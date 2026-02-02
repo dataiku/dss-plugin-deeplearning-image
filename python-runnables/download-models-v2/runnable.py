@@ -1,12 +1,15 @@
 from dataiku.runnables import Runnable
 import dataiku
-import requests
 import json
+import os
+import tempfile
+import time
+import requests
 import pandas as pd
 import dku_deeplearning_image.dku_constants as constants
+import dku_deeplearning_image.utils as utils
 from dku_deeplearning_image.misc_objects import DkuModel
 from dku_deeplearning_image.misc_objects import DkuFileManager
-import time
 
 # We deactivate GPU for this script, because all the methods only need to 
 # fetch information about model and do not make computation
@@ -61,56 +64,42 @@ class MyRunnable(Runnable):
 
         new_model.set_config(config)
 
-        # Downloading weights
-        url_to_weights = new_model.get_weights_url()
-
-        def update_percent(percent, last_update_time):
-            new_time = time.time()
-            if (new_time - last_update_time) > 3:
-                progress_callback(percent)
-                return new_time
-            else:
-                return last_update_time
-
-        def download_files_to_managed_folder(output_f, files_info, chunk_size=8192):
-            total_size = 0
-            bytes_so_far = 0
-            for file_info in files_info:
-                response = requests.get(file_info["url"], stream=True)
-                total_size += int(response.headers.get('content-length'))
-                file_info["response"] = response
-            update_time = time.time()
-            for file_info in files_info:
-                with output_f.get_writer(file_info["filename"]) as f:
-                    for content in file_info["response"].iter_content(chunk_size=chunk_size):
-                        bytes_so_far += len(content)
-                        # Only scale to 80% because needs to compute model summary after download
-                        percent = int(float(bytes_so_far) / total_size * 80)
-                        update_time = update_percent(percent, update_time)
-                        f.write(content)
-
-        class_mapping_url = constants.IMAGENET_URL if trained_on == constants.IMAGENET else ""
-
-        files_to_dl = [
-            {"url": url_to_weights["top"], "filename": new_model.get_weights_path(with_top=True)},
-            {"url": url_to_weights["no_top"], "filename": new_model.get_weights_path(with_top=False)}
-        ]
-
-        if class_mapping_url:
-            files_to_dl.append({"url": class_mapping_url, "filename": constants.CLASSES_MAPPING_FILE})
-
         output_folder_dss.put_file(constants.CONFIG_FILE, json.dumps(config))
-        download_files_to_managed_folder(output_folder, files_to_dl)
 
-        if class_mapping_url:
-            mapping_df = pd.read_json(output_folder.get_download_stream(constants.CLASSES_MAPPING_FILE), orient="index")
+        # Keras 3: Load with weights='imagenet' and save_weights() to convert to Keras 3 format.
+        # This handles the internal h5 structure differences between legacy Google files and Keras 3.
+        with tempfile.TemporaryDirectory() as tmpdir:
+            progress_callback(10)
+
+            model_top = new_model.application.model_func(weights='imagenet', include_top=True)
+            weights_top_path = os.path.join(tmpdir, utils.get_weights_filename(with_top=True))
+            model_top.save_weights(weights_top_path)
+
+            progress_callback(40)
+
+            model_notop = new_model.application.model_func(weights='imagenet', include_top=False)
+            weights_notop_path = os.path.join(tmpdir, utils.get_weights_filename(with_top=False))
+            model_notop.save_weights(weights_notop_path)
+
+            progress_callback(70)
+
+            with open(weights_top_path, 'rb') as f:
+                output_folder.upload_stream(utils.get_weights_filename(with_top=True), f)
+            with open(weights_notop_path, 'rb') as f:
+                output_folder.upload_stream(utils.get_weights_filename(with_top=False), f)
+
+
+        progress_callback(80)
+
+        if trained_on == constants.IMAGENET:
+            response = requests.get(constants.IMAGENET_URL)
+            mapping_df = pd.read_json(response.text, orient="index")
             mapping_df = mapping_df.reset_index()
             mapping_df = mapping_df.rename(columns={"index": "id", 1: "className"})[["id", "className"]]
             DkuFileManager.write_to_folder(
                 folder=output_folder,
                 file_path=constants.MODEL_LABELS_FILE,
                 content=mapping_df.to_csv(index=False, sep=","))
-            output_folder_dss.delete_file(constants.CLASSES_MAPPING_FILE)
 
         new_model.load_model({}, constants.GOAL.SCORE)
         new_model.save_info(output_folder)
