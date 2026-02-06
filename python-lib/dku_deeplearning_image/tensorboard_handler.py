@@ -8,6 +8,7 @@ import logging
 from argparse import ArgumentParser
 from tensorboard.plugins import base_plugin
 from dataikuapi.utils import DataikuException
+from tensorboard.backend.event_processing import data_ingester
 
 from dku_deeplearning_image.dku_constants import TENSORBOARD_LOGS
 
@@ -63,10 +64,13 @@ def make_plugin_loader(plugin_spec):
     Returns:
       A TBLoader for the given plugin.
     """
-    if issubclass(plugin_spec, base_plugin.TBLoader):
-        return plugin_spec()
-    if issubclass(plugin_spec, base_plugin.TBPlugin):
-        return base_plugin.BasicLoader(plugin_spec)
+    if isinstance(plugin_spec, base_plugin.TBLoader):
+        return plugin_spec
+    if isinstance(plugin_spec, type):
+        if issubclass(plugin_spec, base_plugin.TBLoader):
+            return plugin_spec()
+        if issubclass(plugin_spec, base_plugin.TBPlugin):
+            return base_plugin.BasicLoader(plugin_spec)
     raise TypeError(f"Not a TBLoader or TBPlugin subclass: {plugin_spec}")
 
 
@@ -84,10 +88,14 @@ def __get_tb_app(tensorboard_logs):
     flags.purge_orphaned_data = True
     flags.reload_interval = 5.0
     flags.logdir = tensorboard_logs
-    return application.standard_tensorboard_wsgi(
-        plugin_loaders=plugins,
+    ingester = data_ingester.LocalDataIngester(flags)
+    ingester.start()
+    return application.TensorBoardWSGIApp(
+        flags=flags,
+        plugins=plugins,
+        data_provider=ingester.data_provider,
         assets_zip_provider=__get_custom_assets_zip_provider(),
-        flags=flags
+        deprecated_multiplexer=ingester.deprecated_multiplexer
     )
 
 
