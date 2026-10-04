@@ -7,5 +7,7 @@ This plugin provides a total of 3 recipes, two macros and a webapp template.
 
 ⚠️ Starting with DSS version 11 this plugin is partially superseded by the native [image classification capabilities](https://doc.dataiku.com/dss/latest/machine-learning/computer-vision/index.html).
 
+Documentation: https://doc.dataiku.com/dss/latest/unstructured-data/image/deeplearning-image.html
+
 ## License
 This library is distributed under the Apache License version 2.0

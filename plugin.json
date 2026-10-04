@@ -1,6 +1,6 @@
 {
     "id": "deeplearning-image",
-    "version": "3.0.0",
+    "version": "3.0.1",
     "meta": {
         "label": "Deep learning on images",
         "category": "Computer Vision",
@@ -8,7 +8,7 @@
         "author": "Dataiku",
         "icon": "icon-picture",
         "licenseInfo": "Apache Software License",
-        "url": "https://www.dataiku.com/dss/plugins/info/deeplearning-image.html",
+        "url": "https://doc.dataiku.com/dss/latest/unstructured-data/image/deeplearning-image.html",
         "tags": ["Computer Vision"]
     }
 }

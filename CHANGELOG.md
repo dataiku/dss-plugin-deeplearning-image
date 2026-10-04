@@ -1,5 +1,9 @@
 # Changelog
 
+## Version 3.0.1 - Documentation update - 2026-10
+
+- Update documentation links to the DSS reference documentation.
+
 ## Version 3.0.0 - Python versions supported update - Breaking change - 2025-02
 - ⚠️ Drop python3.6 support
 - ⚠️ Base model weights needs redownloading to get weights in keras 3 format.
